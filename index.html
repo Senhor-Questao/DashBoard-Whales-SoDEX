@@ -1104,7 +1104,10 @@
 
   /* end macOS minimize buttons */
   .wallet-input-panel.collapsed .wallet-grid { display: none; }
-  .wallet-input-panel.collapsed .wallet-input-actions { display: none; }
+  .wallet-input-panel.collapsed .wallet-input-actions .btn-auto-fetch,
+  .wallet-input-panel.collapsed .wallet-input-actions .btn-clear-all,
+  .wallet-input-panel.collapsed .wallet-input-actions .btn-apply,
+  .wallet-input-panel.collapsed .wallet-input-actions .wallet-input-hint { display: none; }
   .wallet-input-panel.collapsed .auto-fetch-config { display: none; }
 
   /* rank-row checkbox */
@@ -1435,6 +1438,187 @@
   .pnl-chart-body { padding: 12px 14px 10px; position: relative; }
   #pnl-chart-canvas { width: 100%; display: block; }
   .pnl-chart-empty { color: var(--muted2); font-size: 11px; text-align: center; padding: 28px 0; }
+
+  /* ── PATRIMONY EVOLUTION CHART PANEL ── */
+  .patrimony-panel {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg2);
+    overflow: hidden;
+  }
+  .patrimony-head {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: var(--bg3);
+  }
+  .patrimony-head-left { display: flex; align-items: center; gap: 8px; }
+  .patrimony-filter-bar {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 6px 14px; border-bottom: 1px solid var(--border);
+    font-size: 10px; color: var(--muted); background: var(--bg2);
+  }
+  .patrimony-filter-bar label { font-size: 9px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted2); }
+  .patrimony-body { padding: 12px 14px 10px; position: relative; }
+  #patrimony-canvas { width: 100%; display: block; }
+  .patrimony-empty { color: var(--muted2); font-size: 11px; text-align: center; padding: 32px 0; }
+  .patrimony-legend { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .patrimony-legend-item {
+    display: flex; align-items: center; gap: 4px; font-size: 9px; color: var(--muted);
+    letter-spacing: 0.3px; font-family: var(--mono); cursor: pointer;
+    border: 1px solid transparent; border-radius: 5px; padding: 2px 6px 2px 4px;
+    transition: opacity 0.18s, background 0.18s, border-color 0.18s, color 0.18s;
+    user-select: none;
+  }
+  .patrimony-legend-item:hover { background: rgba(255,255,255,0.05); border-color: var(--border2); color: var(--text); }
+  .patrimony-legend-item.legend-active {
+    background: rgba(255,255,255,0.06); border-color: var(--border3); color: var(--text);
+  }
+  .patrimony-legend-item.legend-dimmed {
+    opacity: 0.35;
+  }
+  .patrimony-legend-item.legend-dimmed .patrimony-legend-dot { filter: grayscale(0.7); }
+  .patrimony-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; transition: transform 0.15s; }
+  .patrimony-legend-item:hover .patrimony-legend-dot { transform: scale(1.3); }
+  .patrimony-legend-item.legend-active .patrimony-legend-dot { transform: scale(1.25); box-shadow: 0 0 5px currentColor; }
+
+  /* ── PATRIMONY SPLIT LAYOUT ── */
+  .patrimony-split-body {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    min-height: 220px;
+  }
+  .patrimony-chart-col {
+    padding: 12px 14px 10px;
+    position: relative;
+    border-right: 1px solid var(--border);
+    min-width: 0;
+  }
+  .patrimony-ops-col {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .patrimony-ops-head {
+    padding: 7px 12px;
+    font-family: var(--sans);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted2);
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .patrimony-ops-count {
+    font-family: var(--mono);
+    font-size: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    padding: 1px 6px;
+    border-radius: 8px;
+    color: var(--muted);
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .patrimony-ops-scroll {
+    overflow-y: auto;
+    flex: 1;
+    max-height: 232px;
+  }
+  .patrimony-ops-empty {
+    color: var(--muted2);
+    font-size: 10px;
+    text-align: center;
+    padding: 24px 12px;
+  }
+  /* Open position rows in patrimony panel */
+  .pat-op-row {
+    display: grid;
+    grid-template-columns: 8px minmax(50px,1fr) 64px 58px 70px;
+    align-items: center;
+    gap: 0 6px;
+    padding: 5px 10px;
+    border-bottom: 1px solid var(--border);
+    font-size: 10px;
+    transition: background 0.12s;
+    cursor: default;
+  }
+  .pat-op-row:last-child { border-bottom: none; }
+  .pat-op-row:hover { background: rgba(255,255,255,0.025); }
+  .pat-op-head {
+    display: grid;
+    grid-template-columns: 8px minmax(50px,1fr) 64px 58px 70px;
+    align-items: center;
+    gap: 0 6px;
+    padding: 4px 10px 5px;
+    border-bottom: 1px solid var(--border2);
+    font-size: 8px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--muted2);
+    background: var(--bg2);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    flex-shrink: 0;
+  }
+  .pat-op-side-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .pat-op-pair { font-weight: 600; color: #fff; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pat-op-sub  { font-size: 9px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pat-op-lev  { font-size: 9px; text-align: center; }
+  .pat-op-lev-badge {
+    font-size: 8px; font-weight: 600; padding: 1px 4px;
+    border-radius: 3px; background: var(--bg); border: 1px solid var(--border2);
+    color: var(--muted); white-space: nowrap;
+  }
+  .pat-op-entry { font-size: 10px; color: var(--muted); text-align: right; white-space: nowrap; }
+  .pat-op-pnl   { font-size: 11px; font-weight: 700; text-align: right; white-space: nowrap; }
+  .pat-op-pnl.pos { color: var(--green); }
+  .pat-op-pnl.neg { color: var(--red); }
+  .pat-op-pnl.neut { color: var(--muted); }
+  /* Summary footer */
+  .patrimony-ops-footer {
+    border-top: 1px solid var(--border);
+    padding: 5px 10px;
+    background: var(--bg3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 9px;
+    color: var(--muted);
+    flex-shrink: 0;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .pat-footer-pnl { font-weight: 700; font-size: 11px; }
+  .pat-footer-pnl.pos { color: var(--green); }
+  .pat-footer-pnl.neg { color: var(--red); }
+  .pat-footer-pnl.neut { color: var(--muted); }
+  @media (max-width: 900px) {
+    .patrimony-split-body { grid-template-columns: 1fr; }
+    .patrimony-chart-col { border-right: none; border-bottom: 1px solid var(--border); }
+    .patrimony-ops-scroll { max-height: 180px; }
+  }
 
   /* ── DIRECTION DOMINANCE PANEL ── */
   .dir-dom-panel {
@@ -2667,8 +2851,11 @@
 
   /* ── PANEL MINIMIZE / COLLAPSE ── */
   /* btn-panel-minimize — styled via the macOS block above */
+  .panel-collapsed .panel-body,
   .panel-collapsed .panel-collapsible-body,
   .panel-collapsed .pnl-chart-body,
+  .panel-collapsed .pnl-filter-bar,
+  .panel-collapsed #wallet-selection-banner,
   .panel-collapsed .dir-dom-body,
   .panel-collapsed .whale-score-grid,
   .panel-collapsed #whale-score-body,
@@ -2685,7 +2872,20 @@
   .panel-collapsed .smt-json-output,
   .panel-collapsed .smt-filter-bar,
   .panel-collapsed .cs-body,
+  .panel-collapsed .cs-filter-bar,
+  .panel-collapsed .patrimony-body,
+  .panel-collapsed .patrimony-split-body,
+  .panel-collapsed .patrimony-filter-bar,
   .panel-collapsed .panel-filter-bar { display: none !important; }
+  /* Remove border-bottom from panel-head when panel is collapsed (no body below) */
+  .panel-collapsed > .panel-head { border-bottom: none; }
+  /* Shrink collapsed panel to header height only — don't stretch in grid */
+  .panel.panel-collapsed {
+    align-self: start;
+  }
+  .panel.panel-collapsed:hover {
+    transform: none;
+  }
   /* pnl wallet filter bar */
   .pnl-filter-bar {
     display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
@@ -2698,6 +2898,192 @@
     padding: 5px 14px; border-bottom: 1px solid var(--border); background: var(--bg3);
   }
   .panel-filter-bar label { font-size: 9px; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; }
+
+  /* ══════════════════════════════════════════════════════════════════
+     HOVER / INTERACTION ANIMATIONS — todos os campos
+     Padrão: linhas de lista → background flash + inset glow
+             cards           → translateY(-1px) + border highlight
+  ══════════════════════════════════════════════════════════════════ */
+
+  /* ── Open positions rows (orow) ── */
+  .orow { transition: background 0.13s var(--ease), box-shadow 0.13s var(--ease); cursor: default; }
+  .orow:not(.orow-head):hover { background: rgba(255,255,255,0.038); box-shadow: inset 2px 0 0 var(--green); }
+
+  /* ── Live events rows (erow) ── */
+  .erow { transition: background 0.13s var(--ease), box-shadow 0.13s var(--ease), padding-left 0.13s var(--ease); cursor: default; border-radius: 4px; }
+  .erow:hover { background: rgba(255,255,255,0.038); box-shadow: inset 2px 0 0 var(--blue); padding-left: 4px; }
+
+  /* ── Top 10 Ranking rows ── */
+  .rank-row { transition: background 0.13s var(--ease), box-shadow 0.13s var(--ease); cursor: default; }
+  .rank-row:hover { background: rgba(255,255,255,0.038); box-shadow: inset 2px 0 0 var(--green); }
+
+  /* ── Whale Score cards ──
+     Clicável: seleciona a wallet (mesmo onclick="selectWallet()" usado no PnL por Wallet
+     e no Ranking), com animação de destaque pulsando na cor característica da wallet.
+  ── */
+  .score-card {
+    --row-color: #00e07a; /* fallback — sobrescrito inline */
+    transition: border-color 0.15s var(--ease), transform 0.12s var(--ease), box-shadow 0.15s var(--ease), background 0.15s var(--ease);
+    cursor: pointer;
+  }
+  .score-card:hover { border-color: var(--border3); transform: translateY(-1px); box-shadow: 0 4px 16px -4px rgba(0,0,0,0.35); }
+  .score-card.is-selected {
+    border-color: var(--row-color);
+    background: color-mix(in srgb, var(--row-color) 7%, var(--bg3));
+    box-shadow: inset 0 0 0 1px var(--row-color);
+    animation: walletSelectPulse 1s var(--ease) 2;
+  }
+  @keyframes walletSelectPulse {
+    0%   { box-shadow: inset 0 0 0 1px var(--row-color), 0 0 0 0 color-mix(in srgb, var(--row-color) 55%, transparent); }
+    70%  { box-shadow: inset 0 0 0 1px var(--row-color), 0 0 0 9px transparent; }
+    100% { box-shadow: inset 0 0 0 1px var(--row-color), 0 0 0 0 transparent; }
+  }
+
+  /* ── Whale Consensus cards ── */
+  .consensus-card {
+    --row-color: #00e07a; /* fallback — sobrescrito inline */
+    transition: border-color 0.15s var(--ease), transform 0.12s var(--ease), box-shadow 0.15s var(--ease), background 0.15s var(--ease);
+    cursor: pointer;
+  }
+  .consensus-card:hover { border-color: var(--border3); transform: translateY(-1px); box-shadow: 0 4px 16px -4px rgba(0,0,0,0.35); }
+  .consensus-card.is-selected {
+    border-color: var(--row-color);
+    background: color-mix(in srgb, var(--row-color) 7%, var(--bg3));
+    box-shadow: inset 0 0 0 1px var(--row-color);
+    animation: walletSelectPulse 1s var(--ease) 2;
+  }
+  /* Wallet dot row inside consensus cards */
+  .consensus-wallet-dots {
+    display: flex;
+    gap: 5px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .consensus-wallet-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.12s;
+    border: 1.5px solid rgba(0,0,0,0.18);
+  }
+  .consensus-wallet-dot:hover { transform: scale(1.45); }
+  .consensus-wallet-dot.is-selected { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--dot-color, #00e07a); transform: scale(1.3); }
+  .consensus-wallet-dot-label { font-size: 8px; color: var(--muted2); letter-spacing: 0.3px; }
+
+  /* ── Conviction Score cards ── */
+  .conviction-card { transition: border-color 0.15s var(--ease), transform 0.12s var(--ease), box-shadow 0.15s var(--ease); cursor: default; }
+  .conviction-card:hover { border-color: var(--border3); transform: translateY(-1px); box-shadow: 0 4px 16px -4px rgba(0,0,0,0.35); }
+
+  /* ── Whale Momentum cards ── */
+  .momentum-card { transition: border-color 0.15s var(--ease), transform 0.12s var(--ease), box-shadow 0.15s var(--ease); cursor: default; }
+  .momentum-card:hover { border-color: var(--border3); transform: translateY(-1px); box-shadow: 0 4px 16px -4px rgba(0,0,0,0.35); }
+
+  /* ── Whale Heatmap rows ── */
+  .heatmap-row { transition: background 0.13s var(--ease), box-shadow 0.13s var(--ease), padding-left 0.13s var(--ease), opacity 0.2s var(--ease); border-radius: 5px; padding: 3px 4px; cursor: pointer; }
+  .heatmap-row:hover { background: rgba(255,255,255,0.04); box-shadow: inset 2px 0 0 var(--amber); padding-left: 8px; }
+  .heatmap-row.is-selected {
+    background: rgba(247,177,61,0.10);
+    box-shadow: inset 3px 0 0 var(--amber), 0 0 0 1px rgba(247,177,61,0.2);
+    animation: heatmapRowSelectPulse 0.9s var(--ease) 2;
+  }
+  .heatmap-row.is-dimmed { opacity: 0.3; }
+  @keyframes heatmapRowSelectPulse {
+    0%   { box-shadow: inset 3px 0 0 var(--amber), 0 0 0 0 rgba(247,177,61,0.45); }
+    70%  { box-shadow: inset 3px 0 0 var(--amber), 0 0 0 8px transparent; }
+    100% { box-shadow: inset 3px 0 0 var(--amber), 0 0 0 0 transparent; }
+  }
+  /* Wallet dot inside heatmap row */
+  .heatmap-wallet-dots { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; margin-top: 3px; }
+  .heatmap-wallet-dot {
+    width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.12s;
+    border: 1.5px solid rgba(0,0,0,0.18);
+  }
+  .heatmap-wallet-dot:hover { transform: scale(1.5); }
+  .heatmap-wallet-dot.is-selected { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--dot-color, #00e07a); transform: scale(1.3); }
+
+  /* ── Direction Dominance wallet rows ── */
+  .dir-dom-wallet-row { transition: background 0.13s var(--ease), box-shadow 0.13s var(--ease), border-radius 0.13s var(--ease); }
+  .dir-dom-wallet-row:hover { background: rgba(255,255,255,0.04); border-radius: 4px; box-shadow: inset 2px 0 0 var(--green); }
+
+  /* ── Signal Master Table rows ── */
+  .smt-table tr { transition: background 0.13s var(--ease), box-shadow 0.13s var(--ease); }
+  .smt-table tbody tr:hover td { background: rgba(255,255,255,0.038); }
+  .smt-table tr.smt-go:hover   td:first-child { box-shadow: inset 3px 0 0 var(--green); }
+  .smt-table tr.smt-wait:hover td:first-child  { box-shadow: inset 3px 0 0 var(--amber); }
+  .smt-table tr.smt-block:hover td:first-child { box-shadow: inset 3px 0 0 var(--red); }
+
+  /* ── Composite Score cards ── */
+  .cs-card:hover { border-color: var(--border3); transform: translateY(-2px); box-shadow: 0 6px 20px -6px rgba(0,0,0,0.4); }
+
+  /* ── Hist. Prob. cards ── */
+  .prob-card { transition: border-color 0.15s var(--ease), transform 0.12s var(--ease), box-shadow 0.15s var(--ease); }
+  .prob-card:hover { border-color: var(--border3); transform: translateY(-1px); box-shadow: 0 4px 16px -4px rgba(0,0,0,0.35); }
+
+  /* ── PnL chart legend items ──
+     Hover realça com a cor característica da wallet (--row-color).
+     Mesmo padrão do Signal Master Table / Histórico / Ranking, personalizado por wallet.
+  ── */
+  .pnl-chart-legend-item {
+    --row-color: #00e07a; /* fallback — sobrescrito inline */
+    transition: color 0.13s var(--ease), background 0.13s var(--ease), box-shadow 0.13s var(--ease), padding-left 0.13s var(--ease);
+    cursor: pointer; border-radius: 3px; padding: 1px 3px;
+  }
+  .pnl-chart-legend-item:hover {
+    color: var(--text);
+    background: color-mix(in srgb, var(--row-color) 12%, transparent);
+    box-shadow: inset 3px 0 0 var(--row-color);
+    padding-left: 6px;
+  }
+
+  /* ── Whale Leaderboard rows ── */
+  .lb-row { transition: border-color 0.15s var(--ease), transform 0.12s var(--ease), background 0.13s var(--ease), box-shadow 0.13s var(--ease); }
+  .lb-row:hover { box-shadow: inset 3px 0 0 var(--green); }
+
+  /* ── Histórico de Posições / Posições Fechadas / Operações Abertas ──
+     Hover realça com a cor característica da wallet (--row-color).
+     Mesmo padrão do Signal Master Table, mas personalizado por wallet.
+  ── */
+  .tr-wallet-row {
+    transition: background 0.14s var(--ease), border-left-color 0.14s var(--ease), border-left-width 0.14s var(--ease);
+    --row-color: #00e07a; /* fallback — sobrescrito inline */
+  }
+  .tr-wallet-row td {
+    transition: background 0.14s var(--ease), box-shadow 0.14s var(--ease);
+  }
+  .tr-wallet-row:hover td {
+    background: color-mix(in srgb, var(--row-color) 8%, transparent);
+    box-shadow: none;
+  }
+  .tr-wallet-row:hover td:first-child {
+    box-shadow: inset 4px 0 0 var(--row-color);
+  }
+  .tr-wallet-row:hover {
+    border-left-color: var(--row-color) !important;
+    border-left-width: 4px !important;
+  }
+
+  /* ── Ranking PnL realizado / Detalhes das wallets monitoradas ──
+     Hover realça com a cor característica da wallet (--row-color).
+     Divs, não <tr>, então sem seletor td — tinta diretamente o div.
+  ── */
+  .rank-row-wallet {
+    --row-color: #00e07a; /* fallback — sobrescrito inline */
+    transition:
+      background 0.14s var(--ease),
+      border-left-color 0.14s var(--ease),
+      border-left-width 0.14s var(--ease),
+      box-shadow 0.14s var(--ease);
+  }
+  .rank-row-wallet:hover {
+    background: color-mix(in srgb, var(--row-color) 9%, transparent) !important;
+    border-left-color: var(--row-color) !important;
+    border-left-width: 4px !important;
+    box-shadow: inset 4px 0 0 var(--row-color);
+  }
 
 </style>
 </head>
@@ -2727,6 +3113,10 @@
     <a class="sidebar-item" data-target="pnl-chart-panel" data-tooltip="PnL por Wallet" onclick="sidebarNav(this)">
       <span class="sidebar-item-icon">📊</span>
       <span class="sidebar-item-label">PnL por Wallet</span>
+    </a>
+    <a class="sidebar-item" data-target="patrimony-panel" data-tooltip="Evolução do Patrimônio" onclick="sidebarNav(this)">
+      <span class="sidebar-item-icon">📈</span>
+      <span class="sidebar-item-label">Evolução Patrimônio</span>
     </a>
 
     <div class="sidebar-section-label">Análise Whale</div>
@@ -2833,7 +3223,6 @@
         🐋 Wallets monitoradas
         <span id="wallet-panel-subtitle">até 10 endereços EVM · pressione Aplicar para iniciar rastreamento</span>
       </div>
-      <button class="btn-minimize-panel" id="btn-minimize-wallets" onclick="toggleWalletPanel()" title="Minimizar painel"></button>
       <div class="wallet-input-actions">
         <button class="btn-auto-fetch" id="btn-auto-fetch" onclick="autoFetchTopWallets()" title="Busca as melhores wallets por PnL na valuechain da SoDEX e preenche automaticamente">
           <span id="af-icon">🔍</span>
@@ -2843,6 +3232,7 @@
         <button class="btn-clear-all" onclick="clearAllWallets()">Limpar tudo</button>
         <button class="btn-apply" id="btn-apply" onclick="applyWallets()">▶ Aplicar</button>
         <span class="wallet-input-hint" id="wallet-count-hint">0 / 10 wallets</span>
+        <button class="btn-minimize-panel" id="btn-minimize-wallets" onclick="toggleWalletPanel()" title="Minimizar painel"></button>
       </div>
     </div>
     <!-- Auto-fetch config -->
@@ -2898,12 +3288,18 @@
   <!-- MID ROW -->
   <div id="mid-row-anchor"></div>
   <div class="mid-row">
-    <div class="panel">
-      <div class="panel-head">Open positions <span class="panel-count" id="open-count">0</span></div>
+    <div class="panel" id="open-positions-panel">
+      <div class="panel-head">
+        <span>Open positions <span class="panel-count" id="open-count">0</span></span>
+        <button class="btn-panel-minimize" onclick="togglePanelMinimize('open-positions-panel',this)" title="Minimizar"></button>
+      </div>
       <div class="panel-body" id="open-list"><div style="color:var(--muted);font-size:11px">Aguardando dados...</div></div>
     </div>
-    <div class="panel">
-      <div class="panel-head">Live events <span class="panel-count" id="event-count">0</span></div>
+    <div class="panel" id="live-events-panel">
+      <div class="panel-head">
+        <span>Live events <span class="panel-count" id="event-count">0</span></span>
+        <button class="btn-panel-minimize" onclick="togglePanelMinimize('live-events-panel',this)" title="Minimizar"></button>
+      </div>
       <div class="panel-body" id="event-list"><div style="color:var(--muted);font-size:11px">Aguardando eventos...</div></div>
     </div>
   </div>
@@ -2915,8 +3311,6 @@
         <div class="sec-label" style="margin-top:0">Top 10 Wallets — ranking por PnL</div>
       </div>
       <div class="sec-header-right">
-        <button class="btn-sec-nav" id="ranking-nav-prev" onclick="rankingNavPage(-1)" title="Página anterior">&#8592;</button>
-        <button class="btn-sec-nav" id="ranking-nav-next" onclick="rankingNavPage(1)" title="Próxima página">&#8594;</button>
         <button class="btn-sec-collapse" id="btn-collapse-ranking" onclick="toggleSection('section-ranking','btn-collapse-ranking')" title="Minimizar"></button>
       </div>
     </div>
@@ -2984,6 +3378,103 @@
     </div>
   </div>
 
+  <!-- PATRIMONY EVOLUTION -->
+  <div class="patrimony-panel" id="patrimony-panel">
+    <div class="patrimony-head">
+      <div class="patrimony-head-left">
+        <span>📈 Evolução do Patrimônio</span>
+        <span class="panel-count" id="patrimony-count">0 wallets</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1">
+        <div class="patrimony-legend" id="patrimony-legend"></div>
+      </div>
+      <button class="btn-panel-minimize" onclick="togglePanelMinimize('patrimony-panel',this)" title="Minimizar"></button>
+    </div>
+    <div class="patrimony-filter-bar">
+      <label>Wallet:</label>
+      <select id="patrimony-wallet-filter" class="panel-filter-select" onchange="renderPatrimonyChart()" title="Filtrar wallet">
+        <option value="all">Todas</option>
+        <option value="1">Top 1</option>
+        <option value="2">Top 2</option>
+        <option value="3">Top 3</option>
+        <option value="5">Top 5</option>
+      </select>
+      <span style="color:var(--border2);margin:0 2px">|</span>
+      <label>Período:</label>
+      <div id="patrimony-period-btns" style="display:flex;gap:4px;flex-wrap:wrap">
+        <button class="period-btn" data-period="1d"  onclick="selectPatrimonyPeriod('1d',this)">1D</button>
+        <button class="period-btn" data-period="1w"  onclick="selectPatrimonyPeriod('1w',this)">1S</button>
+        <button class="period-btn active" data-period="1m"  onclick="selectPatrimonyPeriod('1m',this)">1M</button>
+        <button class="period-btn" data-period="3m"  onclick="selectPatrimonyPeriod('3m',this)">3M</button>
+        <button class="period-btn" data-period="6m"  onclick="selectPatrimonyPeriod('6m',this)">6M</button>
+        <button class="period-btn" data-period="12m" onclick="selectPatrimonyPeriod('12m',this)">12M</button>
+        <button class="period-btn" data-period="all" onclick="selectPatrimonyPeriod('all',this)">Tudo</button>
+      </div>
+      <span style="color:var(--border2);margin:0 4px">|</span>
+      <button id="patrimony-fetch-btn" onclick="triggerPatrimonyFullFetch()" style="
+        background:rgba(79,151,255,0.12);border:1px solid rgba(79,151,255,0.3);
+        color:var(--blue);font-family:var(--mono);font-size:9px;font-weight:600;
+        padding:3px 9px;border-radius:5px;cursor:pointer;letter-spacing:0.4px;
+        transition:background 0.15s,border-color 0.15s;white-space:nowrap;
+        display:flex;align-items:center;gap:5px" title="Busca todo o histórico de trades e funding desde o início da wallet">
+        <svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Buscar histórico completo
+      </button>
+      <span id="patrimony-fetch-status" style="font-size:9px;color:var(--muted2);margin-left:4px;white-space:nowrap"></span>
+      <span style="margin-left:auto;font-size:9px;color:var(--muted2);letter-spacing:0.3px">Saldo total USDC (perp + spot) ao longo do tempo</span>
+      <span style="display:flex;align-items:center;gap:7px;margin-left:10px;flex-shrink:0">
+        <span style="display:flex;align-items:center;gap:3px;font-size:8.5px;color:var(--muted)">
+          <svg width="11" height="11" viewBox="0 0 11 11"><circle cx="5.5" cy="5.5" r="4.5" fill="#2ee591" stroke="#1aa860" stroke-width="1.2"/><circle cx="5.5" cy="5.5" r="1.5" fill="rgba(255,255,255,0.75)"/></svg>Long
+        </span>
+        <span style="display:flex;align-items:center;gap:3px;font-size:8.5px;color:var(--muted)">
+          <svg width="11" height="11" viewBox="0 0 11 11"><circle cx="5.5" cy="5.5" r="4.5" fill="#ff4d61" stroke="#c2293d" stroke-width="1.2"/><circle cx="5.5" cy="5.5" r="1.5" fill="rgba(255,255,255,0.75)"/></svg>Short
+        </span>
+        <span style="display:flex;align-items:center;gap:3px;font-size:8.5px;color:var(--muted)">
+          <svg width="11" height="11" viewBox="0 0 11 11"><circle cx="5.5" cy="5.5" r="4.5" fill="rgba(46,229,145,0.15)" stroke="#2ee591" stroke-width="1.6" stroke-dasharray="3 2"/><circle cx="5.5" cy="5.5" r="2" fill="#2ee591"/></svg>Aberta
+        </span>
+      </span>
+    </div>
+    <!-- Progress bar for full history fetch -->
+    <div id="patrimony-progress-wrap" style="display:none;padding:0 14px 8px;background:var(--bg3);border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span id="patrimony-progress-label" style="font-size:9px;color:var(--muted);flex:1"></span>
+        <span id="patrimony-progress-pct" style="font-size:9px;color:var(--blue);font-weight:600"></span>
+      </div>
+      <div style="height:3px;background:var(--bg4);border-radius:3px;overflow:hidden">
+        <div id="patrimony-progress-bar" style="height:100%;background:var(--blue);border-radius:3px;width:0%;transition:width 0.3s var(--ease)"></div>
+      </div>
+    </div>
+    <div class="patrimony-split-body">
+      <!-- Left: evolution chart -->
+      <div class="patrimony-chart-col">
+        <canvas id="patrimony-canvas" height="180"></canvas>
+        <div class="patrimony-empty" id="patrimony-empty">Aguardando dados de wallets...</div>
+      </div>
+      <!-- Right: open positions detail -->
+      <div class="patrimony-ops-col">
+        <div class="patrimony-ops-head">
+          <span>Operações Abertas</span>
+          <span class="patrimony-ops-count" id="pat-ops-count">0</span>
+        </div>
+        <div class="pat-op-head">
+          <span></span>
+          <span>Par</span>
+          <span style="text-align:right">PnL (USDC)</span>
+          <span style="text-align:right">Size</span>
+          <span style="text-align:right;cursor:pointer;user-select:none" id="pat-op-sort-abertura" onclick="togglePatOpsDateSort()" title="Ordenar por data de abertura">Abertura <span id="pat-op-sort-icon">↓</span></span>
+        </div>
+        <div class="patrimony-ops-scroll" id="pat-ops-scroll">
+          <div class="patrimony-ops-empty" id="pat-ops-empty">Nenhuma posição aberta</div>
+        </div>
+        <div class="patrimony-ops-footer" id="pat-ops-footer" style="display:none">
+          <span style="color:var(--muted)">PnL Total:</span>
+          <span class="pat-footer-pnl neut" id="pat-ops-total-pnl">$0.00</span>
+          <span style="margin-left:auto;color:var(--muted2)" id="pat-ops-breakdown"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- DIRECTION DOMINANCE -->
   <div class="dir-dom-panel" id="dir-dom-panel">
     <div class="dir-dom-head">
@@ -3022,6 +3513,9 @@
           <option value="all">Todos</option>
           <option value="long">🟢 Long</option>
           <option value="short">🔴 Short</option>
+        </select>
+        <select id="consensus-asset-filter" class="consensus-select" onchange="renderWhaleConsensus()">
+          <option value="all">Todos ativos</option>
         </select>
         <select id="consensus-min-whales" class="consensus-select" onchange="renderWhaleConsensus()">
           <option value="1">≥1 baleia</option>
@@ -3232,7 +3726,14 @@
       <span class="panel-count" id="whale-heatmap-count">0 ativos</span>
       <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-heatmap-panel',this)" title="Minimizar"></button>
     </div>
+    <!-- Wallet selection banner (igual ao do PnL por Wallet) -->
+    <div id="heatmap-wallet-selection-banner" style="display:none;align-items:center;gap:8px;padding:6px 14px;background:rgba(61,142,255,0.07);border-bottom:1px solid rgba(61,142,255,0.18);font-size:10px;font-family:var(--mono);flex-wrap:wrap"></div>
     <div class="panel-filter-bar">
+      <label>Wallet:</label>
+      <select id="heatmap-wallet-filter" class="panel-filter-select" onchange="applyHeatmapWalletFilter()" title="Filtrar por wallet">
+        <option value="all">Todas</option>
+      </select>
+      <span style="color:var(--border2);margin:0 2px">|</span>
       <label>Baleias:</label>
       <select id="heatmap-min-whales" class="panel-filter-select" onchange="renderWhaleHeatmap()" title="Mínimo de baleias">
         <option value="1">≥1 baleia</option>
@@ -3918,6 +4419,8 @@
   let markPrices     = {};   // símbolo → mark price atual
   let trackedWallets = [];   // Endereços finais monitorados
   let walletStats    = {};   // addr → { pnl, trades }
+  let patrimonyHistory = {}; // addr → [{ ts, value }] — histórico temporal de Patrimônio (USDC perp+spot) por wallet
+  let walletAccountValue = {}; // addr → { perp: N, spot: N } — saldos USDC mais recentes
   let wsMain         = null; // WebSocket principal (fase 3)
   let markPollTimer  = null; // Timer de polling REST de mark prices (fallback)
   let wsMarkWorking  = false; // true quando WS de mark prices está ativo
@@ -4251,6 +4754,13 @@
       try {
         const data = await fetchWalletState(addr);
         if (data) hydrateWalletState(addr, data);
+        // Tenta buscar saldo spot (best-effort, não bloqueia)
+        _fetchSpotBalance(addr).then(spotVal => {
+          if (spotVal !== null) {
+            if (!walletAccountValue[addr]) walletAccountValue[addr] = { perp: 0, spot: 0 };
+            walletAccountValue[addr].spot = spotVal;
+          }
+        });
       } catch(e) { /* silencioso */ }
     }
   }
@@ -4487,6 +4997,8 @@
     document.getElementById('lbl-mode').textContent = 'Modo: Live';
     setDot('dot-mode', 'on');
     document.getElementById('tick-msg').textContent = 'Conectando WebSocket…';
+    // Carrega histórico persistido do localStorage para as wallets ativas
+    initPatrimonyHistory();
     // Inicia polling de mark prices imediatamente (antes do WS)
     // Garante que PnL calcula mesmo se WS de mark prices falhar
     startMarkPricePolling();
@@ -4535,6 +5047,15 @@
 
     // Carrega histórico REST com o período padrão (3 dias)
     fetchHistoryForAllWallets();
+
+    // Dispara automaticamente o histórico completo (para PnL por Wallet e gráfico de patrimônio)
+    // com delay para não concorrer com fetchHistoryForAllWallets
+    setTimeout(() => {
+      if (trackedWallets.length > 0 && !_patrimonyFetchBusy) {
+        debugLog('Auto-fetch histórico completo iniciado após Aplicar', 'info');
+        triggerPatrimonyFullFetch();
+      }
+    }, 3000);
   }
 
   async function fetchWalletState(addr) {
@@ -4578,6 +5099,34 @@
       const posCount = state.positions.length;
       const ordCount = state.orders.length;
       debugLog(`State ${shortAddr(addr)}: ${posCount} posições, ${ordCount} ordens`, posCount > 0 ? 'ok' : 'warn');
+
+      // Extrai saldo USDC da conta perp a partir de state.balances
+      // A API SoDEX retorna balances como array de { coin/asset, balance/amount/available }
+      // ou como objeto { USDC: N } — cobrimos ambos os formatos.
+      const balArr = state.balances;
+      let perpUsdc = null;
+      if (Array.isArray(balArr) && balArr.length) {
+        const usdcEntry = balArr.find(b => {
+          const coin = (b.coin ?? b.asset ?? b.token ?? b.currency ?? b.c ?? '').toString().toUpperCase();
+          return coin === 'USDC' || coin === 'USD';
+        });
+        if (usdcEntry) {
+          perpUsdc = parseFloat(
+            String(usdcEntry.balance ?? usdcEntry.amount ?? usdcEntry.available ??
+                   usdcEntry.total ?? usdcEntry.equity ?? usdcEntry.v ?? 0).replace(',', '.')
+          ) || 0;
+        }
+      } else if (balArr && typeof balArr === 'object' && !Array.isArray(balArr)) {
+        // Formato objeto: { USDC: "1234.56" }
+        const raw = balArr['USDC'] ?? balArr['usdc'] ?? null;
+        if (raw != null) perpUsdc = parseFloat(String(raw).replace(',', '.')) || 0;
+      }
+      if (perpUsdc !== null && perpUsdc >= 0) {
+        if (!walletAccountValue[addr]) walletAccountValue[addr] = { perp: 0, spot: 0 };
+        walletAccountValue[addr].perp = perpUsdc;
+        debugLog(`Saldo perp ${shortAddr(addr)}: ${perpUsdc.toFixed(2)} USDC`, 'info');
+      }
+
       return state;
     } catch (err) {
       debugLog(`State ${shortAddr(addr)}: FALHOU — ${err.message}`, 'err');
@@ -5099,8 +5648,14 @@
   function selectHistoryPeriod(days, btn) {
     historyPeriodDays = days;
     histPage = 1; // reset to first page on period change
-    // Atualiza visual dos botões
-    document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+    // Atualiza visual apenas dos botões do painel de histórico (não afeta o patrimônio)
+    const histParent = btn ? btn.closest('div[id], section[id]') || btn.parentElement : null;
+    const scope = (histParent && histParent.querySelectorAll('.period-btn').length)
+      ? histParent : document;
+    scope.querySelectorAll('.period-btn').forEach(b => {
+      if (scope === document && b.closest('#patrimony-period-btns')) return; // preserva patrimônio
+      b.classList.remove('active');
+    });
     if (btn) btn.classList.add('active');
     // Recarrega histórico para o novo período
     if (trackedWallets.length > 0) fetchHistoryForAllWallets();
@@ -5691,6 +6246,8 @@
     historyRestData   = [];
     events            = [];
     walletStats       = {};
+    patrimonyHistory  = {};
+    walletAccountValue = {};
     walletEnabled     = {};
     discoveredAddrs   = {};
     _openPairOrder    = [];
@@ -6193,7 +6750,7 @@
       const mode = (!wsMarkWorking || positionsPollTimer) ? 'REST+WS' : 'LIVE';
       document.getElementById('tick-msg').textContent = 'Última atualização: ' + ts() + ' — ' + mode;
     }
-    document.getElementById('open-count').textContent  = positions.length;
+    document.getElementById('open-count').textContent  = positions.filter(p => !isWalletFiltered(p.addr)).length;
     document.getElementById('event-count').textContent = events.length;
   }
 
@@ -6220,6 +6777,7 @@
     }
     const byPair = {};
     positions.forEach(p => {
+      if (isWalletFiltered(p.addr)) return;
       if (!byPair[p.pair]) byPair[p.pair] = { long: 0, short: 0, pnl: 0 };
       p.side === 'LONG' ? byPair[p.pair].long++ : byPair[p.pair].short++;
       byPair[p.pair].pnl += p.pnl || 0;
@@ -6332,7 +6890,7 @@
       const _isSelW  = selectedWalletAddr && selectedWalletAddr.toLowerCase() === addr.toLowerCase();
       const selBg    = _isSelW ? `;background:${wc}0d;box-shadow:inset 0 0 0 1px ${wc}30` : '';
       // Grid: [#] [checkbox] [dot] [wallet addr] [copy] [PnL] [sep] [long] [sep] [short] [sep] [trades]
-      return `<div class="rank-row" style="opacity:${opacity};border-left:2px solid ${wc};cursor:pointer${selBg}" onclick="selectWallet('${addr}')" title="Filtrar todos os painéis por esta wallet">
+      return `<div class="rank-row rank-row-wallet" style="opacity:${opacity};border-left:3px solid ${wc};--row-color:${wc};cursor:pointer${selBg}" onclick="selectWallet('${addr}')" title="Filtrar todos os painéis por esta wallet">
         <span class="rank-num" style="font-size:9px;color:var(--muted2);text-align:right">${i + 1}</span>
         <input type="checkbox" class="rank-check" title="Rastrear esta wallet"
           ${enabled ? 'checked' : ''}
@@ -6364,11 +6922,15 @@
       const op     = byWallet[addr] || {};
       const enabled = walletEnabled[addr.toLowerCase()] !== false;
       const wc      = walletColor(addr);
-      return `<div class="rank-row" style="opacity:${enabled ? '1' : '0.4'};border-left:2px solid ${wc};padding-left:6px">
+      const _walFilt = isWalletFiltered(addr);
+      const opacity  = !enabled ? '0.4' : _walFilt ? '0.2' : '1';
+      const _isSelW  = selectedWalletAddr && selectedWalletAddr.toLowerCase() === addr.toLowerCase();
+      const selBg    = _isSelW ? `;background:${wc}0d;box-shadow:inset 0 0 0 1px ${wc}30` : '';
+      return `<div class="rank-row rank-row-wallet" style="opacity:${opacity};border-left:3px solid ${wc};--row-color:${wc};padding-left:6px;cursor:pointer${selBg}" onclick="selectWallet('${addr}')" title="Filtrar todos os painéis por esta wallet">
         <span class="rank-num">${i + 1}</span>
         <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${wc};flex-shrink:0"></span>
         <span class="rank-addr">${addr.slice(0, 10)}…${addr.slice(-6)}</span>
-        <button class="w-copy" title="Copiar endereço" onclick="copyWalletAddr(this,'${addr}')">⧉</button>
+        <button class="w-copy" title="Copiar endereço" onclick="event.stopPropagation();copyWalletAddr(this,'${addr}')">⧉</button>
         <span class="${(op.openPnl || 0) >= 0 ? 'pnl-pos' : 'pnl-neg'} rank-pnl">${fmtPnl(op.openPnl || 0)}</span>
         <span class="rank-trades">${op.count || 0} posições abertas${enabled ? '' : ' · <span style=color:var(--muted)>pausado</span>'}</span>
       </div>`;
@@ -6602,7 +7164,7 @@
         ? pos.sizeUsdc
         : (pos.size > 0 && refPx > 0 ? pos.size * refPx : null);
       const sizeUsdcFmt = sizeUsdcVal != null ? '$' + fmt(sizeUsdcVal, 2) : '—';
-      return `<tr style="border-left:2px solid ${wc}">
+      return `<tr class="tr-wallet-row" style="border-left:3px solid ${wc};--row-color:${wc}">
         <td class="row-num">${globalIdx}</td>
         <td class="wallet-addr" title="${pos.addr || ''}"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${wc};margin-right:4px;vertical-align:middle;flex-shrink:0"></span>${pos.wallet}</td>
         <td class="pair-sym">${pos.pair}</td>
@@ -6754,7 +7316,7 @@
       const pct    = p.pct != null ? (p.pct >= 0 ? '+' : '') + p.pct.toFixed(2) + '%' : '—';
       const pctCls = (p.pct || 0) >= 0 ? 'pnl-pos' : 'pnl-neg';
       const wc     = walletColor(p.addr);
-      return `<tr style="border-left:2px solid ${wc}">
+      return `<tr class="tr-wallet-row" style="border-left:3px solid ${wc};--row-color:${wc}">
         <td class="row-num">${globalIdx}</td>
         <td class="wallet-addr" title="${p.addr || ''}"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${wc};margin-right:4px;vertical-align:middle"></span>${p.wallet}</td>
         <td class="pair-sym">${p.pair}</td>
@@ -6870,7 +7432,7 @@
         ? (Math.abs(h.fee) >= 0.01 ? h.fee.toFixed(2) : h.fee.toFixed(6))
         : '—';
       const wc = walletColor(h.addr);
-      return `<tr style="border-left:2px solid ${wc}">
+      return `<tr class="tr-wallet-row" style="border-left:3px solid ${wc};--row-color:${wc}">
         <td class="row-num">${globalIdx}</td>
         <td class="wallet-addr" title="${h.addr || ''}"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${wc};margin-right:4px;vertical-align:middle"></span>${h.wallet}</td>
         <td class="pair-sym">${h.pair}</td>
@@ -7011,7 +7573,7 @@
     // Legend
     if (legendEl) {
       legendEl.innerHTML = filteredData.map((d, i) =>
-        `<div class="pnl-chart-legend-item">
+        `<div class="pnl-chart-legend-item" style="--row-color:${d.color}" data-addr="${d.addr}" onmouseenter="_pnlSetHover('${d.addr}')" onmouseleave="_pnlSetHover(null)">
           <div class="pnl-chart-legend-dot" style="background:${d.color}"></div>
           <span>#${i + 1} ${d.label}</span>
         </div>`
@@ -7058,6 +7620,7 @@
     filteredData.forEach((d, i) => {
       const y = PAD_TOP + i * (BAR_H + BAR_GAP);
       const isSelected = selectedWalletAddr && selectedWalletAddr.toLowerCase() === d.addr.toLowerCase();
+      const isHovered  = !isSelected && hoveredWalletAddr && hoveredWalletAddr.toLowerCase() === d.addr.toLowerCase();
       const hasSelection = !!selectedWalletAddr;
       const dimmed = hasSelection && !isSelected;
 
@@ -7068,11 +7631,18 @@
       if (isSelected) {
         ctx.fillStyle = 'rgba(255,255,255,0.04)';
         ctx.fillRect(0, y - 2, W, BAR_H + 4);
+      } else if (isHovered) {
+        // Mesmo padrão de realce por cor de wallet usado em Histórico/Ranking:
+        // tinta de fundo + tarja de 4px na cor característica da wallet.
+        ctx.fillStyle = d.color + '17';
+        ctx.fillRect(0, y - 2, W, BAR_H + 4);
+        ctx.fillStyle = d.color;
+        ctx.fillRect(0, y - 2, 4, BAR_H + 4);
       }
 
       // Label (índice + endereço da wallet)
-      ctx.font = (isSelected ? 'bold ' : '') + '10px JetBrains Mono, monospace';
-      ctx.fillStyle = dimmed ? 'rgba(136,144,168,0.35)' : (isSelected ? '#fff' : '#8890a8');
+      ctx.font = (isSelected || isHovered ? 'bold ' : '') + '10px JetBrains Mono, monospace';
+      ctx.fillStyle = dimmed ? 'rgba(136,144,168,0.35)' : (isSelected || isHovered ? '#fff' : '#8890a8');
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
       ctx.fillText(`#${i + 1}  ${d.label}`, PAD_LEFT - 8, y + BAR_H / 2);
@@ -7092,7 +7662,7 @@
       ctx.save();
       if (!dimmed) {
         ctx.shadowColor = d.color;
-        ctx.shadowBlur  = isSelected ? 12 : 6;
+        ctx.shadowBlur  = (isSelected || isHovered) ? 12 : 6;
       }
       ctx.globalAlpha = dimmed ? 0.22 : 1;
 
@@ -7159,6 +7729,13 @@
         ctx.shadowBlur = 8;
         ctx.strokeRect(1, y, W - 2, BAR_H);
         ctx.restore();
+      } else if (isHovered) {
+        ctx.save();
+        ctx.strokeStyle = d.color;
+        ctx.lineWidth = 1;
+        ctx.globalAlpha = 0.6;
+        ctx.strokeRect(1, y, W - 2, BAR_H);
+        ctx.restore();
       }
     });
 
@@ -7179,7 +7756,1251 @@
         if (hit) selectWallet(hit.addr);
         else { clearWalletSelection(); }
       });
+      canvas.addEventListener('mousemove', function(e) {
+        const rect = canvas.getBoundingClientRect();
+        const cssY = e.clientY - rect.top;
+        const logY = cssY * (canvas.height / dpr) / canvas.clientHeight;
+        let hit = null;
+        for (const bar of _pnlBarHitAreas) {
+          if (logY >= bar.y1 - 3 && logY <= bar.y2 + 3) { hit = bar; break; }
+        }
+        const addr = hit ? hit.addr : null;
+        if (addr !== hoveredWalletAddr) {
+          hoveredWalletAddr = addr;
+          renderPnlChart();
+        }
+      });
+      canvas.addEventListener('mouseleave', function() {
+        if (hoveredWalletAddr !== null) {
+          hoveredWalletAddr = null;
+          renderPnlChart();
+        }
+      });
       canvas.title = 'Clique em uma barra para filtrar todos os painéis por esta wallet';
+    }
+  }
+
+  /* ── PATRIMONY EVOLUTION ───────────────────────────────────────────────────
+     Registra snapshots do valor total USDC (conta perp + conta spot) por wallet
+     a cada renderAll() e exibe uma curva de linha temporal (line chart) com Canvas 2D.
+     Cada ponto = saldo USDC total (perp + spot) no momento do snapshot.
+     O saldo perp é extraído de state.balances via fetchWalletState.
+     O saldo spot é buscado via /api/v1/spot/accounts/{addr} (best-effort).
+  ─────────────────────────────────────────────────────────────────────────── */
+  // Histórico persistido em localStorage: até 12 meses de snapshots (1/min ≈ 525 600 pontos/wallet)
+  // Para não explodir o storage, compactamos: pontos com >24h de idade são mantidos mas só
+  // 1 ponto a cada 15 min é guardado; pontos >7d ficam com 1/h; >30d com 1/6h.
+  // v2: armazena { ts, value } — valor total USDC (perp+spot) em vez de PnL
+  const PATRIMONY_LS_PREFIX = 'sodex_pat_v2_';
+  function _patrimonyToggleLegend(addr) {
+    const key = addr.toLowerCase();
+    if (_patrimonyHiddenWallets.has(key)) {
+      _patrimonyHiddenWallets.delete(key);
+    } else {
+      _patrimonyHiddenWallets.add(key);
+    }
+    renderPatrimonyChart();
+  }
+
+  let _patrimonyPeriod = '1m'; // período ativo nos botões
+  let _patrimonyHiddenWallets = new Set(); // wallets ocultas via clique na legenda (só no modo "Todas")
+
+  function _patrimonyLsKey(addr) {
+    return PATRIMONY_LS_PREFIX + addr.toLowerCase();
+  }
+
+  function _loadPatrimonyFromLS(addr) {
+    try {
+      const raw = localStorage.getItem(_patrimonyLsKey(addr));
+      if (!raw) return [];
+      return JSON.parse(raw);
+    } catch (e) { return []; }
+  }
+
+  function _savePatrimonyToLS(addr, pts) {
+    try {
+      // Compactação: mantém resolução por idade para economizar storage.
+      const now = Date.now();
+      const MIN = 60000;
+      const compacted = [];
+      let lastKept = 0;
+      for (let i = 0; i < pts.length; i++) {
+        const p = pts[i];
+        const age = now - p.ts;
+        let minGap;
+        if      (age < 24 * 60 * MIN) minGap = MIN;         // últimas 24h: 1/min
+        else if (age < 7  * 24 * 60 * MIN) minGap = 15 * MIN; // últimos 7d: 1/15min
+        else if (age < 30 * 24 * 60 * MIN) minGap = 60 * MIN; // último mês: 1/h
+        else    minGap = 6 * 60 * MIN;                        // >30d: 1/6h
+        if (i === 0 || i === pts.length - 1 || (p.ts - lastKept) >= minGap) {
+          compacted.push(p);
+          lastKept = p.ts;
+        }
+      }
+      // Limita a 12 meses
+      const cutoff12m = now - 365 * 24 * 60 * MIN;
+      const trimmed = compacted.filter(p => p.ts >= cutoff12m);
+      localStorage.setItem(_patrimonyLsKey(addr), JSON.stringify(trimmed));
+      return trimmed;
+    } catch (e) { return pts; }
+  }
+
+  function initPatrimonyHistory() {
+    // Ao iniciar, carrega histórico do localStorage para todas as wallets já configuradas
+    trackedWallets.forEach(addr => {
+      if (!patrimonyHistory[addr] || patrimonyHistory[addr].length === 0) {
+        patrimonyHistory[addr] = _loadPatrimonyFromLS(addr);
+      }
+    });
+  }
+
+  // Busca saldo USDC da conta spot via API SoDEX (best-effort, falha silenciosamente).
+  // Endpoint tentado: /api/v1/spot/accounts/{addr} — se não existir, retorna null.
+  async function _fetchSpotBalance(addr) {
+    const SODEX_REST_SPOT = 'https://mainnet-gw.sodex.dev/api/v1/spot';
+    try {
+      const res = await corsAwareFetch(`${SODEX_REST_SPOT}/accounts/${addr}`);
+      if (!res.ok) return null;
+      const env = await res.json();
+      const d = env.data ?? env;
+      // Tenta extrair saldo USDC do array de balances ou objeto
+      const balArr = d.balances ?? d.B ?? d.assets ?? d.coins ?? [];
+      if (Array.isArray(balArr) && balArr.length) {
+        const entry = balArr.find(b => {
+          const coin = (b.coin ?? b.asset ?? b.token ?? b.currency ?? b.c ?? '').toString().toUpperCase();
+          return coin === 'USDC' || coin === 'USD';
+        });
+        if (entry) {
+          const val = parseFloat(String(entry.balance ?? entry.amount ?? entry.available ?? entry.free ?? entry.v ?? 0).replace(',', '.'));
+          return isNaN(val) ? null : val;
+        }
+      } else if (d && typeof d === 'object') {
+        const raw = d['USDC'] ?? d['usdc'] ?? null;
+        if (raw != null) { const v = parseFloat(String(raw)); return isNaN(v) ? null : v; }
+      }
+      return null;
+    } catch(e) { return null; }
+  }
+
+  function snapshotPatrimony() {
+    const now = Date.now();
+    trackedWallets.forEach(addr => {
+      if (walletEnabled[addr.toLowerCase()] === false) return;
+      const av = walletAccountValue[addr] || {};
+      const perpVal = av.perp != null ? av.perp : null;
+      const spotVal = av.spot != null ? av.spot : 0;
+      // Só registra snapshot se tiver pelo menos o saldo perp
+      if (perpVal === null) return;
+      const totalValue = perpVal + spotVal;
+      if (!patrimonyHistory[addr]) patrimonyHistory[addr] = _loadPatrimonyFromLS(addr);
+      patrimonyHistory[addr].push({ ts: now, value: totalValue });
+      // Persiste no localStorage (com compactação automática)
+      patrimonyHistory[addr] = _savePatrimonyToLS(addr, patrimonyHistory[addr]);
+    });
+  }
+
+  function selectPatrimonyPeriod(period, btn) {
+    _patrimonyPeriod = period;
+    document.querySelectorAll('#patrimony-period-btns .period-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderPatrimonyChart();
+  }
+
+  /* ── PATRIMONY FULL HISTORY FETCH ────────────────────────────────────────
+     Busca TODO o histórico de trades + fundings + posições fechadas desde o
+     primeiro trade da wallet via paginação completa da API SoDEX REST.
+     Reconstrói uma curva de patrimônio (valor USDC) ancorada no saldo atual
+     da conta perp. Se o saldo ao vivo não estiver disponível, usa PnL relativo
+     como proxy (variação, não valor absoluto).
+  ─────────────────────────────────────────────────────────────────────────── */
+  let _patrimonyFetchBusy = false;
+
+  function _setPatrimonyStatus(msg, color) {
+    const el = document.getElementById('patrimony-fetch-status');
+    if (el) { el.textContent = msg; el.style.color = color || 'var(--muted2)'; }
+  }
+
+  function _setPatrimonyProgress(label, pct) {
+    const wrap  = document.getElementById('patrimony-progress-wrap');
+    const lbl   = document.getElementById('patrimony-progress-label');
+    const bar   = document.getElementById('patrimony-progress-bar');
+    const pctEl = document.getElementById('patrimony-progress-pct');
+    if (!wrap) return;
+    if (pct < 0) { wrap.style.display = 'none'; return; }
+    wrap.style.display = 'block';
+    if (lbl)   lbl.textContent  = label;
+    if (bar)   bar.style.width  = Math.min(100, pct) + '%';
+    if (pctEl) pctEl.textContent = pct < 100 ? Math.round(pct) + '%' : '100%';
+  }
+
+  function _setPatrimonyFetchBtn(loading) {
+    const btn = document.getElementById('patrimony-fetch-btn');
+    if (!btn) return;
+    const icon = '<svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>';
+    if (loading) {
+      btn.innerHTML = icon + ' Buscando...';
+      btn.style.opacity = '0.6';
+      btn.style.cursor  = 'not-allowed';
+    } else {
+      btn.innerHTML = icon + ' Buscar histórico completo';
+      btn.style.opacity = '1';
+      btn.style.cursor  = 'pointer';
+    }
+  }
+
+  async function _paginateEndpoint(baseUrl, listKey, totalSteps, stepCb) {
+    /* Pagina um endpoint usando cursor/offset via endTime.
+       Estratégia: usa o menor timestamp da página anterior como novo endTime.
+       Retorna array achatado de todos os registros. */
+    const LIMIT = 1000;
+    let allItems = [];
+    let endTime  = Date.now();
+    let page     = 0;
+    let done     = false;
+    while (!done) {
+      const url = `${baseUrl}?limit=${LIMIT}&endTime=${endTime}`;
+      try {
+        const res = await corsAwareFetch(url);
+        if (!res.ok) break;
+        const env   = await res.json();
+        const inner = env.data != null ? env.data : env;
+        const list  = inner[listKey] || inner.data || (Array.isArray(inner) ? inner : []);
+        if (!list.length) break;
+        allItems = allItems.concat(list);
+        page++;
+        if (stepCb) stepCb(page, allItems.length);
+        if (list.length < LIMIT) { done = true; break; }
+        // Move endTime back: use the smallest timestamp in this page
+        const minTs = list.reduce((m, r) => {
+          const ts = Number(r.time ?? r.timestamp ?? r.ts ?? r.createdAt ?? r.closedAt ?? r.ct ?? 0);
+          return (ts > 0 && ts < m) ? ts : m;
+        }, endTime);
+        if (minTs >= endTime) { done = true; break; } // safeguard infinite loop
+        endTime = minTs - 1;
+        await sleep(REST_DELAY_MS * 2);
+      } catch (e) { break; }
+    }
+    return allItems;
+  }
+
+  async function fetchPatrimonyFullHistory(addr) {
+    /* Reconstrói curva de PnL acumulado da wallet desde o primeiro trade.
+       Fontes de dados (em ordem de importância):
+         1. /positions/history  → PnL realizado por posição fechada (com timestamp)
+         2. /fundings           → funding fees recebidas/pagas (com timestamp)
+       Cada item gera um ponto na curva: { ts, pnl (acumulado) }.
+       A curva é depois mesclada com patrimonyHistory[] para exibição. */
+
+    _setPatrimonyStatus('Iniciando busca...', 'var(--amber)');
+    _setPatrimonyProgress('Buscando posições fechadas...', 5);
+    debugLog(`PatrimonyFull: iniciando para ${shortAddr(addr)}`, 'info');
+
+    // ── 1. Posições fechadas ────────────────────────────────────────────────
+    let closedPositions = [];
+    try {
+      closedPositions = await _paginateEndpoint(
+        `${SODEX_REST_PERPS}/accounts/${addr}/positions/history`,
+        'positions',
+        null,
+        (page, total) => {
+          _setPatrimonyProgress(`Posições fechadas — pág ${page} (${total} registros)`, Math.min(5 + page * 3, 40));
+          _setPatrimonyStatus(`Posições: ${total} registros...`, 'var(--amber)');
+        }
+      );
+    } catch(e) {
+      debugLog(`PatrimonyFull [${shortAddr(addr)}] posições: ${e.message}`, 'warn');
+    }
+    debugLog(`PatrimonyFull: ${closedPositions.length} posições fechadas`, 'info');
+    _setPatrimonyProgress('Buscando funding fees...', 45);
+    await sleep(REST_DELAY_MS * 2);
+
+    // ── 2. Funding fees ─────────────────────────────────────────────────────
+    let fundings = [];
+    try {
+      fundings = await _paginateEndpoint(
+        `${SODEX_REST_PERPS}/accounts/${addr}/fundings`,
+        'fundings',
+        null,
+        (page, total) => {
+          _setPatrimonyProgress(`Funding fees — pág ${page} (${total} registros)`, Math.min(45 + page * 3, 80));
+          _setPatrimonyStatus(`Fundings: ${total} registros...`, 'var(--amber)');
+        }
+      );
+    } catch(e) {
+      debugLog(`PatrimonyFull [${shortAddr(addr)}] fundings: ${e.message}`, 'warn');
+    }
+    debugLog(`PatrimonyFull: ${fundings.length} funding entries`, 'info');
+    _setPatrimonyProgress('Construindo curva de patrimônio...', 85);
+
+    // ── 3. Construção da curva cronológica ──────────────────────────────────
+    // Cada evento gera um delta de PnL. Juntamos tudo, ordenamos por tempo,
+    // e calculamos o PnL acumulado progressivo.
+    const events = [];
+
+    // 3a. Posições fechadas: cada uma contribui com seu realizedPnL
+    closedPositions.forEach(p => {
+      const ts = Number(
+        p.closedAt ?? p.closeTime ?? p.closedTime ?? p.closeTs ?? p.ct ??
+        p.endTime  ?? p.et ?? p.closeTimestamp ?? p.updatedAt ?? p.ut ??
+        p.createdAt ?? 0
+      );
+      if (!ts || ts <= 0) return;
+      const pnl = parseFloat(
+        String(p.realizedPnL ?? p.realizedPnl ?? p.rpnl ?? p.pnl ?? p.profit ?? 0)
+          .replace(',', '.')) || 0;
+      if (pnl === 0) return; // ignora posições sem PnL relevante
+      events.push({ ts, delta: pnl, type: 'pos' });
+    });
+
+    // 3b. Funding fees: fundingFee negativo = recebeu (adiciona); positivo = pagou (subtrai)
+    fundings.forEach(f => {
+      const ts = Number(
+        f.time ?? f.timestamp ?? f.ts ?? f.createdAt ?? f.fundingTime ??
+        f.settledAt ?? f.ct ?? 0
+      );
+      if (!ts || ts <= 0) return;
+      // SoDEX: positivo = pagou (custo → negativo no PnL); negativo = recebeu (ganho → positivo)
+      const fee = parseFloat(String(f.fundingFee ?? f.funding ?? f.fee ?? 0).replace(',', '.')) || 0;
+      if (fee === 0) return;
+      events.push({ ts, delta: -fee, type: 'fund' }); // inverte sinal: pagou fee → reduz PnL
+    });
+
+    if (!events.length) {
+      _setPatrimonyStatus('Sem dados históricos', 'var(--muted2)');
+      _setPatrimonyProgress('', -1);
+      debugLog(`PatrimonyFull [${shortAddr(addr)}]: nenhum evento com timestamp`, 'warn');
+      return;
+    }
+
+    // Ordena cronologicamente
+    events.sort((a, b) => a.ts - b.ts);
+
+    // Constrói curva de PnL acumulado (variação relativa)
+    let cumPnl = 0;
+    const pnlCurve = [];
+    events.forEach(ev => {
+      cumPnl += ev.delta;
+      pnlCurve.push({ ts: ev.ts, deltaPnl: cumPnl });
+    });
+
+    // Ancora a curva no saldo atual total (perp + spot).
+    // Tenta obter o saldo perp do walletAccountValue já carregado; se ainda não
+    // disponível, tenta buscar via REST agora (best-effort) para garantir que a
+    // curva reflita valores absolutos de patrimônio, não PnL relativo.
+    const av = walletAccountValue[addr] || {};
+    let currentPerp = av.perp != null ? av.perp : null;
+    let currentSpot = av.spot != null ? av.spot : 0;
+
+    // Se não temos saldo perp ainda, tenta buscar o state REST
+    if (currentPerp === null) {
+      try {
+        const stateRes = await corsAwareFetch(`${SODEX_REST_PERPS}/accounts/${addr}`);
+        if (stateRes.ok) {
+          const stateEnv = await stateRes.json();
+          const stateD   = stateEnv.data ?? stateEnv;
+          const balArr   = stateD.balances ?? stateD.B ?? stateD.assets ?? [];
+          if (Array.isArray(balArr)) {
+            const uE = balArr.find(b => {
+              const c = (b.coin ?? b.asset ?? b.token ?? b.currency ?? b.c ?? '').toString().toUpperCase();
+              return c === 'USDC' || c === 'USD';
+            });
+            if (uE) {
+              const v = parseFloat(String(uE.balance ?? uE.amount ?? uE.available ?? uE.total ?? uE.equity ?? uE.v ?? 0).replace(',', '.'));
+              if (!isNaN(v) && v >= 0) { currentPerp = v; if (!walletAccountValue[addr]) walletAccountValue[addr] = { perp: v, spot: 0 }; walletAccountValue[addr].perp = v; }
+            }
+          }
+        }
+      } catch(e) { /* silencioso */ }
+    }
+
+    const currentTotal = currentPerp !== null ? (currentPerp + currentSpot) : null;
+
+    // pnl acumulado no ponto mais recente da curva
+    const finalCumPnl = pnlCurve.length ? pnlCurve[pnlCurve.length - 1].deltaPnl : 0;
+
+    let curve;
+    if (currentTotal !== null) {
+      // Ancora: valor_histórico_em_t = saldo_atual - (pnl_final - pnl_em_t)
+      // Isso converte a curva de PnL relativo em valores absolutos de patrimônio.
+      curve = pnlCurve.map(pt => ({
+        ts: pt.ts,
+        value: currentTotal - (finalCumPnl - pt.deltaPnl)
+      }));
+      // Adiciona ponto atual com valor real (perp + spot)
+      curve.push({ ts: Date.now(), value: currentTotal });
+    } else {
+      // Sem saldo ao vivo: usa PnL relativo como proxy (variação, não valor absoluto)
+      // Tenta ao menos ancorá-lo no PnL conhecido das stats
+      const stats   = walletStats[addr] || {};
+      const openPnl = positions
+        .filter(p => p.addr === addr && _pairEnabled[p.pair] !== false)
+        .reduce((s, p) => s + (p.pnl || 0), 0);
+      const knownBase = stats.pnl || 0;
+      curve = pnlCurve.map(pt => ({ ts: pt.ts, value: pt.deltaPnl }));
+      curve.push({ ts: Date.now(), value: finalCumPnl + openPnl });
+    }
+
+    // ── 4. Merge com patrimonyHistory existente ─────────────────────────────
+    // A curva histórica é a "base". Os snapshots em tempo real (capturados a cada render)
+    // são adicionados ao final para continuidade ao vivo.
+    const existingLive = (patrimonyHistory[addr] || []).filter(p => p.ts > curve[curve.length - 2]?.ts);
+    const merged = curve.concat(existingLive);
+    // Remove duplicatas por proximidade (<30s)
+    const deduped = [];
+    merged.forEach(p => {
+      if (!deduped.length || p.ts - deduped[deduped.length - 1].ts >= 30000) {
+        deduped.push(p);
+      }
+    });
+    patrimonyHistory[addr] = deduped;
+    // Persiste no localStorage com compactação
+    _savePatrimonyToLS(addr, deduped);
+
+    const firstDate = new Date(events[0].ts);
+    const fmtDate = d => `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
+    const summary = `${closedPositions.length} posições, ${fundings.length} fundings — desde ${fmtDate(firstDate)}`;
+    _setPatrimonyStatus(`✓ ${summary}`, 'var(--green)');
+    _setPatrimonyProgress('Concluído!', 100);
+    debugLog(`PatrimonyFull [${shortAddr(addr)}]: ${deduped.length} pontos na curva. ${summary}`, 'ok');
+
+    setTimeout(() => _setPatrimonyProgress('', -1), 2000);
+    return deduped;
+  }
+
+  async function triggerPatrimonyFullFetch() {
+    if (_patrimonyFetchBusy) return;
+    _patrimonyFetchBusy = true;
+    _setPatrimonyFetchBtn(true);
+
+    // Determina quais wallets buscar (filtro atual ou todas as ativas)
+    const walFilter = (document.getElementById('patrimony-wallet-filter') || {}).value || 'all';
+    let targets = trackedWallets.filter(a => walletEnabled[a.toLowerCase()] !== false);
+    if (walFilter && walFilter !== 'all') {
+      const n = parseInt(walFilter, 10);
+      if (!isNaN(n)) targets = targets.slice(0, n);
+      else targets = targets.filter(a => a === walFilter);
+    }
+    if (!targets.length) {
+      _setPatrimonyStatus('Nenhuma wallet ativa', 'var(--muted2)');
+      _patrimonyFetchBusy = false;
+      _setPatrimonyFetchBtn(false);
+      return;
+    }
+
+    for (let i = 0; i < targets.length; i++) {
+      const addr = targets[i];
+      _setPatrimonyStatus(`Wallet ${i+1}/${targets.length}: ${shortAddr(addr)}...`, 'var(--amber)');
+      await fetchPatrimonyFullHistory(addr);
+      if (i < targets.length - 1) await sleep(REST_DELAY_MS * 4);
+    }
+
+    _patrimonyFetchBusy = false;
+    _setPatrimonyFetchBtn(false);
+    renderPatrimonyChart();
+  }
+
+  function renderPatrimonyChart() {
+    try { _renderPatrimonyChartInner(); } catch(e) { console.error('[PatrimonyChart] erro:', e); }
+  }
+  function _renderPatrimonyChartInner() {
+    // Popula o filtro de wallet: mantém as opções agregadas (Todas/Top N) e
+    // adiciona, separadamente, cada wallet individual monitorada — permitindo
+    // selecionar exatamente uma wallet específica no gráfico.
+    const wSel = document.getElementById('patrimony-wallet-filter');
+    if (wSel) {
+      const activeAddrs = trackedWallets.filter(addr => walletEnabled[addr.toLowerCase()] !== false);
+      let opts = '<option value="all">Todas</option>';
+      opts += '<option value="1">Top 1</option><option value="2">Top 2</option>';
+      opts += '<option value="3">Top 3</option><option value="5">Top 5</option>';
+      if (activeAddrs.length) {
+        opts += '<optgroup label="Wallet individual">';
+        activeAddrs.forEach(addr => {
+          const label = addr.slice(0,6) + '...' + addr.slice(-4);
+          opts += `<option value="${addr}">${label}</option>`;
+        });
+        opts += '</optgroup>';
+      }
+      const curVal = wSel.value;
+      wSel.innerHTML = opts;
+      if (curVal) wSel.value = curVal;
+    }
+
+    const canvas  = document.getElementById('patrimony-canvas');
+    const emptyEl = document.getElementById('patrimony-empty');
+    const legendEl = document.getElementById('patrimony-legend');
+    const countEl  = document.getElementById('patrimony-count');
+    if (!canvas) return;
+
+    // Determine which wallets to show
+    const walFilter = (document.getElementById('patrimony-wallet-filter') || {}).value || 'all';
+    // isTopN: '1','2','3','5' — pure numeric strings (Top N filter)
+    // IMPORTANT: parseInt('0xbead...', 10) === 0 (not NaN!), so isNaN check is wrong for ETH addresses
+    const isTopN = walFilter !== 'all' && /^\d+$/.test(walFilter);
+    const isIndividual = walFilter && walFilter !== 'all' && !isTopN;
+    const isAll = walFilter === 'all';
+    // Limpa wallets ocultas quando não está no modo "Todas"
+    if (!isAll) _patrimonyHiddenWallets.clear();
+    const period = _patrimonyPeriod || 'all';
+    const nowTs  = Date.now();
+    const MIN = 60000;
+    const periodCutoffs = {
+      '1d':  nowTs - 1  * 24 * 60 * MIN,
+      '1w':  nowTs - 7  * 24 * 60 * MIN,
+      '1m':  nowTs - 30 * 24 * 60 * MIN,
+      '3m':  nowTs - 90 * 24 * 60 * MIN,
+      '6m':  nowTs - 180* 24 * 60 * MIN,
+      '12m': nowTs - 365* 24 * 60 * MIN,
+      'all': 0
+    };
+    const cutoffTs = periodCutoffs[period] ?? 0;
+
+    // Garante que historico do localStorage esta carregado para todas as wallets ativas
+    trackedWallets.forEach(addr => {
+      if (!patrimonyHistory[addr] || patrimonyHistory[addr].length === 0) {
+        patrimonyHistory[addr] = _loadPatrimonyFromLS(addr);
+      }
+    });
+
+    // Pré-filtro de wallets: para modo individual requer pontos no período selecionado;
+    // para Top N e Todas, aceita qualquer wallet com histórico (o corte de período é feito
+    // depois na construção de walletSeries, preservando o Top N mesmo com períodos curtos).
+    let wallets;
+    if (isIndividual) {
+      wallets = trackedWallets.filter(addr =>
+        walletEnabled[addr.toLowerCase()] !== false &&
+        patrimonyHistory[addr] && patrimonyHistory[addr].length >= 1
+      );
+    } else {
+      // Top N / Todas: inclui wallets com qualquer histórico disponível
+      wallets = trackedWallets.filter(addr =>
+        walletEnabled[addr.toLowerCase()] !== false &&
+        patrimonyHistory[addr] && patrimonyHistory[addr].length >= 1
+      );
+    }
+
+    if (!wallets.length && !isIndividual) {
+      canvas.style.display = 'none';
+      if (emptyEl) emptyEl.style.display = 'block';
+      if (legendEl) legendEl.innerHTML = '';
+      if (countEl) countEl.textContent = '0 wallets';
+      return;
+    }
+
+    // Apply wallet filter
+    if (walFilter && walFilter !== 'all') {
+      if (isTopN) {
+        const n = parseInt(walFilter, 10);
+        // Top N by latest total value
+        wallets = [...wallets]
+          .sort((a, b) => {
+            const pa = patrimonyHistory[a]; const pb = patrimonyHistory[b];
+            const va = pa ? (pa[pa.length - 1].value ?? pa[pa.length - 1].pnl ?? 0) : 0;
+            const vb = pb ? (pb[pb.length - 1].value ?? pb[pb.length - 1].pnl ?? 0) : 0;
+            return vb - va;
+          })
+          .slice(0, n);
+      } else {
+        // Individual wallet address — case-insensitive match, bypass pre-filter
+        wallets = trackedWallets.filter(a =>
+          a.toLowerCase() === walFilter.toLowerCase() &&
+          walletEnabled[a.toLowerCase()] !== false
+        );
+        // Include even if no history yet, so empty state shows correctly
+        if (!wallets.length) {
+          const found = trackedWallets.find(a => a.toLowerCase() === walFilter.toLowerCase());
+          if (found) wallets = [found];
+        }
+      }
+    }
+
+    if (!wallets.length) {
+      canvas.style.display = 'none';
+      if (emptyEl) emptyEl.style.display = 'block';
+      if (legendEl) legendEl.innerHTML = '';
+      if (countEl) countEl.textContent = '0 wallets';
+      return;
+    }
+
+    canvas.style.display = 'block';
+    if (emptyEl) emptyEl.style.display = 'none';
+    // countEl atualizado abaixo após montar as séries (reflete nº correto de wallets)
+
+    // ── Constrói séries por wallet (filtradas pelo período) ─────────────────
+    const walletSeries = wallets.map(addr => {
+      let pts = (patrimonyHistory[addr] || []).filter(p => p.ts >= cutoffTs);
+      // Se não há pontos no período selecionado, usa todo o histórico disponível
+      // (aplica tanto ao modo individual quanto ao Top N / Todas)
+      if (!pts.length) {
+        pts = (patrimonyHistory[addr] || []);
+      }
+      // Normaliza: garante que cada ponto tem campo 'value'
+      pts = pts.map(p => ({ ts: p.ts, value: p.value ?? p.pnl ?? 0 }));
+      return { addr, color: walletColor(addr), label: addr.slice(0,6) + '…' + addr.slice(-4), pts };
+    }).filter(s => s.pts.length >= 1);
+
+    if (!walletSeries.length) {
+      canvas.style.display = 'none';
+      if (emptyEl) {
+        emptyEl.style.display = 'block';
+        emptyEl.textContent = isIndividual
+          ? 'Sem histórico para esta wallet — use "Buscar histórico completo" para carregar dados'
+          : 'Dados insuficientes para o período selecionado';
+      }
+      if (legendEl) legendEl.innerHTML = '';
+      return;
+    }
+
+    // ── Decide entre série agregada (Todas/Top N) ou individual ──────────────
+    // Interpolador: retorna o valor de uma série num timestamp qualquer
+    const _interpSeries = (pts, ts) => {
+      if (!pts.length) return 0;
+      if (ts <= pts[0].ts) return pts[0].value;
+      if (ts >= pts[pts.length - 1].ts) return pts[pts.length - 1].value;
+      for (let i = 0; i < pts.length - 1; i++) {
+        if (pts[i].ts <= ts && pts[i + 1].ts >= ts) {
+          if (pts[i].ts === pts[i + 1].ts) return pts[i].value;
+          const t = (ts - pts[i].ts) / (pts[i + 1].ts - pts[i].ts);
+          return pts[i].value + t * (pts[i + 1].value - pts[i].value);
+        }
+      }
+      return pts[pts.length - 1].value;
+    };
+
+    let series;
+    if (isIndividual) {
+      series = walletSeries;
+    } else {
+      // Modo "Todas": exibe cada wallet com sua cor individual (sem agregação).
+      // Isso permite distinguir visualmente cada carteira no gráfico.
+      series = walletSeries;
+    }
+
+    if (!series.length) {
+      canvas.style.display = 'none';
+      if (emptyEl) { emptyEl.style.display = 'block'; emptyEl.textContent = 'Dados insuficientes para o período selecionado'; }
+      if (legendEl) legendEl.innerHTML = '';
+      return;
+    }
+
+    // Atualiza contador: mostra nº de wallets incluídas
+    if (countEl) {
+      const n = isIndividual ? walletSeries.length : wallets.length;
+      countEl.textContent = n + ' wallet' + (n !== 1 ? 's' : '');
+    }
+
+    // ── Legend ────────────────────────────────────────────────────────────────
+    if (legendEl) {
+      legendEl.innerHTML = series.map((s, i) => {
+        const first = s.pts[0];
+        const last  = s.pts[s.pts.length - 1];
+        const lastVal  = last.value  ?? 0;
+        const firstVal = first.value ?? 0;
+        const delta = lastVal - firstVal;
+        const sign  = delta >= 0 ? '+' : '';
+        const deltaStr = sign + (Math.abs(delta) >= 1000 ? (delta/1000).toFixed(1)+'K' : delta.toFixed(2));
+        const deltaColor = delta >= 0 ? 'var(--green)' : 'var(--red)';
+        const valStr = lastVal >= 1000 ? (lastVal/1000).toFixed(2)+'K' : lastVal.toFixed(2);
+        const spanMs2 = last.ts - first.ts;
+        let spanLabel = '';
+        if (spanMs2 > 24*60*MIN) {
+          const fd = new Date(first.ts);
+          spanLabel = ` <span style="color:var(--muted2);font-size:8px">desde ${fd.getDate().toString().padStart(2,'0')}/${(fd.getMonth()+1).toString().padStart(2,'0')}/${fd.getFullYear()}</span>`;
+        }
+        const dotColor = s.isCombined ? 'var(--green)' : s.color;
+        const rankPfx  = s.isCombined ? '' : `#${i + 1} `;
+        const isHidden = isAll && _patrimonyHiddenWallets.has(s.addr.toLowerCase());
+        const clickHandler = isAll ? ` onclick="_patrimonyToggleLegend('${s.addr}')"` : '';
+        const activeClass = isAll ? (isHidden ? ' legend-dimmed' : ' legend-active') : '';
+        return `<div class="patrimony-legend-item${activeClass}" data-addr="${s.addr}"${clickHandler} title="${isAll ? (isHidden ? 'Clique para exibir' : 'Clique para ocultar') : ''}">
+          <div class="patrimony-legend-dot" style="background:${isHidden ? 'var(--muted2)' : dotColor}"></div>
+          <span>${rankPfx}${s.label}</span>
+          <span style="color:#fff;font-weight:700;margin-left:4px">$${valStr}</span>
+          <span style="color:${deltaColor};font-weight:600;margin-left:4px;font-size:8.5px">(${deltaStr})</span>${spanLabel}
+        </div>`;
+      }).join('');
+    }
+
+    // Série visível para o gráfico: no modo "Todas", exclui wallets ocultas pela legenda
+    const visibleSeries = isAll
+      ? series.filter(s => !_patrimonyHiddenWallets.has(s.addr.toLowerCase()))
+      : series;
+
+    // Se todas as wallets estiverem ocultas, mostra estado vazio no canvas mas mantém legenda
+    if (isAll && !visibleSeries.length) {
+      canvas.style.display = 'none';
+      if (emptyEl) { emptyEl.style.display = 'block'; emptyEl.textContent = 'Nenhuma wallet selecionada — clique em um nome para exibir'; }
+      return;
+    }
+    canvas.style.display = 'block';
+    if (emptyEl) emptyEl.style.display = 'none';
+    const dpr = window.devicePixelRatio || 1;
+    const W = canvas.parentElement.clientWidth - 28;
+    const H = 180;
+    const PAD_L = 56, PAD_R = 12, PAD_T = 14, PAD_B = 28;
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, W, H);
+
+    // Global min/max across all series for shared Y axis
+    let allVals = visibleSeries.flatMap(s => s.pts.map(p => p.value ?? p.pnl ?? 0));
+    let minVal = Math.min(...allVals);
+    let maxVal = Math.max(...allVals);
+    if (minVal === maxVal) { minVal -= 100; maxVal += 100; }
+    const valRange = maxVal - minVal;
+    // Add 8% padding top/bottom
+    const yPad = valRange * 0.08;
+    const yMin = minVal - yPad;
+    const yMax = maxVal + yPad;
+
+    // Global min/max timestamps
+    let allTs = visibleSeries.flatMap(s => s.pts.map(p => p.ts));
+    const tsMin = Math.min(...allTs);
+    const tsMax = Math.max(...allTs);
+    const tsRange = tsMax - tsMin || 1;
+
+    // Helpers
+    const chartW = W - PAD_L - PAD_R;
+    const chartH = H - PAD_T - PAD_B;
+    const toX = ts  => PAD_L + ((ts - tsMin) / tsRange) * chartW;
+    const toY = val => PAD_T + ((yMax - val) / (yMax - yMin)) * chartH;
+
+    // Grid lines (horizontal)
+    const gridCount = 4;
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= gridCount; i++) {
+      const y = PAD_T + (i / gridCount) * chartH;
+      ctx.beginPath(); ctx.moveTo(PAD_L, y); ctx.lineTo(W - PAD_R, y); ctx.stroke();
+    }
+
+    // Y-axis labels — mostra valores absolutos de patrimônio
+    ctx.font = '9px JetBrains Mono, monospace';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (let i = 0; i <= gridCount; i++) {
+      const val = yMin + ((gridCount - i) / gridCount) * (yMax - yMin);
+      const y   = PAD_T + (i / gridCount) * chartH;
+      const lbl = val >= 1000 ? (val / 1000).toFixed(1) + 'K' : val.toFixed(0);
+      ctx.fillStyle = 'rgba(130,139,171,0.6)';
+      ctx.fillText('$' + lbl, PAD_L - 4, y);
+    }
+
+    // X-axis time labels (5 ticks) — formato adaptado ao período selecionado
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    const spanMs  = tsMax - tsMin;
+    const showDate = spanMs > 24 * 60 * MIN;
+    const showYear = spanMs > 180 * 24 * 60 * MIN;
+    const xTicks = 4;
+    for (let i = 0; i <= xTicks; i++) {
+      const ts  = tsMin + (i / xTicks) * tsRange;
+      const x   = toX(ts);
+      const d   = new Date(ts);
+      let lbl;
+      if (showYear) {
+        lbl = (d.getDate()).toString().padStart(2,'0') + '/' + (d.getMonth()+1).toString().padStart(2,'0') + '/' + String(d.getFullYear()).slice(2);
+      } else if (showDate) {
+        lbl = (d.getDate()).toString().padStart(2,'0') + '/' + (d.getMonth()+1).toString().padStart(2,'0');
+      } else {
+        lbl = d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+      }
+      ctx.fillStyle = 'rgba(130,139,171,0.5)';
+      ctx.fillText(lbl, x, H - PAD_B + 5);
+    }
+
+    // ── Build trade marker list (closed history + open positions) ─────────────
+    // Respects wallet filter and period cutoff. Each marker stores all trade info
+    // needed for the rich tooltip.
+    const _pad = n => String(n).padStart(2,'0');
+    const _fmtTs = ts => {
+      const d = new Date(ts);
+      return `${_pad(d.getDate())}/${_pad(d.getMonth()+1)}/${d.getFullYear()} ${_pad(d.getHours())}:${_pad(d.getMinutes())}`;
+    };
+    const _fmtDur = ms => {
+      if (!ms || ms <= 0) return '—';
+      const s = Math.floor(ms / 1000);
+      if (s < 60)   return s + 's';
+      const m = Math.floor(s / 60);
+      if (m < 60)   return m + 'm ' + (s % 60) + 's';
+      const h = Math.floor(m / 60);
+      if (h < 24)   return h + 'h ' + (m % 60) + 'm';
+      const day = Math.floor(h / 24);
+      return day + 'd ' + (h % 24) + 'h';
+    };
+    const _fmtPnl = v => {
+      const sign = v >= 0 ? '+' : '';
+      return sign + (Math.abs(v) >= 1000 ? (v/1000).toFixed(2)+'K' : v.toFixed(2));
+    };
+    const _fmtPrice = v => v > 0 ? (v >= 1000 ? v.toFixed(2) : v >= 1 ? v.toFixed(4) : v.toFixed(6)) : '—';
+
+    // Active wallet addresses — usa walletSeries para manter os endereços reais
+    // mesmo quando series está no modo combinado (addr='combined')
+    const _realSeries = (visibleSeries.length === 1 && visibleSeries[0].isCombined) ? walletSeries : visibleSeries;
+    const activeAddrsSet = new Set(_realSeries.map(s => s.addr));
+
+    const tradeMarkers = []; // { ts, value (on curve), addr, trade, isOpen }
+
+    // Helper: find the curve value at a given timestamp for a wallet
+    const _interpVal = (addr, ts) => {
+      const pts = (patrimonyHistory[addr] || []);
+      if (!pts.length) return null;
+      // Find surrounding points
+      let lo = pts[0], hi = pts[pts.length - 1];
+      for (let i = 0; i < pts.length - 1; i++) {
+        if (pts[i].ts <= ts && pts[i+1].ts >= ts) { lo = pts[i]; hi = pts[i+1]; break; }
+      }
+      const loV = lo.value ?? lo.pnl ?? 0;
+      const hiV = hi.value ?? hi.pnl ?? 0;
+      if (lo.ts === hi.ts) return loV;
+      const t = (ts - lo.ts) / (hi.ts - lo.ts);
+      return loV + t * (hiV - loV);
+    };
+
+    // Closed positions from historyRestData
+    historyRestData.forEach(h => {
+      if (!activeAddrsSet.has(h.addr)) return;
+      if (!h.closedTs || h.closedTs < cutoffTs) return;
+      // Check pairEnabled filter
+      if (_pairEnabled[h.pair] === false) return;
+      const curveVal = _interpVal(h.addr, h.closedTs);
+      if (curveVal === null) return;
+      // Duration: try to find open position timestamp from current positions (fallback: 0)
+      const durMs = h.openedTs ? (h.closedTs - h.openedTs) : 0;
+      tradeMarkers.push({
+        ts: h.closedTs,
+        value: curveVal,
+        addr: h.addr,
+        walletColor: walletColor(h.addr),
+        walletLabel: h.addr.slice(0,6) + '…' + h.addr.slice(-4),
+        isOpen: false,
+        trade: {
+          pair:      h.pair || '—',
+          side:      h.side || '—',
+          pnl:       typeof h.finalPnl === 'number' ? h.finalPnl : 0,
+          entry:     h.entry || 0,
+          close:     h.closePrice || 0,
+          duration:  _fmtDur(durMs),
+          closedAt:  h.closedTs ? _fmtTs(h.closedTs) : '—',
+          leverage:  h.leverage ?? null,
+          size:      h.sizeUsdc ?? null
+        }
+      });
+    });
+
+    // Open positions — plotted at current ts with their unrealised PnL on curve
+    positions.forEach(p => {
+      if (!activeAddrsSet.has(p.addr)) return;
+      if (_pairEnabled[p.pair] === false) return;
+      if (walletEnabled[(p.addr||'').toLowerCase()] === false) return;
+      const ts = Date.now();
+      if (ts < cutoffTs) return;
+      const curveVal = _interpVal(p.addr, ts);
+      if (curveVal === null) return;
+      const openedTs = p.openedAtTs || 0;
+      tradeMarkers.push({
+        ts,
+        value: curveVal,
+        addr: p.addr,
+        walletColor: walletColor(p.addr),
+        walletLabel: p.addr.slice(0,6) + '…' + p.addr.slice(-4),
+        isOpen: true,
+        trade: {
+          pair:     p.pair || '—',
+          side:     p.side || '—',
+          pnl:      p.pnl || 0,
+          entry:    p.entry || 0,
+          close:    p.mark || 0,
+          duration: openedTs > 0 ? _fmtDur(Date.now() - openedTs) : '—',
+          closedAt: '—',
+          leverage: p.leverage ?? null,
+          size:     p.sizeUsdc ?? null
+        }
+      });
+    });
+
+    // ── Draw lines + area fills first (below markers) ─────────────────────────
+    visibleSeries.forEach(s => {
+      if (s.pts.length < 2) return;
+
+      // Area fill (gradient under line)
+      const grad = ctx.createLinearGradient(0, PAD_T, 0, PAD_T + chartH);
+      grad.addColorStop(0, s.color + '28');
+      grad.addColorStop(1, s.color + '00');
+      ctx.beginPath();
+      ctx.moveTo(toX(s.pts[0].ts), toY(s.pts[0].value ?? s.pts[0].pnl ?? 0));
+      s.pts.forEach(p => ctx.lineTo(toX(p.ts), toY(p.value ?? p.pnl ?? 0)));
+      ctx.lineTo(toX(s.pts[s.pts.length - 1].ts), H - PAD_B);
+      ctx.lineTo(toX(s.pts[0].ts), H - PAD_B);
+      ctx.closePath();
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Line
+      ctx.beginPath();
+      ctx.moveTo(toX(s.pts[0].ts), toY(s.pts[0].value ?? s.pts[0].pnl ?? 0));
+      s.pts.forEach(p => ctx.lineTo(toX(p.ts), toY(p.value ?? p.pnl ?? 0)));
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = 1.8;
+      ctx.shadowColor = s.color;
+      ctx.shadowBlur = 4;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // First trade marker (history span label)
+      if (s.pts.length > 2 && showDate) {
+        const first = s.pts[0];
+        const fVal  = first.value ?? first.pnl ?? 0;
+        const fx = toX(first.ts);
+        const fy = toY(fVal);
+        ctx.beginPath();
+        ctx.arc(fx, fy, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = s.color + 'aa';
+        ctx.fill();
+        if (fx > PAD_L + 24) {
+          const fd = new Date(first.ts);
+          const fLbl = _pad(fd.getDate()) + '/' + _pad(fd.getMonth()+1) + (showYear ? '/' + String(fd.getFullYear()).slice(2) : '');
+          ctx.font = '8px JetBrains Mono, monospace';
+          ctx.fillStyle = s.color + '88';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText('◂ ' + fLbl, fx + 4, fy - 2);
+        }
+      }
+
+      // Last value dot + label
+      const last = s.pts[s.pts.length - 1];
+      const lastV = last.value ?? last.pnl ?? 0;
+      const lx = toX(last.ts);
+      const ly = toY(lastV);
+      ctx.beginPath();
+      ctx.arc(lx, ly, 3.5, 0, Math.PI * 2);
+      ctx.fillStyle = s.color;
+      ctx.fill();
+      const lbl = '$' + (lastV >= 1000 ? (lastV/1000).toFixed(1)+'K' : lastV.toFixed(0));
+      ctx.font = 'bold 9px JetBrains Mono, monospace';
+      ctx.fillStyle = s.color;
+      ctx.textAlign = lx > W - 60 ? 'right' : 'left';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(lbl, lx + (ctx.textAlign === 'left' ? 5 : -5), ly - 4);
+    });
+
+    // ── Draw trade markers on top of lines ────────────────────────────────────
+    // LONG closed  → filled green circle  (border: darker green)
+    // SHORT closed → filled red circle    (border: darker red)
+    // LONG open    → hollow green circle  (dashed border, animated via JS)
+    // SHORT open   → hollow red circle    (dashed border)
+    const MARKER_R = 5.5;
+    tradeMarkers.forEach(m => {
+      const mx2 = toX(m.ts);
+      const my2 = toY(m.value ?? m.pnl ?? 0);
+      // Clip to chart area
+      if (mx2 < PAD_L - MARKER_R || mx2 > W - PAD_R + MARKER_R) return;
+      if (my2 < PAD_T - MARKER_R || my2 > H - PAD_B + MARKER_R) return;
+
+      const isLong  = (m.trade.side || '').toUpperCase() === 'LONG';
+      const fillCol = isLong ? '#2ee591' : '#ff4d61';
+      const darkCol = isLong ? '#1aa860' : '#c2293d';
+
+      ctx.beginPath();
+      ctx.arc(mx2, my2, MARKER_R, 0, Math.PI * 2);
+
+      if (m.isOpen) {
+        // Hollow (open position) — pulsing outline
+        ctx.fillStyle   = (isLong ? 'rgba(46,229,145,0.15)' : 'rgba(255,77,97,0.15)');
+        ctx.fill();
+        ctx.strokeStyle = fillCol;
+        ctx.lineWidth   = 1.8;
+        ctx.setLineDash([3, 2]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // Inner dot to distinguish from closed
+        ctx.beginPath();
+        ctx.arc(mx2, my2, 2, 0, Math.PI * 2);
+        ctx.fillStyle = fillCol;
+        ctx.fill();
+      } else {
+        // Filled (closed position)
+        ctx.fillStyle   = fillCol;
+        ctx.fill();
+        ctx.strokeStyle = darkCol;
+        ctx.lineWidth   = 1.2;
+        ctx.stroke();
+        // Small white center dot
+        ctx.beginPath();
+        ctx.arc(mx2, my2, 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.75)';
+        ctx.fill();
+      }
+
+      // Store pixel coords back for mouse hit-testing
+      m._cx = mx2; m._cy = my2;
+    });
+
+    // ── Rich tooltip — both line hover and marker click/hover ─────────────────
+    canvas._patrimonySeries  = visibleSeries;
+    canvas._patrimonyMarkers = tradeMarkers;
+    canvas._patrimonyMeta    = { tsMin, tsRange, W, H, PAD_L, PAD_R, PAD_T, PAD_B };
+
+    const _getOrCreateTip = (id, css) => {
+      let el = document.getElementById(id);
+      if (!el) {
+        el = document.createElement('div');
+        el.id = id;
+        el.style.cssText = css;
+        canvas.parentElement.style.position = 'relative';
+        canvas.parentElement.appendChild(el);
+      }
+      return el;
+    };
+
+    if (!canvas._patrimonyHoverBound) {
+      canvas._patrimonyHoverBound = true;
+
+      const TIP_CSS = 'position:absolute;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:8px 11px;font-size:9.5px;font-family:var(--mono);color:var(--text);pointer-events:none;z-index:300;white-space:nowrap;box-shadow:var(--shadow-lg);min-width:160px;transition:opacity 0.1s';
+
+      canvas.addEventListener('mousemove', function(e) {
+        const rect    = canvas.getBoundingClientRect();
+        const scaleX  = canvas.width / rect.width;
+        const mx      = (e.clientX - rect.left);
+        const my      = (e.clientY - rect.top);
+        const markers = canvas._patrimonyMarkers || [];
+        const meta    = canvas._patrimonyMeta;
+        const s0      = canvas._patrimonySeries;
+        if (!meta) return;
+
+        const parentRect = canvas.parentElement.getBoundingClientRect();
+        const tipX = Math.min(e.clientX - parentRect.left + 14, parentRect.width - 200);
+        const tipY = Math.max(e.clientY - parentRect.top  - 20, 4);
+
+        // ── Priority 1: check if mouse is near a trade marker (hit radius = MARKER_R+3) ──
+        const HIT = MARKER_R + 4;
+        let hitMarker = null, hitDist = Infinity;
+        markers.forEach(m => {
+          if (m._cx == null) return;
+          const dist = Math.hypot(mx - m._cx, my - m._cy);
+          if (dist < HIT && dist < hitDist) { hitDist = dist; hitMarker = m; }
+        });
+
+        const tip = _getOrCreateTip('patrimony-tooltip', TIP_CSS);
+
+        if (hitMarker) {
+          const t = hitMarker.trade;
+          const isLong  = (t.side || '').toUpperCase() === 'LONG';
+          const sideCol = isLong ? 'var(--green)' : 'var(--red)';
+          const sideLbl = isLong ? '▲ LONG' : '▼ SHORT';
+          const pnlCol  = t.pnl >= 0 ? 'var(--green)' : 'var(--red)';
+          const statusBadge = hitMarker.isOpen
+            ? `<span style="background:rgba(79,151,255,0.18);color:var(--blue);border:1px solid rgba(79,151,255,0.3);border-radius:3px;padding:1px 5px;font-size:8px;font-weight:700;letter-spacing:0.5px">● ABERTO</span>`
+            : `<span style="background:rgba(130,139,171,0.12);color:var(--muted);border:1px solid var(--border);border-radius:3px;padding:1px 5px;font-size:8px;font-weight:700;letter-spacing:0.5px">✓ FECHADO</span>`;
+          const leverLbl  = t.leverage ? `${t.leverage}×` : '—';
+          const sizeLbl   = t.size ? `$${(t.size>=1000?(t.size/1000).toFixed(1)+'K':t.size.toFixed(0))}` : '—';
+          const priceLbl  = hitMarker.isOpen
+            ? `<span style="color:var(--muted)">Mark:</span> <b>${_fmtPrice(t.close)}</b>`
+            : `<span style="color:var(--muted)">Saída:</span> <b>${_fmtPrice(t.close)}</b>`;
+          tip.innerHTML = `
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;border-bottom:1px solid var(--border);padding-bottom:5px">
+              <span style="font-size:12px;font-weight:800;color:#fff">${t.pair}</span>
+              <span style="color:${sideCol};font-weight:700;font-size:10px">${sideLbl}</span>
+              <span style="margin-left:auto">${statusBadge}</span>
+            </div>
+            <table style="border-collapse:collapse;width:100%">
+              <tr>
+                <td style="color:var(--muted);padding:1.5px 8px 1.5px 0;font-size:8.5px">PnL</td>
+                <td style="font-weight:800;font-size:11px;color:${pnlCol}">${_fmtPnl(t.pnl)} <span style="font-size:8px;font-weight:400">USDC</span></td>
+              </tr>
+              <tr>
+                <td style="color:var(--muted);padding:1.5px 8px 1.5px 0;font-size:8.5px">Entrada</td>
+                <td><span style="color:var(--muted)">@ </span><b>${_fmtPrice(t.entry)}</b></td>
+              </tr>
+              <tr>
+                <td style="color:var(--muted);padding:1.5px 8px 1.5px 0;font-size:8.5px">${hitMarker.isOpen ? 'Mark price' : 'Saída'}</td>
+                <td><span style="color:var(--muted)">@ </span><b>${_fmtPrice(t.close)}</b></td>
+              </tr>
+              <tr>
+                <td style="color:var(--muted);padding:1.5px 8px 1.5px 0;font-size:8.5px">Duração</td>
+                <td style="color:var(--amber)">${t.duration}</td>
+              </tr>
+              <tr>
+                <td style="color:var(--muted);padding:1.5px 8px 1.5px 0;font-size:8.5px">Alavancagem</td>
+                <td>${leverLbl}</td>
+              </tr>
+              <tr>
+                <td style="color:var(--muted);padding:1.5px 8px 1.5px 0;font-size:8.5px">Tamanho</td>
+                <td>${sizeLbl}</td>
+              </tr>
+              <tr>
+                <td style="color:var(--muted);padding:1.5px 8px 1.5px 0;font-size:8.5px">Wallet</td>
+                <td style="color:${hitMarker.walletColor}">${hitMarker.walletLabel}</td>
+              </tr>
+            </table>`;
+          tip.style.left    = tipX + 'px';
+          tip.style.top     = tipY + 'px';
+          tip.style.display = 'block';
+          tip.style.borderColor = isLong ? 'rgba(46,229,145,0.35)' : 'rgba(255,77,97,0.35)';
+          canvas.style.cursor = 'pointer';
+          return;
+        }
+
+        // ── Priority 2: line hover — nearest curve point ───────────────────────
+        canvas.style.cursor = 'crosshair';
+        if (!s0 || !s0.length) { tip.style.display = 'none'; return; }
+        const { tsMin: tm, tsRange: tr, W: cW, PAD_L: pL, PAD_R: pR } = meta;
+        const hovTs = tm + ((mx - pL) / (cW - pL - pR)) * tr;
+        if (mx < pL || mx > cW - pR) { tip.style.display = 'none'; return; }
+
+        let bestDist = Infinity, bestPt = null, bestS = null;
+        s0.forEach(s => {
+          s.pts.forEach(pt => {
+            const d = Math.abs(pt.ts - hovTs);
+            if (d < bestDist) { bestDist = d; bestPt = pt; bestS = s; }
+          });
+        });
+        if (!bestPt || !bestS) { tip.style.display = 'none'; return; }
+
+        const ptVal = bestPt.value ?? bestPt.pnl ?? 0;
+        const valFmt = '$' + (ptVal >= 1000 ? (ptVal/1000).toFixed(2)+'K' : ptVal.toFixed(2));
+        const tipLabel = bestS.isCombined ? 'Patrimônio Total (perp + spot)' : bestS.label;
+        tip.innerHTML = `
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+            <span style="width:8px;height:8px;border-radius:50%;background:${bestS.color};flex-shrink:0"></span>
+            <span style="color:${bestS.color};font-weight:600">${tipLabel}</span>
+            <span style="margin-left:auto;color:var(--muted);font-size:8.5px">${_fmtTs(bestPt.ts)}</span>
+          </div>
+          <div style="font-size:13px;font-weight:800;color:var(--green)">${valFmt} <span style="font-size:9px;font-weight:400;color:var(--muted)">USDC</span></div>`;
+        tip.style.borderColor = 'var(--border2)';
+        tip.style.left    = tipX + 'px';
+        tip.style.top     = tipY + 'px';
+        tip.style.display = 'block';
+      });
+
+      canvas.addEventListener('mouseleave', function() {
+        const tip = document.getElementById('patrimony-tooltip');
+        if (tip) tip.style.display = 'none';
+        canvas.style.cursor = '';
+      });
+    }
+    // Render open positions detail panel alongside chart
+    renderPatOps();
+  }
+
+  /* ── OPEN POSITIONS DETAIL (patrimony panel right column) ─────────────── */
+  // ── Pat-ops date sort state: 'desc' = mais recente primeiro (padrão), 'asc' = mais antiga primeiro
+  let _patOpsDateSort = 'desc';
+  function togglePatOpsDateSort() {
+    _patOpsDateSort = _patOpsDateSort === 'desc' ? 'asc' : 'desc';
+    const icon = document.getElementById('pat-op-sort-icon');
+    if (icon) icon.textContent = _patOpsDateSort === 'desc' ? '↓' : '↑';
+    renderPatOps();
+  }
+
+  function renderPatOps() {
+    const scroll  = document.getElementById('pat-ops-scroll');
+    const empty   = document.getElementById('pat-ops-empty');
+    const countEl = document.getElementById('pat-ops-count');
+    const footer  = document.getElementById('pat-ops-footer');
+    const totalEl = document.getElementById('pat-ops-total-pnl');
+    const brkEl   = document.getElementById('pat-ops-breakdown');
+    if (!scroll) return;
+
+    // Respeita o filtro de wallet do painel de patrimônio
+    const walSel  = (document.getElementById('patrimony-wallet-filter') || {}).value || 'all';
+    const _isTopN = walSel !== 'all' && /^\d+$/.test(walSel);
+    const _isInd  = walSel && walSel !== 'all' && !_isTopN;
+
+    // Determina quais endereços mostrar
+    let allowedAddrs = null; // null = todas
+    if (_isInd) {
+      // Wallet individual: só essa
+      allowedAddrs = new Set([walSel.toLowerCase()]);
+    } else if (_isTopN) {
+      // Top N: as N wallets com maior patrimônio atual
+      const n = parseInt(walSel, 10);
+      const ranked = trackedWallets
+        .filter(a => walletEnabled[a.toLowerCase()] !== false)
+        .sort((a, b) => {
+          const pa = patrimonyHistory[a] || [], pb = patrimonyHistory[b] || [];
+          const va = pa.length ? (pa[pa.length-1].value ?? pa[pa.length-1].pnl ?? 0) : 0;
+          const vb = pb.length ? (pb[pb.length-1].value ?? pb[pb.length-1].pnl ?? 0) : 0;
+          return vb - va;
+        })
+        .slice(0, n);
+      allowedAddrs = new Set(ranked.map(a => a.toLowerCase()));
+    }
+
+    // Filtra posições: wallet habilitada + dentro do filtro selecionado
+    const activePos = positions.filter(p => {
+      if (walletEnabled[(p.addr || '').toLowerCase()] === false) return false;
+      if (allowedAddrs && !allowedAddrs.has((p.addr || '').toLowerCase())) return false;
+      return true;
+    });
+
+    if (!activePos.length) {
+      scroll.innerHTML = '';
+      if (empty) { empty.style.display = 'block'; empty.textContent = 'Nenhuma posição aberta'; }
+      if (countEl) countEl.textContent = '0';
+      if (footer) footer.style.display = 'none';
+      return;
+    }
+
+    if (empty) empty.style.display = 'none';
+    if (countEl) countEl.textContent = activePos.length;
+
+    // Sort por data de abertura (respeita estado _patOpsDateSort)
+    const sorted = [...activePos].sort((a, b) => {
+      const ta = a.openedAtTs || a.openedTs || 0;
+      const tb = b.openedAtTs || b.openedTs || 0;
+      return _patOpsDateSort === 'desc' ? tb - ta : ta - tb;
+    });
+
+    let totalPnl = 0, longCount = 0, shortCount = 0;
+    const rows = sorted.map(p => {
+      const pnl   = p.pnl ?? 0;
+      totalPnl   += pnl;
+      const isLong = (p.side || '').toUpperCase() === 'LONG';
+      if (isLong) longCount++; else shortCount++;
+      const dotColor  = isLong ? 'var(--green)' : 'var(--red)';
+      const pnlClass  = pnl > 0 ? 'pos' : pnl < 0 ? 'neg' : 'neut';
+      const pnlSign   = pnl >= 0 ? '+' : '';
+      const pnlFmt    = pnlSign + (Math.abs(pnl) >= 1000 ? (pnl/1000).toFixed(2)+'K' : pnl.toFixed(2));
+      const size      = p.sizeUsdc ?? p.size ?? null;
+      const sizeFmt   = size != null ? '$' + (Math.abs(size) >= 1000 ? (size/1000).toFixed(1)+'K' : size.toFixed(0)) : '—';
+      const openedTs  = p.openedAtTs || p.openedTs || 0;
+      let dateFmt = '—';
+      if (openedTs > 0) {
+        const d = new Date(openedTs);
+        const pad = n => String(n).padStart(2,'0');
+        dateFmt = pad(d.getDate()) + '/' + pad(d.getMonth()+1) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+      }
+      const pairLabel = (p.pair || p.sym || '—').replace('USDT','').replace('PERP','');
+      const wColor    = walletColor(p.addr || '');
+      const wLabel    = p.addr ? p.addr.slice(0,4)+'…'+p.addr.slice(-3) : '—';
+      return `<div class="pat-op-row" title="Wallet: ${p.addr || '—'} | ${p.side} ${p.pair}">
+        <span class="pat-op-side-dot" style="background:${dotColor}"></span>
+        <span>
+          <div class="pat-op-pair">${pairLabel}</div>
+          <div class="pat-op-sub" style="color:${wColor}">${wLabel}</div>
+        </span>
+        <span class="pat-op-pnl ${pnlClass}" style="text-align:right">${pnlFmt}</span>
+        <span class="pat-op-entry" style="text-align:right">${sizeFmt}</span>
+        <span class="pat-op-entry" style="text-align:right;font-size:9px">${dateFmt}</span>
+      </div>`;
+    });
+
+    scroll.innerHTML = rows.join('');
+
+    // Footer summary
+    if (footer) {
+      footer.style.display = 'flex';
+      const tSign = totalPnl >= 0 ? '+' : '';
+      const tFmt  = tSign + (Math.abs(totalPnl) >= 1000 ? (totalPnl/1000).toFixed(2)+'K' : totalPnl.toFixed(2));
+      const tCls  = totalPnl > 0 ? 'pos' : totalPnl < 0 ? 'neg' : 'neut';
+      if (totalEl) { totalEl.textContent = '$' + tFmt; totalEl.className = 'pat-footer-pnl ' + tCls; }
+      if (brkEl) brkEl.textContent = longCount + 'L / ' + shortCount + 'S';
     }
   }
 
@@ -7376,9 +9197,12 @@
       const s  = calcWhaleScore(addr);
       const wc = walletColor(addr);
       const shortA = addr.slice(0,6) + '…' + addr.slice(-4);
+      const _isSelW = selectedWalletAddr && selectedWalletAddr.toLowerCase() === addr.toLowerCase();
+      const selCls  = _isSelW ? ' is-selected' : '';
+      const cardAttrs = `style="--row-color:${wc}" onclick="selectWallet('${addr}')" title="Clique para filtrar todos os painéis por esta wallet"`;
 
       if (!s) {
-        return `<div class="score-card tier-mid">
+        return `<div class="score-card tier-mid${selCls}" ${cardAttrs}>
           <div class="score-card-addr">
             <span class="score-card-dot" style="background:${wc}"></span>
             <span>${shortA}</span>
@@ -7395,7 +9219,7 @@
       const tierLabel = s.score >= 80 ? 'Elite' : s.score >= 60 ? 'Strong' : s.score >= 40 ? 'Average' : 'Weak';
       const barColor = tier === 'elite' ? '#ffd700' : tier === 'good' ? 'var(--green)' : tier === 'mid' ? 'var(--blue)' : 'var(--amber)';
 
-      return `<div class="score-card tier-${tier}">
+      return `<div class="score-card tier-${tier}${selCls}" ${cardAttrs}>
         <div class="score-card-addr">
           <span class="score-card-dot" style="background:${wc}"></span>
           <span>${shortA}</span>
@@ -7430,7 +9254,8 @@
     }).join('');
 
     body.innerHTML = `<div class="whale-score-grid">${cards}</div>`;
-    if (count) count.textContent = trackedWallets.length + ' wallet' + (trackedWallets.length !== 1 ? 's' : '');
+    const _wsVisible = trackedWallets.filter(addr => !isWalletFiltered(addr)).length;
+    if (count) count.textContent = _wsVisible + ' wallet' + (_wsVisible !== 1 ? 's' : '');
   }
 
   /* ── WHALE CONSENSUS ─────────────────────────────────────────────────────
@@ -7443,7 +9268,8 @@
     if (!body) return;
 
     // Filtros
-    const dirFilter   = (document.getElementById('consensus-dir-filter')  || {}).value || 'all';
+    const dirFilter   = (document.getElementById('consensus-dir-filter')   || {}).value || 'all';
+    const assetFilter = (document.getElementById('consensus-asset-filter') || {}).value || 'all';
     const minWhales   = parseInt((document.getElementById('consensus-min-whales') || {}).value || '1', 10);
 
     // Agrupa posições abertas por par, inclui peso (size × leverage) para conviction
@@ -7466,7 +9292,19 @@
       }
     });
 
+    // Atualiza dropdown de ativos dinamicamente
+    const assetSel = document.getElementById('consensus-asset-filter');
+    if (assetSel) {
+      const allPairs = Object.keys(byPair).sort();
+      const curVal   = assetSel.value;
+      assetSel.innerHTML = '<option value="all">Todos ativos</option>' +
+        allPairs.map(p => `<option value="${p}"${p === curVal ? ' selected' : ''}>${p}</option>`).join('');
+    }
+
     let pairs = Object.keys(byPair);
+
+    // Aplica filtro de ativo
+    if (assetFilter !== 'all') pairs = pairs.filter(pair => pair === assetFilter);
 
     // Aplica filtro de direção
     pairs = pairs.filter(pair => {
@@ -7502,7 +9340,38 @@
       const dirLabel = isLongDominant ? '🟢 Consensus: Long' : '🔴 Consensus: Short';
       const dirPct   = dominant + '%';
 
-      return `<div class="consensus-card">
+      // Build wallet dot rows (Long + Short wallets)
+      const allAddrs = [...new Set([...d.longAddrs, ...d.shortAddrs])];
+      const longDotsHtml = d.longAddrs.map(addr => {
+        const wc = walletColor(addr);
+        const isSelected = selectedWalletAddr && selectedWalletAddr.toLowerCase() === addr.toLowerCase();
+        const selClass = isSelected ? ' is-selected' : '';
+        const lbl = addr.slice(0,4) + '…' + addr.slice(-3);
+        return `<span class="consensus-wallet-dot${selClass}" style="background:${wc};--dot-color:${wc}" onclick="event.stopPropagation();selectWalletFromConsensus('${addr}')" title="${addr} (Long)"></span>`;
+      }).join('');
+      const shortDotsHtml = d.shortAddrs.map(addr => {
+        const wc = walletColor(addr);
+        const isSelected = selectedWalletAddr && selectedWalletAddr.toLowerCase() === addr.toLowerCase();
+        const selClass = isSelected ? ' is-selected' : '';
+        return `<span class="consensus-wallet-dot${selClass}" style="background:${wc};--dot-color:${wc}" onclick="event.stopPropagation();selectWalletFromConsensus('${addr}')" title="${addr} (Short)"></span>`;
+      }).join('');
+
+      // Determine if this card is "filtered" by wallet selection
+      const hasSelectedWallet = !!selectedWalletAddr;
+      const selWalletInCard = hasSelectedWallet && allAddrs.some(a => a.toLowerCase() === (selectedWalletAddr||'').toLowerCase());
+      const cardOpacity = hasSelectedWallet && !selWalletInCard ? 0.35 : 1;
+      const wc = selWalletInCard ? walletColor(selectedWalletAddr) : null;
+      const cardStyle = `opacity:${cardOpacity};cursor:pointer;${wc ? `--row-color:${wc}` : ''}`;
+      const cardClass = `consensus-card${selWalletInCard ? ' is-selected' : ''}`;
+
+      // Card-level click cycles through wallets: dominant-direction first, then others, then deselect
+      const dominantAddrs = isLongDominant ? d.longAddrs : d.shortAddrs;
+      const nonDominantAddrs = isLongDominant ? d.shortAddrs : d.longAddrs;
+      const cycleAddrs = [...new Set([...dominantAddrs, ...nonDominantAddrs])];
+      // Store addrs as comma-separated in a data attribute to avoid quote conflicts inside onclick=""
+      const cycleData = cycleAddrs.join(',');
+
+      return `<div class="${cardClass}" style="${cardStyle}" data-cycle-addrs="${cycleData}" onclick="selectConsensusCard(this)" title="Clique para selecionar/ciclar wallets · dots para selecionar wallet específica">
         <div class="consensus-pair">${pair}</div>
         <div class="consensus-bar-row">
           <span class="consensus-label long" style="min-width:28px;text-align:right">${longPct}%</span>
@@ -7514,6 +9383,12 @@
         <div class="consensus-label ${isLongDominant ? 'long' : 'short'}" style="font-size:10px">${dirLabel} ${dirPct}</div>
         <div class="consensus-details">
           🟢 ${d.long} baleia${d.long !== 1 ? 's' : ''} Long &nbsp;·&nbsp; 🔴 ${d.short} baleia${d.short !== 1 ? 's' : ''} Short
+        </div>
+        <div class="consensus-wallet-dots">
+          ${d.longAddrs.length ? `<span class="consensus-wallet-dot-label" style="color:rgba(46,229,145,0.6)">L:</span>${longDotsHtml}` : ''}
+          ${d.longAddrs.length && d.shortAddrs.length ? `<span style="color:var(--border2);margin:0 2px">|</span>` : ''}
+          ${d.shortAddrs.length ? `<span class="consensus-wallet-dot-label" style="color:rgba(255,77,97,0.7)">S:</span>${shortDotsHtml}` : ''}
+          ${hasSelectedWallet && selWalletInCard ? `<button onclick="event.stopPropagation();clearWalletSelection()" style="margin-left:auto;font-size:8px;background:rgba(255,61,77,0.12);border:1px solid rgba(255,61,77,0.3);color:var(--red);cursor:pointer;font-family:var(--mono);padding:1px 6px;border-radius:3px">✕</button>` : ''}
         </div>
       </div>`;
     }).join('');
@@ -7851,15 +9726,35 @@
     if (!body) return;
     const _hmFilters = getHeatmapFilters();
 
-    // Compila dados por par
+    // Populate wallet filter dropdown
+    const walletSel = document.getElementById('heatmap-wallet-filter');
+    if (walletSel) {
+      const curVal = walletSel.value;
+      let opts = '<option value="all">Todas</option>';
+      trackedWallets.forEach(addr => {
+        const label = addr.slice(0,6) + '...' + addr.slice(-4);
+        const wc = walletColor(addr);
+        opts += `<option value="${addr}">${label}</option>`;
+      });
+      walletSel.innerHTML = opts;
+      if (curVal && curVal !== 'all') walletSel.value = curVal;
+    }
+
+    // Compila dados por par — respeitando filtro de wallet do heatmap
     const byPair = {};
+    // Per-pair: track which wallets participate (for dots)
+    const pairWallets = {}; // pair → [addr, ...]
     positions.forEach(p => {
       if (_pairEnabled[p.pair] === false) return;
       if (walletEnabled[(p.addr || '').toLowerCase()] === false) return;
+      // Apply heatmap-local wallet filter
+      if (_heatmapSelectedWallet && (p.addr || '').toLowerCase() !== _heatmapSelectedWallet.toLowerCase()) return;
+      // Also respect global wallet filter
       if (isWalletFiltered(p.addr)) return;
       const side = (p.side || '').toUpperCase();
-      if (!byPair[p.pair]) byPair[p.pair] = { whales: new Set(), longUsdc: 0, shortUsdc: 0 };
+      if (!byPair[p.pair]) { byPair[p.pair] = { whales: new Set(), longUsdc: 0, shortUsdc: 0 }; pairWallets[p.pair] = []; }
       byPair[p.pair].whales.add(p.addr);
+      if (!pairWallets[p.pair].includes(p.addr)) pairWallets[p.pair].push(p.addr);
       const sizeUsdc = (parseFloat(p.size) || 0) * (parseFloat(p.mark) || parseFloat(p.entry) || 1);
       if (side === 'LONG')  byPair[p.pair].longUsdc  += sizeUsdc;
       else                  byPair[p.pair].shortUsdc += sizeUsdc;
@@ -7902,12 +9797,10 @@
 
       const isLong = d.longUsdc >= d.shortUsdc;
 
-      return { pair, whaleCount, capital, heatScore, isLong, convScore };
+      return { pair, whaleCount, capital, heatScore, isLong, convScore, wallets: pairWallets[pair] || [] };
     });
 
     // Mantém a posição de cada ativo estável: atualiza o registro de ordem
-    // (remove os que sumiram, mantém os existentes na posição, anexa novos ao final)
-    // em vez de reordenar pelo heatScore (que muda a cada tick).
     const presentPairs = new Set(scored.map(d => d.pair));
     _heatmapOrderKeys = _heatmapOrderKeys.filter(k => presentPairs.has(k));
     scored.forEach(d => { if (!_heatmapOrderKeys.includes(d.pair)) _heatmapOrderKeys.push(d.pair); });
@@ -7944,7 +9837,21 @@
       const convPct  = Math.round(d.convScore * 100);
       const medal    = rk === 0 ? '🥇' : rk === 1 ? '🥈' : rk === 2 ? '🥉' : `${rk+1}`;
 
-      return `<div class="heatmap-row">
+      // Wallet dots — same pattern as Whale Consensus
+      const walletDots = d.wallets.map(addr => {
+        const wc = walletColor(addr);
+        const isSelDot = _heatmapSelectedWallet && _heatmapSelectedWallet.toLowerCase() === addr.toLowerCase();
+        const dotCls = isSelDot ? 'heatmap-wallet-dot is-selected' : 'heatmap-wallet-dot';
+        const selStyle = isSelDot ? `;--dot-color:${wc}` : '';
+        return `<span class="${dotCls}" style="background:${wc}${selStyle}" onclick="event.stopPropagation();selectHeatmapWallet('${addr}')" title="${addr.slice(0,6)}...${addr.slice(-4)}"></span>`;
+      }).join('');
+
+      // Row selection state
+      const isRowSel = _heatmapSelectedWallet && d.wallets.some(a => a.toLowerCase() === _heatmapSelectedWallet.toLowerCase());
+      const isAnySelActive = !!_heatmapSelectedWallet;
+      const rowSelCls = isRowSel ? ' is-selected' : (isAnySelActive && !isRowSel ? ' is-dimmed' : '');
+
+      return `<div class="heatmap-row${rowSelCls}" onclick="selectHeatmapWalletFromRow('${d.wallets.join(',')}', this)" title="Clique para filtrar por wallet desta linha">
         <span class="heatmap-rank ${rankCls}">${medal}</span>
         <span class="heatmap-sym">${sideSymbol} ${d.pair}</span>
         <div class="heatmap-bar-wrap">
@@ -7954,11 +9861,30 @@
         </div>
         <span class="heatmap-score">${d.heatScore}/100</span>
         <span class="heatmap-meta">${d.whaleCount}🐋 · ${fmtK(d.capital)} · Conv ${convPct}%</span>
+        ${d.wallets.length > 0 ? `<div class="heatmap-wallet-dots">${walletDots}</div>` : ''}
       </div>`;
     }).join('');
 
     body.innerHTML = rows;
     if (count) count.textContent = scored.length + ' ativo' + (scored.length!==1?'s':'');
+  }
+
+  /** Click on a heatmap row: cycles through wallets in that row (like selectConsensusCard) */
+  function selectHeatmapWalletFromRow(addrsStr, el) {
+    const addrs = addrsStr.split(',').filter(Boolean);
+    if (!addrs.length) return;
+    if (!_heatmapSelectedWallet) {
+      selectHeatmapWallet(addrs[0]);
+      return;
+    }
+    const currentIdx = addrs.findIndex(a => a.toLowerCase() === _heatmapSelectedWallet.toLowerCase());
+    if (currentIdx === -1) {
+      selectHeatmapWallet(addrs[0]);
+    } else if (currentIdx < addrs.length - 1) {
+      selectHeatmapWallet(addrs[currentIdx + 1]);
+    } else {
+      clearHeatmapWalletSelection();
+    }
   }
 
   /* ── ENTRY CLUSTER DETECTION ────────────────────────────────────────────────
@@ -8583,6 +10509,7 @@
     positions.forEach(p => {
       if (_pairEnabled[p.pair] === false) return;
       if (walletEnabled[(p.addr || '').toLowerCase()] === false) return;
+      if (isWalletFiltered(p.addr)) return;
       const key = `${p.pair}|${(p.side || '').toUpperCase()}`;
       if (!openNow[key]) openNow[key] = new Set();
       openNow[key].add(p.addr);
@@ -8965,6 +10892,8 @@
     renderEvents();
     renderRanking();
     renderPnlChart();
+    snapshotPatrimony();
+    renderPatrimonyChart();
     renderDirectionDominance();
     renderWhaleScore();
     renderWhaleConsensus();
@@ -9015,7 +10944,17 @@
 
   /* ── WALLET SELECTION FILTER (clique nas barras do PnL por Wallet) ── */
   let selectedWalletAddr = null; // null = todas | string = addr selecionada
+  let hoveredWalletAddr  = null; // realce transitório ao passar o mouse (barra OU item da legenda)
   let _pnlBarHitAreas   = [];   // [{addr, y1, y2}] — atualizado a cada renderPnlChart
+  let _heatmapSelectedWallet = null; // null = todas | string addr — seleção do Whale Heatmap
+
+  /** Chamado pelos itens da legenda (mouseenter/mouseleave) para sincronizar o
+   *  realce com a barra correspondente no canvas — mesma cor característica da wallet. */
+  function _pnlSetHover(addr) {
+    if (hoveredWalletAddr === addr) return;
+    hoveredWalletAddr = addr;
+    renderPnlChart();
+  }
 
   /** Retorna true se a wallet deve ser OCULTADA pelo filtro de seleção */
   function isWalletFiltered(addr) {
@@ -9029,14 +10968,55 @@
     } else {
       selectedWalletAddr = addr;
     }
+    // Sync heatmap wallet filter
+    _heatmapSelectedWallet = selectedWalletAddr;
+    const hmSel = document.getElementById('heatmap-wallet-filter');
+    if (hmSel) hmSel.value = selectedWalletAddr || 'all';
+    _updateHeatmapWalletBanner();
     _updateWalletFilterBanner();
     renderAll();
   }
 
   function clearWalletSelection() {
     selectedWalletAddr = null;
+    // Also clear heatmap filter
+    _heatmapSelectedWallet = null;
+    const hmSel = document.getElementById('heatmap-wallet-filter');
+    if (hmSel) hmSel.value = 'all';
+    _updateHeatmapWalletBanner();
     _updateWalletFilterBanner();
     renderAll();
+  }
+
+  /** Selects a wallet from the Whale Consensus panel — same as selectWallet but
+   *  triggers a highlight animation on the consensus card after re-render. */
+  function selectWalletFromConsensus(addr) {
+    selectWallet(addr);
+  }
+
+  /** Card-level click on a Whale Consensus card: cycles through the wallets in
+   *  the card (dominant direction first). Successive clicks cycle to the next wallet;
+   *  after the last one it deselects. Individual dot clicks call selectWallet directly. */
+  function selectConsensusCard(el) {
+    const raw = el.getAttribute('data-cycle-addrs') || '';
+    const addrs = raw.split(',').filter(Boolean);
+    if (!addrs.length) return;
+    if (!selectedWalletAddr) {
+      // Nothing selected → select first wallet (dominant direction)
+      selectWallet(addrs[0]);
+      return;
+    }
+    const currentIdx = addrs.findIndex(a => a.toLowerCase() === selectedWalletAddr.toLowerCase());
+    if (currentIdx === -1) {
+      // Selected wallet not in this card → select first of this card
+      selectWallet(addrs[0]);
+    } else if (currentIdx < addrs.length - 1) {
+      // Cycle to next wallet in card
+      selectWallet(addrs[currentIdx + 1]);
+    } else {
+      // Was last wallet → deselect
+      clearWalletSelection();
+    }
   }
 
   function _updateWalletFilterBanner() {
@@ -9062,8 +11042,76 @@
   function getHeatmapFilters() {
     return {
       minWhales: parseInt((document.getElementById('heatmap-min-whales') || {}).value || '1', 10),
-      dir: (document.getElementById('heatmap-dir-filter') || {}).value || 'all'
+      dir: (document.getElementById('heatmap-dir-filter') || {}).value || 'all',
+      wallet: (document.getElementById('heatmap-wallet-filter') || {}).value || 'all'
     };
+  }
+
+  /* ── HEATMAP WALLET SELECTION STATE ── */
+
+  function applyHeatmapWalletFilter() {
+    const val = (document.getElementById('heatmap-wallet-filter') || {}).value || 'all';
+    if (val === 'all') {
+      _heatmapSelectedWallet = null;
+    } else {
+      _heatmapSelectedWallet = val;
+      // Also apply global wallet selection so all panels sync
+      if (selectedWalletAddr !== val) {
+        selectedWalletAddr = val;
+        _updateWalletFilterBanner();
+      }
+    }
+    renderAll();
+    _updateHeatmapWalletBanner();
+  }
+
+  function selectHeatmapWallet(addr) {
+    if (_heatmapSelectedWallet && _heatmapSelectedWallet.toLowerCase() === addr.toLowerCase()) {
+      // deselect
+      _heatmapSelectedWallet = null;
+      // sync dropdown
+      const sel = document.getElementById('heatmap-wallet-filter');
+      if (sel) sel.value = 'all';
+    } else {
+      _heatmapSelectedWallet = addr;
+      // sync dropdown
+      const sel = document.getElementById('heatmap-wallet-filter');
+      if (sel) sel.value = addr;
+      // Also apply global wallet selection
+      if (selectedWalletAddr !== addr) {
+        selectedWalletAddr = addr;
+        _updateWalletFilterBanner();
+      }
+    }
+    _updateHeatmapWalletBanner();
+    renderAll();
+  }
+
+  function _updateHeatmapWalletBanner() {
+    const banner = document.getElementById('heatmap-wallet-selection-banner');
+    if (!banner) return;
+    if (_heatmapSelectedWallet) {
+      const label = _heatmapSelectedWallet.slice(0,6) + '…' + _heatmapSelectedWallet.slice(-4);
+      const wc = walletColor(_heatmapSelectedWallet);
+      banner.style.display = 'flex';
+      banner.innerHTML = `
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${wc};flex-shrink:0;box-shadow:0 0 6px ${wc}"></span>
+        <span style="color:var(--text)">Filtro Heatmap:</span>
+        <span style="color:${wc};font-weight:600;letter-spacing:0.3px">${label}</span>
+        <span style="color:var(--muted);font-size:9px">— exibindo apenas dados desta wallet</span>
+        <button onclick="clearHeatmapWalletSelection()" style="margin-left:auto;background:rgba(255,61,77,0.12);border:1px solid rgba(255,61,77,0.3);color:var(--red);cursor:pointer;font-family:var(--mono);font-size:9px;padding:2px 9px;border-radius:4px;transition:background 0.12s" onmouseover="this.style.background='rgba(255,61,77,0.22)'" onmouseout="this.style.background='rgba(255,61,77,0.12)'">✕ Limpar filtro</button>
+      `;
+    } else {
+      banner.style.display = 'none';
+    }
+  }
+
+  function clearHeatmapWalletSelection() {
+    _heatmapSelectedWallet = null;
+    const sel = document.getElementById('heatmap-wallet-filter');
+    if (sel) sel.value = 'all';
+    _updateHeatmapWalletBanner();
+    renderAll();
   }
 
   /* ── ENTRY CLUSTER FILTERS ── */
