@@ -1691,9 +1691,24 @@
   .mov-filter-chip.active-liq { background: rgba(255,77,97,0.18); color: var(--red); border-color: rgba(255,77,97,0.5); }
   .mov-filter-chip.active-partial { background: rgba(247,177,61,0.12); color: var(--amber); border-color: rgba(247,177,61,0.3); }
   .mov-filter-chip.active-all { background: rgba(255,255,255,0.07); color: var(--text); border-color: var(--border3); }
+  /* Size filter active states */
+  .mov-filter-chip.active-size-all    { background: rgba(255,255,255,0.07); color: var(--text); border-color: var(--border3); }
+  .mov-filter-chip.active-size-micro  { background: rgba(130,139,171,0.14); color: var(--muted); border-color: rgba(130,139,171,0.4); }
+  .mov-filter-chip.active-size-small  { background: rgba(79,151,255,0.12); color: var(--blue); border-color: rgba(79,151,255,0.4); }
+  .mov-filter-chip.active-size-mid    { background: var(--amber-dim); color: var(--amber); border-color: rgba(247,177,61,0.4); }
+  .mov-filter-chip.active-size-large  { background: rgba(255,120,60,0.12); color: #ff7840; border-color: rgba(255,120,60,0.4); }
+  .mov-filter-chip.active-size-whale  { background: var(--green-dim); color: var(--green); border-color: rgba(46,229,145,0.4); }
   .mov-filter-row {
     display: flex; align-items: center; gap: 4px; padding: 5px 10px;
     background: var(--bg3); border-bottom: 1px solid var(--border); flex-shrink: 0; flex-wrap: wrap;
+  }
+  .mov-filter-row.size-row {
+    border-bottom: 1px solid var(--border2);
+    padding-top: 4px; padding-bottom: 5px;
+  }
+  .mov-size-label {
+    font-size: 7px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase;
+    color: var(--muted2); white-space: nowrap; margin-right: 2px; flex-shrink: 0;
   }
   .mov-scroll { overflow-y: auto; flex: 1; max-height: 356px; }
   .mov-empty { color: var(--muted2); font-size: 10px; text-align: center; padding: 24px 12px; }
@@ -3584,7 +3599,7 @@
     <div class="patrimony-split-body">
       <!-- Left: evolution chart -->
       <div class="patrimony-chart-col">
-        <canvas id="patrimony-canvas" height="260"></canvas>
+        <canvas id="patrimony-canvas" height="380"></canvas>
         <div class="patrimony-empty" id="patrimony-empty">Aguardando dados de wallets...</div>
       </div>
       <!-- Right: open positions detail -->
@@ -3637,6 +3652,15 @@
           <button class="mov-filter-chip" data-mov-filter="reduce" onclick="setMovFilter(this,'reduce')">↓ Redução</button>
           <button class="mov-filter-chip" data-mov-filter="liq" onclick="setMovFilter(this,'liq')">Liquidação</button>
           <button class="mov-filter-chip" data-mov-filter="partial" onclick="setMovFilter(this,'partial')">Saída Parcial</button>
+        </div>
+        <div class="mov-filter-row size-row">
+          <span class="mov-size-label">Size</span>
+          <button class="mov-filter-chip active-size-all" data-mov-size-filter="all"   onclick="setMovSizeFilter(this,'all')">Todos</button>
+          <button class="mov-filter-chip" data-mov-size-filter="micro"  onclick="setMovSizeFilter(this,'micro')"  title="Menos de $1.000">&lt;$1k</button>
+          <button class="mov-filter-chip" data-mov-size-filter="small"  onclick="setMovSizeFilter(this,'small')"  title="$1.000 – $10.000">$1k–$10k</button>
+          <button class="mov-filter-chip" data-mov-size-filter="mid"    onclick="setMovSizeFilter(this,'mid')"    title="$10.000 – $50.000">$10k–$50k</button>
+          <button class="mov-filter-chip" data-mov-size-filter="large"  onclick="setMovSizeFilter(this,'large')"  title="$50.000 – $200.000">$50k–$200k</button>
+          <button class="mov-filter-chip" data-mov-size-filter="whale"  onclick="setMovSizeFilter(this,'whale')"  title="Acima de $200.000">🐋 &gt;$200k</button>
         </div>
         <div class="mov-scroll" id="mov-scroll">
           <div class="mov-empty">Aguardando movimentações...</div>
@@ -7030,6 +7054,24 @@
   }
 
   let _movFilter = 'all'; // 'all' | 'long' | 'short' | 'increase' | 'reduce' | 'liq' | 'partial'
+  let _movSizeFilter = 'all'; // 'all' | 'micro' | 'small' | 'mid' | 'large' | 'whale'
+
+  function setMovSizeFilter(btn, filter) {
+    _movSizeFilter = filter;
+    document.querySelectorAll('[data-mov-size-filter]').forEach(c => {
+      c.className = 'mov-filter-chip';
+    });
+    const activeClass = {
+      all:   'active-size-all',
+      micro: 'active-size-micro',
+      small: 'active-size-small',
+      mid:   'active-size-mid',
+      large: 'active-size-large',
+      whale: 'active-size-whale',
+    }[filter] || 'active-size-all';
+    btn.classList.add(activeClass);
+    renderMovimentacoes();
+  }
 
   function setMovFilter(btn, filter) {
     _movFilter = filter;
@@ -7102,17 +7144,37 @@
       return true;
     }
     const filtered = sorted.filter(matchesMovFilter);
+
+    // ── Aplica filtro de size ────────────────────────────────────────────────
+    function getSize(item) {
+      const pos = item.pos;
+      if (pos.sizeUsdc != null) return pos.sizeUsdc;
+      if (pos.entry > 0 && pos.size > 0) return pos.size * pos.entry;
+      return null;
+    }
+    function matchesSizeFilter(item) {
+      if (_movSizeFilter === 'all') return true;
+      const s = getSize(item);
+      if (s == null) return _movSizeFilter === 'all'; // desconhecido → só aparece em "Todos"
+      if (_movSizeFilter === 'micro') return s < 1000;
+      if (_movSizeFilter === 'small') return s >= 1000  && s < 10000;
+      if (_movSizeFilter === 'mid')   return s >= 10000 && s < 50000;
+      if (_movSizeFilter === 'large') return s >= 50000 && s < 200000;
+      if (_movSizeFilter === 'whale') return s >= 200000;
+      return true;
+    }
+    const filteredFinal = filtered.filter(matchesSizeFilter);
     // ────────────────────────────────────────────────────────────────────────
 
-    if (!filtered.length) {
-      const emptyMsg = _movFilter === 'all'
+    if (!filteredFinal.length) {
+      const emptyMsg = (_movFilter === 'all' && _movSizeFilter === 'all')
         ? 'Aguardando movimentações...'
         : 'Nenhuma movimentação para este filtro.';
       scroll.innerHTML = `<div class="mov-empty">${emptyMsg}</div>`;
       return;
     }
 
-    const limit = _movExpanded ? filtered.length : Math.min(filtered.length, 20);
+    const limit = _movExpanded ? filteredFinal.length : Math.min(filteredFinal.length, 20);
 
     const ICONS = {
       open:  { path: '<path d="M5 12h14M12 5l7 7-7 7"/>', color: 'var(--green)' },
@@ -7120,7 +7182,7 @@
       liq:   { path: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>', color: 'var(--red)' },
     };
 
-    scroll.innerHTML = filtered.slice(0, limit).map(item => {
+    scroll.innerHTML = filteredFinal.slice(0, limit).map(item => {
       const { kind, pos } = item;
       const wColor = walletColor(pos.addr);
       // Rótulo da wallet: "Wallet #N" pelo índice em trackedWallets
@@ -8844,7 +8906,7 @@
     if (emptyEl) emptyEl.style.display = 'none';
     const dpr = window.devicePixelRatio || 1;
     const W = canvas.parentElement.clientWidth - 28;
-    const H = 180;
+    const H = 380;
     const PAD_L = 56, PAD_R = 12, PAD_T = 14, PAD_B = 28;
     canvas.width  = W * dpr;
     canvas.height = H * dpr;
