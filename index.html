@@ -3986,6 +3986,14 @@
       <button class="btn-panel-minimize" onclick="togglePanelMinimize('smart-exit-panel',this)" title="Minimizar"></button>
     </div>
     <div class="panel-filter-bar">
+      <label>Wallet:</label>
+      <select id="exit-wallet-filter" class="panel-filter-select" onchange="renderSmartExit()" title="Filtrar por wallet">
+        <option value="all">Todas</option>
+      </select>
+      <label>Ativo:</label>
+      <select id="exit-asset-filter" class="panel-filter-select" onchange="renderSmartExit()" title="Filtrar por ativo">
+        <option value="all">Todos</option>
+      </select>
       <label>Direção:</label>
       <select id="exit-dir-filter" class="panel-filter-select" onchange="renderSmartExit()" title="Filtrar por direção">
         <option value="all">Todas</option>
@@ -9816,6 +9824,8 @@
      Para cada par com posições abertas, calcula quantas baleias estão Long vs Short.
      Mostra o consenso direcional com % e barra visual.
   ─────────────────────────────────────────────────────────────────────────── */
+  let _consensusOrderKeys = [];
+
   function renderWhaleConsensus() {
     const body  = document.getElementById('whale-consensus-body');
     const count = document.getElementById('whale-consensus-count');
@@ -9876,15 +9886,20 @@
     });
 
     if (!pairs.length) {
+      _consensusOrderKeys = [];
       body.innerHTML = '<div class="consensus-empty">Nenhum par com os filtros selecionados...</div>';
       if (count) count.textContent = '0 pares';
       return;
     }
 
-    // Ordena por total de baleias (mais ativas primeiro)
-    pairs.sort((a, b) => (byPair[b].long + byPair[b].short) - (byPair[a].long + byPair[a].short));
+    // Mantém a ordem visual dos cards estável entre re-renders
+    const presentSet = new Set(pairs);
+    _consensusOrderKeys = _consensusOrderKeys.filter(k => presentSet.has(k));
+    pairs.forEach(p => { if (!_consensusOrderKeys.includes(p)) _consensusOrderKeys.push(p); });
+    pairs = _consensusOrderKeys.slice();
 
-    const cards = pairs.map(pair => {
+    // Função que gera o innerHTML interno de um card (sem o wrapper <div>)
+    function cardInner(pair) {
       const d     = byPair[pair];
       const total = d.long + d.short;
       const longPct  = total > 0 ? Math.round((d.long  / total) * 100) : 50;
@@ -9894,13 +9909,11 @@
       const dirLabel = isLongDominant ? '🟢 Consensus: Long' : '🔴 Consensus: Short';
       const dirPct   = dominant + '%';
 
-      // Build wallet dot rows (Long + Short wallets)
       const allAddrs = [...new Set([...d.longAddrs, ...d.shortAddrs])];
       const longDotsHtml = d.longAddrs.map(addr => {
         const wc = walletColor(addr);
         const isSelected = selectedWalletAddr && selectedWalletAddr.toLowerCase() === addr.toLowerCase();
         const selClass = isSelected ? ' is-selected' : '';
-        const lbl = addr.slice(0,4) + '…' + addr.slice(-3);
         return `<span class="consensus-wallet-dot${selClass}" style="background:${wc};--dot-color:${wc}" onclick="event.stopPropagation();selectWalletFromConsensus('${addr}')" title="${addr} (Long)"></span>`;
       }).join('');
       const shortDotsHtml = d.shortAddrs.map(addr => {
@@ -9910,7 +9923,6 @@
         return `<span class="consensus-wallet-dot${selClass}" style="background:${wc};--dot-color:${wc}" onclick="event.stopPropagation();selectWalletFromConsensus('${addr}')" title="${addr} (Short)"></span>`;
       }).join('');
 
-      // Determine if this card is "filtered" by wallet selection
       const hasSelectedWallet = !!selectedWalletAddr;
       const selWalletInCard = hasSelectedWallet && allAddrs.some(a => a.toLowerCase() === (selectedWalletAddr||'').toLowerCase());
       const cardOpacity = hasSelectedWallet && !selWalletInCard ? 0.35 : 1;
@@ -9918,15 +9930,12 @@
       const cardStyle = `opacity:${cardOpacity};cursor:pointer;${wc ? `--row-color:${wc}` : ''}`;
       const cardClass = `consensus-card${selWalletInCard ? ' is-selected' : ''}`;
 
-      // Card-level click cycles through wallets: dominant-direction first, then others, then deselect
       const dominantAddrs = isLongDominant ? d.longAddrs : d.shortAddrs;
       const nonDominantAddrs = isLongDominant ? d.shortAddrs : d.longAddrs;
       const cycleAddrs = [...new Set([...dominantAddrs, ...nonDominantAddrs])];
-      // Store addrs as comma-separated in a data attribute to avoid quote conflicts inside onclick=""
       const cycleData = cycleAddrs.join(',');
 
-      return `<div class="${cardClass}" style="${cardStyle}" data-cycle-addrs="${cycleData}" onclick="selectConsensusCard(this)" title="Clique para selecionar/ciclar wallets · dots para selecionar wallet específica">
-        <div class="consensus-pair">${pair}</div>
+      const inner = `<div class="consensus-pair">${pair}</div>
         <div class="consensus-bar-row">
           <span class="consensus-label long" style="min-width:28px;text-align:right">${longPct}%</span>
           <div class="consensus-track">
@@ -9943,11 +9952,39 @@
           ${d.longAddrs.length && d.shortAddrs.length ? `<span style="color:var(--border2);margin:0 2px">|</span>` : ''}
           ${d.shortAddrs.length ? `<span class="consensus-wallet-dot-label" style="color:rgba(255,77,97,0.7)">S:</span>${shortDotsHtml}` : ''}
           ${hasSelectedWallet && selWalletInCard ? `<button onclick="event.stopPropagation();clearWalletSelection()" style="margin-left:auto;font-size:8px;background:rgba(255,61,77,0.12);border:1px solid rgba(255,61,77,0.3);color:var(--red);cursor:pointer;font-family:var(--mono);padding:1px 6px;border-radius:3px">✕</button>` : ''}
-        </div>
-      </div>`;
-    }).join('');
+        </div>`;
+      return { inner, cardClass, cardStyle, cycleData };
+    }
 
-    body.innerHTML = cards;
+    // Patch individual por card: reusa elementos DOM existentes, só cria/remove quando necessário
+    const existingCards = Array.from(body.querySelectorAll('.consensus-card'));
+    const existingByPair = new Map(existingCards.map(el => [el.dataset.pair, el]));
+
+    pairs.forEach((pair, i) => {
+      const { inner, cardClass, cardStyle, cycleData } = cardInner(pair);
+      let el = existingByPair.get(pair);
+      if (!el) {
+        // Card novo: cria e insere na posição correta
+        el = document.createElement('div');
+        el.dataset.pair = pair;
+        el.setAttribute('onclick', 'selectConsensusCard(this)');
+        el.setAttribute('title', 'Clique para selecionar/ciclar wallets · dots para selecionar wallet específica');
+        body.appendChild(el);
+      }
+      // Atualiza atributos e conteúdo sem recriar o elemento
+      el.className = cardClass;
+      el.setAttribute('style', cardStyle);
+      el.setAttribute('data-cycle-addrs', cycleData);
+      if (el.innerHTML !== inner) el.innerHTML = inner;
+      // Garante ordem correta no DOM
+      if (body.children[i] !== el) body.insertBefore(el, body.children[i] || null);
+    });
+
+    // Remove cards que não existem mais
+    Array.from(body.querySelectorAll('.consensus-card')).forEach(el => {
+      if (!presentSet.has(el.dataset.pair)) el.remove();
+    });
+
     if (count) count.textContent = pairs.length + ' par' + (pairs.length !== 1 ? 'es' : '');
   }
 
@@ -10164,6 +10201,8 @@
     return 'stable';                                     // ➡️ Estável
   }
 
+  let _momentumOrderKeys = [];
+
   function renderWhaleMomentum() {
     const body  = document.getElementById('whale-momentum-body');
     const count = document.getElementById('whale-momentum-count');
@@ -10177,6 +10216,7 @@
 
     const pairs = [...new Set([...Object.keys(_momentumCurr), ...Object.keys(_momentumPrev)])];
     if (!pairs.length) {
+      _momentumOrderKeys = [];
       body.innerHTML = '<div class="momentum-empty">Aguardando posições abertas...</div>';
       if (count) count.textContent = '0 pares';
       return;
@@ -10214,13 +10254,11 @@
     });
 
     if (!momentumData.length) {
+      _momentumOrderKeys = [];
       body.innerHTML = '<div class="momentum-empty">Nenhum par com os filtros selecionados</div>';
       if (count) count.textContent = '0 pares';
       return;
     }
-
-    // Ordena por magnitude de mudança
-    momentumData.sort((a,b) => Math.abs(b.pctChange) - Math.abs(a.pctChange));
 
     // Mapa de grade → visual
     const GRADE_MAP = {
@@ -10231,15 +10269,22 @@
       reducing_strong: { cls: 'down', arrow: '💥', label: 'Reduzindo Forte ↓',  badge: 'mom-badge-rs' },
     };
 
-    const cards = momentumData.map(d => {
+    // Mantém a ordem visual dos cards estável entre re-renders
+    const presentSet = new Set(momentumData.map(d => d.pair));
+    _momentumOrderKeys = _momentumOrderKeys.filter(k => presentSet.has(k));
+    momentumData.forEach(d => { if (!_momentumOrderKeys.includes(d.pair)) _momentumOrderKeys.push(d.pair); });
+    const orderIndex = new Map(_momentumOrderKeys.map((k, i) => [k, i]));
+    momentumData.sort((a, b) => (orderIndex.get(a.pair) ?? 0) - (orderIndex.get(b.pair) ?? 0));
+
+    // Função que gera o innerHTML interno de um card (sem o wrapper <div>)
+    function cardInner(d) {
       const g    = GRADE_MAP[d.grade] || GRADE_MAP.stable;
       const sign = d.pctChange >= 0 ? '+' : '';
       const sideLabel = d.isLong
         ? `<span style="color:var(--green)">LONG</span>`
         : `<span style="color:var(--red)">SHORT</span>`;
-
-      return `<div class="momentum-card ${g.cls}">
-        <div class="momentum-pair">
+      return {
+        inner: `<div class="momentum-pair">
           <span>${g.arrow}</span>
           <span>${d.pair}</span>
           <span style="font-size:10px;font-weight:400;color:var(--muted)">${sideLabel}</span>
@@ -10258,11 +10303,33 @@
             <span style="color:var(--muted2);margin:0 3px">·</span>
             <span style="color:rgba(255,61,77,0.7)">Short: ${fmtK(d.curr.shortUsdc)}</span>
           </div>
-        </div>
-      </div>`;
-    }).join('');
+        </div>`,
+        cls: `momentum-card ${g.cls}`
+      };
+    }
 
-    body.innerHTML = cards;
+    // Patch individual por card: reusa elementos DOM existentes, só cria/remove quando necessário
+    const existingCards = Array.from(body.querySelectorAll('.momentum-card'));
+    const existingByPair = new Map(existingCards.map(el => [el.dataset.pair, el]));
+
+    momentumData.forEach((d, i) => {
+      const { inner, cls } = cardInner(d);
+      let el = existingByPair.get(d.pair);
+      if (!el) {
+        el = document.createElement('div');
+        el.dataset.pair = d.pair;
+        body.appendChild(el);
+      }
+      el.className = cls;
+      if (el.innerHTML !== inner) el.innerHTML = inner;
+      if (body.children[i] !== el) body.insertBefore(el, body.children[i] || null);
+    });
+
+    // Remove cards que não existem mais
+    Array.from(body.querySelectorAll('.momentum-card')).forEach(el => {
+      if (!presentSet.has(el.dataset.pair)) el.remove();
+    });
+
     if (count) count.textContent = momentumData.length + ' par' + (momentumData.length!==1?'es':'');
   }
 
@@ -10450,6 +10517,11 @@
   // ele não pula de lugar — apenas seu conteúdo é atualizado. Novos clusters entram no final.
   let _clusterOrderKeys = [];
 
+  // Mantém a ordem visual dos cards de Risk Score do Mercado estável entre re-renders:
+  // o card de um par não pula de lugar quando o score muda — apenas o conteúdo é atualizado.
+  // Novos pares entram no final; pares que somem são removidos da ordem.
+  let _riskOrderKeys = [];
+
   function renderEntryCluster() {
     const body  = document.getElementById('entry-cluster-body');
     const count = document.getElementById('entry-cluster-count');
@@ -10587,6 +10659,7 @@
   ───────────────────────────────────────────────────────────────────��─────── */
   // Track peak whale count per pair+side across the session
   let _exitPeakCount = {}; // key: "pair|side" → max wallets seen
+  let _exitKeyWallets = {}; // key: "pair|side" → Set de wallets já vistas (para filtro de wallet)
 
   function renderSmartExit() {
     const body  = document.getElementById('smart-exit-body');
@@ -10603,6 +10676,8 @@
       const key = `${p.pair}|${(p.side || '').toUpperCase()}`;
       if (!openNow[key]) openNow[key] = new Set();
       openNow[key].add(p.addr);
+      if (!_exitKeyWallets[key]) _exitKeyWallets[key] = new Set();
+      _exitKeyWallets[key].add((p.addr || '').toLowerCase());
     });
 
     // Update peak counts
@@ -10626,7 +10701,7 @@
       const closed_count = peak - currentOpen;
       const pct = peak > 0 ? (closed_count / peak) * 100 : 0;
       if (pct < 0) return;
-      exitData.push({ pair, side, peak, currentOpen, closed_count, pct });
+      exitData.push({ pair, side, peak, currentOpen, closed_count, pct, key });
     });
 
     if (!exitData.length) {
@@ -10637,6 +10712,29 @@
 
     exitData.sort((a, b) => b.pct - a.pct);
 
+    // Popula dropdown de ativos
+    const exAssetSel = document.getElementById('exit-asset-filter');
+    if (exAssetSel) {
+      const allPairs = [...new Set(exitData.map(d => d.pair))].sort();
+      const curVal = exAssetSel.value;
+      exAssetSel.innerHTML = '<option value="all">Todos</option>' +
+        allPairs.map(p => `<option value="${p}"${p===curVal?' selected':''}>${p}</option>`).join('');
+    }
+
+    // Popula dropdown de wallets
+    const exWalletSel = document.getElementById('exit-wallet-filter');
+    if (exWalletSel) {
+      const curVal = exWalletSel.value;
+      const addrs = [...new Set(positions.map(p => p.addr).filter(Boolean))];
+      let opts = '<option value="all">Todas</option>';
+      addrs.forEach(addr => {
+        const label = addr.slice(0,6)+'...'+addr.slice(-4);
+        opts += `<option value="${addr}">${label}</option>`;
+      });
+      exWalletSel.innerHTML = opts;
+      if (curVal && curVal !== 'all') exWalletSel.value = curVal;
+    }
+
     // Apply smart exit filters
     const _exFilters2 = getExitFilters();
     const filteredExitData = exitData.filter(d => {
@@ -10645,6 +10743,11 @@
       if (_exFilters2.dir === 'short' && isLong) return false;
       if (_exFilters2.grade === 'high' && d.pct < 50) return false;
       if (_exFilters2.grade === 'low' && d.pct >= 50) return false;
+      if (_exFilters2.asset !== 'all' && d.pair !== _exFilters2.asset) return false;
+      if (_exFilters2.wallet !== 'all') {
+        const ws = _exitKeyWallets[d.key];
+        if (!ws || !ws.has(_exFilters2.wallet.toLowerCase())) return false;
+      }
       return true;
     });
 
@@ -10870,7 +10973,15 @@
       if (d.consensus < _rFilters.minConsensus) return false;
       if (d.conviction < _rFilters.minConviction) return false;
       return true;
-    }).sort((a, b) => b.score - a.score);
+    });
+
+    // Mantém os cards parados: a posição de cada par é fixada na primeira vez que aparece;
+    // atualizações de score não reordenam os cards, só o conteúdo interno é atualizado.
+    const presentRiskKeys = new Set(scored.map(d => d.pair));
+    _riskOrderKeys = _riskOrderKeys.filter(k => presentRiskKeys.has(k));
+    scored.forEach(d => { if (!_riskOrderKeys.includes(d.pair)) _riskOrderKeys.push(d.pair); });
+    const riskOrderIndex = new Map(_riskOrderKeys.map((k, i) => [k, i]));
+    scored.sort((a, b) => (riskOrderIndex.get(a.pair) ?? 0) - (riskOrderIndex.get(b.pair) ?? 0));
 
     const cards = scored.map(d => {
       return `<div class="risk-card ${d.tier}">
@@ -11692,7 +11803,9 @@
   function getExitFilters() {
     return {
       dir: (document.getElementById('exit-dir-filter') || {}).value || 'all',
-      grade: (document.getElementById('exit-grade-filter') || {}).value || 'all' // 'all'|'high'|'low'
+      grade: (document.getElementById('exit-grade-filter') || {}).value || 'all', // 'all'|'high'|'low'
+      asset: (document.getElementById('exit-asset-filter') || {}).value || 'all',
+      wallet: (document.getElementById('exit-wallet-filter') || {}).value || 'all'
     };
   }
 
