@@ -1462,6 +1462,21 @@
     background: var(--bg3);
   }
   .patrimony-head-left { display: flex; align-items: center; gap: 8px; }
+  .patrimony-live-pill {
+    display: flex; align-items: center; gap: 5px;
+    font-family: var(--mono); font-size: 9px; font-weight: 600;
+    letter-spacing: 0.3px; text-transform: none; color: var(--amber);
+    background: var(--amber-dim); border: 1px solid rgba(247,177,61,0.3);
+    padding: 2px 9px; border-radius: 20px;
+  }
+  .patrimony-live-pill .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--amber); animation: blink 1.6s infinite; flex-shrink: 0; }
+  .patrimony-update-info {
+    font-family: var(--mono); font-size: 9.5px; color: var(--muted2);
+    letter-spacing: 0.2px; text-transform: none; font-weight: 400; white-space: nowrap;
+  }
+  .patrimony-update-info strong { color: var(--muted); font-weight: 600; }
+  .patrimony-head .btn-panel-minimize { width: 22px; height: 22px; }
+  .patrimony-head .btn-panel-minimize::before { font-size: 11px; }
   .patrimony-filter-bar {
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
     padding: 6px 14px; border-bottom: 1px solid var(--border);
@@ -1471,31 +1486,56 @@
   .patrimony-body { padding: 12px 14px 10px; position: relative; }
   #patrimony-canvas { width: 100%; display: block; }
   .patrimony-empty { color: var(--muted2); font-size: 11px; text-align: center; padding: 32px 0; }
-  .patrimony-legend { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  /* ── PATRIMONY OVERVIEW CARDS (Portfólio Total + por wallet) ── */
+  .patrimony-legend {
+    display: flex; align-items: stretch; gap: 8px; flex-wrap: wrap;
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+  }
   .patrimony-legend-item {
-    display: flex; align-items: center; gap: 4px; font-size: 9px; color: var(--muted);
+    display: flex; flex-direction: column; gap: 5px;
+    min-width: 150px; flex: 1 1 150px;
+    font-size: 9px; color: var(--muted);
     letter-spacing: 0.3px; font-family: var(--mono); cursor: pointer;
-    border: 1px solid transparent; border-radius: 5px; padding: 2px 6px 2px 4px;
-    transition: opacity 0.18s, background 0.18s, border-color 0.18s, color 0.18s;
+    border: 1px solid var(--border2); border-radius: 10px;
+    background: var(--bg3); padding: 8px 10px 7px;
+    transition: opacity 0.18s, background 0.18s, border-color 0.18s, color 0.18s, transform 0.12s;
     user-select: none;
   }
-  .patrimony-legend-item:hover { background: rgba(255,255,255,0.05); border-color: var(--border2); color: var(--text); }
+  .patrimony-legend-item:hover { background: var(--bg4); border-color: var(--border3); color: var(--text); transform: translateY(-1px); }
   .patrimony-legend-item.legend-active {
-    background: rgba(255,255,255,0.06); border-color: var(--border3); color: var(--text);
+    background: var(--bg4); border-color: var(--border3); color: var(--text);
   }
   .patrimony-legend-item.legend-dimmed {
-    opacity: 0.35;
+    opacity: 0.4;
   }
   .patrimony-legend-item.legend-dimmed .patrimony-legend-dot { filter: grayscale(0.7); }
-  .patrimony-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; transition: transform 0.15s; }
-  .patrimony-legend-item:hover .patrimony-legend-dot { transform: scale(1.3); }
-  .patrimony-legend-item.legend-active .patrimony-legend-dot { transform: scale(1.25); box-shadow: 0 0 5px currentColor; }
+  .patrimony-legend-item.pcard-total {
+    border-color: rgba(247,177,61,0.4); background: rgba(247,177,61,0.07); cursor: default;
+  }
+  .patrimony-legend-item.pcard-total:hover { transform: none; border-color: rgba(247,177,61,0.55); background: rgba(247,177,61,0.09); }
+  .patrimony-legend-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; transition: transform 0.15s; }
+  .patrimony-legend-item:hover .patrimony-legend-dot { transform: scale(1.2); }
+  .patrimony-legend-item.legend-active .patrimony-legend-dot { transform: scale(1.15); box-shadow: 0 0 5px currentColor; }
+  .pcard-top    { display: flex; align-items: center; gap: 5px; }
+  .pcard-rank   { color: var(--muted2); font-size: 8.5px; flex-shrink: 0; }
+  .pcard-label  { color: var(--text); font-weight: 700; font-size: 9.5px; letter-spacing: 0.4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pcard-total .pcard-label { text-transform: uppercase; color: var(--amber); }
+  .pcard-live   {
+    margin-left: auto; flex-shrink: 0; font-size: 7.5px; color: var(--green);
+    letter-spacing: 0.3px; display: flex; align-items: center; gap: 3px; white-space: nowrap;
+  }
+  .pcard-total .pcard-live { color: var(--amber); }
+  .pcard-live::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: currentColor; animation: blink 1.6s infinite; flex-shrink: 0; }
+  .pcard-value  { font-size: 15px; font-weight: 800; color: #fff; display: flex; align-items: baseline; gap: 5px; }
+  .pcard-delta  { font-size: 9.5px; font-weight: 600; }
+  .pcard-since  { font-size: 8px; color: var(--muted2); letter-spacing: 0.3px; display: flex; justify-content: space-between; gap: 6px; }
 
   /* ── PATRIMONY SPLIT LAYOUT ── */
   .patrimony-split-body {
     display: grid;
     grid-template-columns: 1fr 340px;
-    min-height: 220px;
+    min-height: 300px;
   }
   .patrimony-chart-col {
     padding: 12px 14px 10px;
@@ -1539,7 +1579,7 @@
   .patrimony-ops-scroll {
     overflow-y: auto;
     flex: 1;
-    max-height: 232px;
+    max-height: 312px;
   }
   .patrimony-ops-empty {
     color: var(--muted2);
@@ -1550,9 +1590,9 @@
   /* Open position rows in patrimony panel */
   .pat-op-row {
     display: grid;
-    grid-template-columns: 8px minmax(50px,1fr) 64px 58px 70px;
+    grid-template-columns: 8px minmax(44px,1fr) 62px 62px 52px 66px;
     align-items: center;
-    gap: 0 6px;
+    gap: 0 5px;
     padding: 5px 10px;
     border-bottom: 1px solid var(--border);
     font-size: 10px;
@@ -1563,9 +1603,9 @@
   .pat-op-row:hover { background: rgba(255,255,255,0.025); }
   .pat-op-head {
     display: grid;
-    grid-template-columns: 8px minmax(50px,1fr) 64px 58px 70px;
+    grid-template-columns: 8px minmax(44px,1fr) 62px 62px 52px 66px;
     align-items: center;
-    gap: 0 6px;
+    gap: 0 5px;
     padding: 4px 10px 5px;
     border-bottom: 1px solid var(--border2);
     font-size: 8px;
@@ -2876,6 +2916,7 @@
   .panel-collapsed .patrimony-body,
   .panel-collapsed .patrimony-split-body,
   .panel-collapsed .patrimony-filter-bar,
+  .panel-collapsed .patrimony-legend,
   .panel-collapsed .panel-filter-bar { display: none !important; }
   /* Remove border-bottom from panel-head when panel is collapsed (no body below) */
   .panel-collapsed > .panel-head { border-bottom: none; }
@@ -3384,14 +3425,15 @@
       <div class="patrimony-head-left">
         <span>📈 Evolução do Patrimônio</span>
         <span class="panel-count" id="patrimony-count">0 wallets</span>
+        <span class="patrimony-live-pill"><span class="dot"></span>Live data</span>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1">
-        <div class="patrimony-legend" id="patrimony-legend"></div>
-      </div>
+      <span class="patrimony-update-info" id="patrimony-update-info">Última Atualização: <strong id="patrimony-update-secs">—</strong></span>
       <button class="btn-panel-minimize" onclick="togglePanelMinimize('patrimony-panel',this)" title="Minimizar"></button>
     </div>
+    <!-- Overview cards: Portfólio Total + por wallet (clique para exibir/ocultar no gráfico) -->
+    <div class="patrimony-legend" id="patrimony-legend"></div>
     <div class="patrimony-filter-bar">
-      <label>Wallet:</label>
+      <label>Selecione a Carteira:</label>
       <select id="patrimony-wallet-filter" class="panel-filter-select" onchange="renderPatrimonyChart()" title="Filtrar wallet">
         <option value="all">Todas</option>
         <option value="1">Top 1</option>
@@ -3400,7 +3442,6 @@
         <option value="5">Top 5</option>
       </select>
       <span style="color:var(--border2);margin:0 2px">|</span>
-      <label>Período:</label>
       <div id="patrimony-period-btns" style="display:flex;gap:4px;flex-wrap:wrap">
         <button class="period-btn" data-period="1d"  onclick="selectPatrimonyPeriod('1d',this)">1D</button>
         <button class="period-btn" data-period="1w"  onclick="selectPatrimonyPeriod('1w',this)">1S</button>
@@ -3421,18 +3462,6 @@
         Buscar histórico completo
       </button>
       <span id="patrimony-fetch-status" style="font-size:9px;color:var(--muted2);margin-left:4px;white-space:nowrap"></span>
-      <span style="margin-left:auto;font-size:9px;color:var(--muted2);letter-spacing:0.3px">Saldo total USDC (perp + spot) ao longo do tempo</span>
-      <span style="display:flex;align-items:center;gap:7px;margin-left:10px;flex-shrink:0">
-        <span style="display:flex;align-items:center;gap:3px;font-size:8.5px;color:var(--muted)">
-          <svg width="11" height="11" viewBox="0 0 11 11"><circle cx="5.5" cy="5.5" r="4.5" fill="#2ee591" stroke="#1aa860" stroke-width="1.2"/><circle cx="5.5" cy="5.5" r="1.5" fill="rgba(255,255,255,0.75)"/></svg>Long
-        </span>
-        <span style="display:flex;align-items:center;gap:3px;font-size:8.5px;color:var(--muted)">
-          <svg width="11" height="11" viewBox="0 0 11 11"><circle cx="5.5" cy="5.5" r="4.5" fill="#ff4d61" stroke="#c2293d" stroke-width="1.2"/><circle cx="5.5" cy="5.5" r="1.5" fill="rgba(255,255,255,0.75)"/></svg>Short
-        </span>
-        <span style="display:flex;align-items:center;gap:3px;font-size:8.5px;color:var(--muted)">
-          <svg width="11" height="11" viewBox="0 0 11 11"><circle cx="5.5" cy="5.5" r="4.5" fill="rgba(46,229,145,0.15)" stroke="#2ee591" stroke-width="1.6" stroke-dasharray="3 2"/><circle cx="5.5" cy="5.5" r="2" fill="#2ee591"/></svg>Aberta
-        </span>
-      </span>
     </div>
     <!-- Progress bar for full history fetch -->
     <div id="patrimony-progress-wrap" style="display:none;padding:0 14px 8px;background:var(--bg3);border-bottom:1px solid var(--border)">
@@ -3447,18 +3476,32 @@
     <div class="patrimony-split-body">
       <!-- Left: evolution chart -->
       <div class="patrimony-chart-col">
-        <canvas id="patrimony-canvas" height="180"></canvas>
+        <canvas id="patrimony-canvas" height="260"></canvas>
         <div class="patrimony-empty" id="patrimony-empty">Aguardando dados de wallets...</div>
       </div>
       <!-- Right: open positions detail -->
       <div class="patrimony-ops-col">
         <div class="patrimony-ops-head">
           <span>Operações Abertas</span>
-          <span class="patrimony-ops-count" id="pat-ops-count">0</span>
+          <span style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+            <span style="display:flex;align-items:center;gap:7px">
+              <span style="display:flex;align-items:center;gap:3px;font-size:8.5px;color:var(--muted);text-transform:none;letter-spacing:0.3px">
+                <svg width="11" height="11" viewBox="0 0 11 11"><circle cx="5.5" cy="5.5" r="4.5" fill="#2ee591" stroke="#1aa860" stroke-width="1.2"/><circle cx="5.5" cy="5.5" r="1.5" fill="rgba(255,255,255,0.75)"/></svg>Long
+              </span>
+              <span style="display:flex;align-items:center;gap:3px;font-size:8.5px;color:var(--muted);text-transform:none;letter-spacing:0.3px">
+                <svg width="11" height="11" viewBox="0 0 11 11"><circle cx="5.5" cy="5.5" r="4.5" fill="#ff4d61" stroke="#c2293d" stroke-width="1.2"/><circle cx="5.5" cy="5.5" r="1.5" fill="rgba(255,255,255,0.75)"/></svg>Short
+              </span>
+              <span style="display:flex;align-items:center;gap:3px;font-size:8.5px;color:var(--muted);text-transform:none;letter-spacing:0.3px">
+                <svg width="11" height="11" viewBox="0 0 11 11"><circle cx="5.5" cy="5.5" r="4.5" fill="rgba(46,229,145,0.15)" stroke="#2ee591" stroke-width="1.6" stroke-dasharray="3 2"/><circle cx="5.5" cy="5.5" r="2" fill="#2ee591"/></svg>Aberta
+              </span>
+            </span>
+            <span class="patrimony-ops-count" id="pat-ops-count">0</span>
+          </span>
         </div>
         <div class="pat-op-head">
           <span></span>
           <span>Par</span>
+          <span style="text-align:right">Entrada</span>
           <span style="text-align:right">PnL (USDC)</span>
           <span style="text-align:right">Size</span>
           <span style="text-align:right;cursor:pointer;user-select:none" id="pat-op-sort-abertura" onclick="togglePatOpsDateSort()" title="Ordenar por data de abertura">Abertura <span id="pat-op-sort-icon">↓</span></span>
@@ -3467,9 +3510,9 @@
           <div class="patrimony-ops-empty" id="pat-ops-empty">Nenhuma posição aberta</div>
         </div>
         <div class="patrimony-ops-footer" id="pat-ops-footer" style="display:none">
-          <span style="color:var(--muted)">PnL Total:</span>
-          <span class="pat-footer-pnl neut" id="pat-ops-total-pnl">$0.00</span>
-          <span style="margin-left:auto;color:var(--muted2)" id="pat-ops-breakdown"></span>
+          <span style="color:var(--muted)">PnL Total Atual</span>
+          <span style="color:var(--muted2)" id="pat-ops-breakdown"></span>
+          <span class="pat-footer-pnl neut" id="pat-ops-total-pnl" style="margin-left:auto">$0.00</span>
         </div>
       </div>
     </div>
@@ -7800,6 +7843,7 @@
       _patrimonyHiddenWallets.add(key);
     }
     renderPatrimonyChart();
+    renderPatOps();
   }
 
   let _patrimonyPeriod = '1m'; // período ativo nos botões
@@ -8199,7 +8243,9 @@
     renderPatrimonyChart();
   }
 
+  let _patrimonyLastUpdateTs = 0;
   function renderPatrimonyChart() {
+    _patrimonyLastUpdateTs = Date.now();
     try { _renderPatrimonyChartInner(); } catch(e) { console.error('[PatrimonyChart] erro:', e); }
   }
   function _renderPatrimonyChartInner() {
@@ -8388,36 +8434,61 @@
       countEl.textContent = n + ' wallet' + (n !== 1 ? 's' : '');
     }
 
-    // ── Legend ────────────────────────────────────────────────────────────────
+    // ── Overview cards (Portfólio Total + por wallet) ──────────────────────────
+    // Mantém a mesma função de toggle (_patrimonyToggleLegend) já usada para
+    // exibir/ocultar wallets no modo "Todas" — apenas o template visual muda.
     if (legendEl) {
-      legendEl.innerHTML = series.map((s, i) => {
+      let totalLast = 0, totalFirst = 0, totalPosCount = 0;
+      const cardsHtml = series.map((s, i) => {
         const first = s.pts[0];
         const last  = s.pts[s.pts.length - 1];
         const lastVal  = last.value  ?? 0;
         const firstVal = first.value ?? 0;
         const delta = lastVal - firstVal;
+        totalLast  += lastVal;
+        totalFirst += firstVal;
         const sign  = delta >= 0 ? '+' : '';
         const deltaStr = sign + (Math.abs(delta) >= 1000 ? (delta/1000).toFixed(1)+'K' : delta.toFixed(2));
-        const deltaColor = delta >= 0 ? 'var(--green)' : 'var(--red)';
+        const deltaArrow = delta > 0 ? ' ▲' : delta < 0 ? ' ▼' : '';
+        const deltaColor = delta > 0 ? 'var(--green)' : delta < 0 ? 'var(--red)' : 'var(--muted2)';
         const valStr = lastVal >= 1000 ? (lastVal/1000).toFixed(2)+'K' : lastVal.toFixed(2);
-        const spanMs2 = last.ts - first.ts;
-        let spanLabel = '';
-        if (spanMs2 > 24*60*MIN) {
-          const fd = new Date(first.ts);
-          spanLabel = ` <span style="color:var(--muted2);font-size:8px">desde ${fd.getDate().toString().padStart(2,'0')}/${(fd.getMonth()+1).toString().padStart(2,'0')}/${fd.getFullYear()}</span>`;
-        }
+        const fd = new Date(first.ts);
+        const sinceStr = `${fd.getDate().toString().padStart(2,'0')}/${(fd.getMonth()+1).toString().padStart(2,'0')}/${fd.getFullYear()}`;
         const dotColor = s.isCombined ? 'var(--green)' : s.color;
-        const rankPfx  = s.isCombined ? '' : `#${i + 1} `;
+        const rankPfx  = s.isCombined ? '' : `${i + 1} `;
         const isHidden = isAll && _patrimonyHiddenWallets.has(s.addr.toLowerCase());
         const clickHandler = isAll ? ` onclick="_patrimonyToggleLegend('${s.addr}')"` : '';
         const activeClass = isAll ? (isHidden ? ' legend-dimmed' : ' legend-active') : '';
         return `<div class="patrimony-legend-item${activeClass}" data-addr="${s.addr}"${clickHandler} title="${isAll ? (isHidden ? 'Clique para exibir' : 'Clique para ocultar') : ''}">
-          <div class="patrimony-legend-dot" style="background:${isHidden ? 'var(--muted2)' : dotColor}"></div>
-          <span>${rankPfx}${s.label}</span>
-          <span style="color:#fff;font-weight:700;margin-left:4px">$${valStr}</span>
-          <span style="color:${deltaColor};font-weight:600;margin-left:4px;font-size:8.5px">(${deltaStr})</span>${spanLabel}
+          <div class="pcard-top">
+            <div class="patrimony-legend-dot" style="background:${isHidden ? 'var(--muted2)' : dotColor}"></div>
+            <span class="pcard-rank">${rankPfx}</span>
+            <span class="pcard-label">${s.label}</span>
+            <span class="pcard-live">Live</span>
+          </div>
+          <div class="pcard-value">$${valStr}${delta !== 0 ? `<span class="pcard-delta" style="color:${deltaColor}">(${deltaStr})${deltaArrow}</span>` : ''}</div>
+          <div class="pcard-since"><span>DESDE ${sinceStr}</span></div>
         </div>`;
       }).join('');
+
+      // Posições abertas agregadas das wallets ativas (visão geral do portfólio)
+      totalPosCount = positions.filter(p => walletEnabled[(p.addr || '').toLowerCase()] !== false).length;
+      const totalDelta = totalLast - totalFirst;
+      const totalSign  = totalDelta >= 0 ? '+' : '';
+      const totalDeltaStr = totalSign + (Math.abs(totalDelta) >= 1000 ? (totalDelta/1000).toFixed(1)+'K' : totalDelta.toFixed(2));
+      const totalDeltaArrow = totalDelta > 0 ? ' ▲' : totalDelta < 0 ? ' ▼' : '';
+      const totalDeltaColor = totalDelta > 0 ? 'var(--green)' : totalDelta < 0 ? 'var(--red)' : 'var(--muted2)';
+      const totalValStr = totalLast >= 1000 ? (totalLast/1000).toFixed(1)+'K' : totalLast.toFixed(2);
+      const totalCard = `<div class="patrimony-legend-item pcard-total" title="Soma de todas as wallets ativas">
+        <div class="pcard-top">
+          <span class="pcard-label">Portfólio Total</span>
+          <span class="pcard-live">Live</span>
+        </div>
+        <div class="pcard-value">$${totalValStr}<span class="pcard-delta" style="color:${totalDeltaColor}">${totalDeltaStr}${totalDeltaArrow}</span></div>
+        <div class="pcard-since"><span>Agregata PnL</span><span>${totalPosCount} posiç${totalPosCount === 1 ? 'ão' : 'ões'}</span></div>
+      </div>`;
+
+      legendEl.innerHTML = totalCard + cardsHtml;
     }
 
     // Série visível para o gráfico: no modo "Todas", exclui wallets ocultas pela legenda
@@ -8774,8 +8845,12 @@
         if (!meta) return;
 
         const parentRect = canvas.parentElement.getBoundingClientRect();
-        const tipX = Math.min(e.clientX - parentRect.left + 14, parentRect.width - 200);
-        const tipY = Math.max(e.clientY - parentRect.top  - 20, 4);
+        const TIP_W = 210; // estimated tooltip width
+        const TIP_H = 210; // estimated tooltip height (trade marker tooltip)
+        const rawX = e.clientX - parentRect.left + 14;
+        const rawY = e.clientY - parentRect.top  - 20;
+        const tipX = Math.min(rawX, parentRect.width  - TIP_W - 8);
+        const tipY = Math.max(4, Math.min(rawY, parentRect.height - TIP_H - 8));
 
         // ── Priority 1: check if mouse is near a trade marker (hit radius = MARKER_R+3) ──
         const HIT = MARKER_R + 4;
@@ -8932,10 +9007,12 @@
       allowedAddrs = new Set(ranked.map(a => a.toLowerCase()));
     }
 
-    // Filtra posições: wallet habilitada + dentro do filtro selecionado
+    // Filtra posições: wallet habilitada + dentro do filtro selecionado + cards selecionados
     const activePos = positions.filter(p => {
       if (walletEnabled[(p.addr || '').toLowerCase()] === false) return false;
       if (allowedAddrs && !allowedAddrs.has((p.addr || '').toLowerCase())) return false;
+      // Respeita seleção dos cards da legenda de patrimônio (wallets ocultas = não selecionadas)
+      if (_patrimonyHiddenWallets.size > 0 && _patrimonyHiddenWallets.has((p.addr || '').toLowerCase())) return false;
       return true;
     });
 
@@ -8969,6 +9046,9 @@
       const pnlFmt    = pnlSign + (Math.abs(pnl) >= 1000 ? (pnl/1000).toFixed(2)+'K' : pnl.toFixed(2));
       const size      = p.sizeUsdc ?? p.size ?? null;
       const sizeFmt   = size != null ? '$' + (Math.abs(size) >= 1000 ? (size/1000).toFixed(1)+'K' : size.toFixed(0)) : '—';
+      // Preço de entrada
+      const entry     = p.entryPrice ?? p.entry ?? p.ep ?? p.avgPrice ?? null;
+      const entryFmt  = entry != null ? (parseFloat(entry) >= 1000 ? parseFloat(entry).toLocaleString('en-US', {maximumFractionDigits:1}) : parseFloat(entry).toFixed(4)) : '—';
       const openedTs  = p.openedAtTs || p.openedTs || 0;
       let dateFmt = '—';
       if (openedTs > 0) {
@@ -8985,6 +9065,7 @@
           <div class="pat-op-pair">${pairLabel}</div>
           <div class="pat-op-sub" style="color:${wColor}">${wLabel}</div>
         </span>
+        <span class="pat-op-entry" style="text-align:right;color:var(--muted)">${entryFmt}</span>
         <span class="pat-op-pnl ${pnlClass}" style="text-align:right">${pnlFmt}</span>
         <span class="pat-op-entry" style="text-align:right">${sizeFmt}</span>
         <span class="pat-op-entry" style="text-align:right;font-size:9px">${dateFmt}</span>
@@ -10916,6 +10997,16 @@
   // Os dados já foram atualizados em memória pelos handlers WS;
   // este interval não faz chamadas de rede, só atualiza o DOM.
   setInterval(renderAll, RENDER_MS);
+
+  // Ticker leve (1s) só para o texto "Última Atualização: Xs atrás" do
+  // painel de patrimônio — não refaz nenhum cálculo, apenas exibe o tempo
+  // transcorrido desde o último ciclo de renderPatrimonyChart().
+  setInterval(() => {
+    const el = document.getElementById('patrimony-update-secs');
+    if (!el || !_patrimonyLastUpdateTs) return;
+    const secs = Math.max(0, Math.round((Date.now() - _patrimonyLastUpdateTs) / 1000));
+    el.textContent = secs < 60 ? secs + 's atrás' : Math.floor(secs / 60) + 'm atrás';
+  }, 1000);
 
   // Render imediato ao carregar (estado de "Iniciando...")
   renderAll();
