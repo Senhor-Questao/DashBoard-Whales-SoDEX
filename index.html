@@ -3768,6 +3768,9 @@
     <div class="whale-momentum-head">
       <span>🚀 Whale Momentum</span>
       <div class="panel-filter-group">
+        <select id="mom-asset-filter" class="panel-filter-select" onchange="renderWhaleMomentum()" title="Filtrar por ativo">
+          <option value="all">Todos os ativos</option>
+        </select>
         <select id="mom-dir-filter" class="panel-filter-select" onchange="renderWhaleMomentum()" title="Filtrar por direção dominante">
           <option value="all">Todos</option>
           <option value="long">🟢 Long</option>
@@ -3787,6 +3790,52 @@
     </div>
     <div class="whale-momentum-body" id="whale-momentum-body">
       <div class="momentum-empty">Aguardando dados...</div>
+    </div>
+  </div>
+
+  <!-- WHALE HEATMAP -->
+  <div class="whale-heatmap-panel" id="whale-heatmap-panel">
+    <div class="whale-heatmap-head">
+      <span>🌡️ Whale Heatmap</span>
+      <span class="panel-count" id="whale-heatmap-count">0 ativos</span>
+      <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-heatmap-panel',this)" title="Minimizar"></button>
+    </div>
+    <!-- Wallet selection banner (igual ao do PnL por Wallet) -->
+    <div id="heatmap-wallet-selection-banner" style="display:none;align-items:center;gap:8px;padding:6px 14px;background:rgba(61,142,255,0.07);border-bottom:1px solid rgba(61,142,255,0.18);font-size:10px;font-family:var(--mono);flex-wrap:wrap"></div>
+    <div class="panel-filter-bar">
+      <label>Wallet:</label>
+      <select id="heatmap-wallet-filter" class="panel-filter-select" onchange="applyHeatmapWalletFilter()" title="Filtrar por wallet">
+        <option value="all">Todas</option>
+      </select>
+      <span style="color:var(--border2);margin:0 2px">|</span>
+      <label>Baleias:</label>
+      <select id="heatmap-min-whales" class="panel-filter-select" onchange="renderWhaleHeatmap()" title="Mínimo de baleias">
+        <option value="1">≥1 baleia</option>
+        <option value="2">≥2 baleias</option>
+        <option value="3">≥3 baleias</option>
+        <option value="5">≥5 baleias</option>
+      </select>
+      <label>Direção:</label>
+      <select id="heatmap-dir-filter" class="panel-filter-select" onchange="renderWhaleHeatmap()" title="Filtrar por direção">
+        <option value="all">Todas</option>
+        <option value="long">🟢 Long</option>
+        <option value="short">🔴 Short</option>
+      </select>
+    </div>
+    <div class="whale-heatmap-body" id="whale-heatmap-body">
+      <div class="heatmap-empty">Aguardando posições abertas...</div>
+    </div>
+  </div>
+
+  <!-- WHALE LEADERBOARD -->
+  <div class="whale-leaderboard-panel" id="whale-leaderboard-panel">
+    <div class="whale-leaderboard-head">
+      <span>🏆 Whale Leaderboard</span>
+      <span class="panel-count" id="whale-leaderboard-count">0 wallets</span>
+      <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-leaderboard-panel',this)" title="Minimizar"></button>
+    </div>
+    <div class="whale-leaderboard-body" id="whale-leaderboard-body">
+      <div class="lb-empty">Aguardando histórico de wallets...</div>
     </div>
   </div>
 
@@ -3913,40 +3962,6 @@
     </div>
   </div>
 
-  <!-- WHALE HEATMAP -->
-  <div class="whale-heatmap-panel" id="whale-heatmap-panel">
-    <div class="whale-heatmap-head">
-      <span>🌡️ Whale Heatmap</span>
-      <span class="panel-count" id="whale-heatmap-count">0 ativos</span>
-      <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-heatmap-panel',this)" title="Minimizar"></button>
-    </div>
-    <!-- Wallet selection banner (igual ao do PnL por Wallet) -->
-    <div id="heatmap-wallet-selection-banner" style="display:none;align-items:center;gap:8px;padding:6px 14px;background:rgba(61,142,255,0.07);border-bottom:1px solid rgba(61,142,255,0.18);font-size:10px;font-family:var(--mono);flex-wrap:wrap"></div>
-    <div class="panel-filter-bar">
-      <label>Wallet:</label>
-      <select id="heatmap-wallet-filter" class="panel-filter-select" onchange="applyHeatmapWalletFilter()" title="Filtrar por wallet">
-        <option value="all">Todas</option>
-      </select>
-      <span style="color:var(--border2);margin:0 2px">|</span>
-      <label>Baleias:</label>
-      <select id="heatmap-min-whales" class="panel-filter-select" onchange="renderWhaleHeatmap()" title="Mínimo de baleias">
-        <option value="1">≥1 baleia</option>
-        <option value="2">≥2 baleias</option>
-        <option value="3">≥3 baleias</option>
-        <option value="5">≥5 baleias</option>
-      </select>
-      <label>Direção:</label>
-      <select id="heatmap-dir-filter" class="panel-filter-select" onchange="renderWhaleHeatmap()" title="Filtrar por direção">
-        <option value="all">Todas</option>
-        <option value="long">🟢 Long</option>
-        <option value="short">🔴 Short</option>
-      </select>
-    </div>
-    <div class="whale-heatmap-body" id="whale-heatmap-body">
-      <div class="heatmap-empty">Aguardando posições abertas...</div>
-    </div>
-  </div>
-
   <!-- ENTRY CLUSTER DETECTION -->
   <div class="entry-cluster-panel" id="entry-cluster-panel">
     <div class="entry-cluster-head">
@@ -4009,18 +4024,6 @@
     </div>
     <div class="smart-exit-body" id="smart-exit-body">
       <div class="exit-empty">Aguardando posições abertas...</div>
-    </div>
-  </div>
-
-  <!-- WHALE LEADERBOARD -->
-  <div class="whale-leaderboard-panel" id="whale-leaderboard-panel">
-    <div class="whale-leaderboard-head">
-      <span>🏆 Whale Leaderboard</span>
-      <span class="panel-count" id="whale-leaderboard-count">0 wallets</span>
-      <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-leaderboard-panel',this)" title="Minimizar"></button>
-    </div>
-    <div class="whale-leaderboard-body" id="whale-leaderboard-body">
-      <div class="lb-empty">Aguardando histórico de wallets...</div>
     </div>
   </div>
 
@@ -4090,6 +4093,11 @@
     </div>
   <div class="table-wrap-paged" id="ops-table-wrap">
     <div class="table-filter-bar">
+      <label>Ativo:</label>
+      <select class="tf-select" id="ops-asset-filter" onchange="opsPage=1;renderOpsTable()" title="Filtrar por ativo">
+        <option value="all">Todos</option>
+      </select>
+      <span class="tf-sep">|</span>
       <label>Wallet:</label>
       <select class="tf-select" id="ops-wallet-filter" onchange="opsPage=1;renderOpsTable()" title="Filtrar por wallet">
         <option value="all">Todas</option>
@@ -4162,6 +4170,11 @@
     </div>
   <div class="table-wrap-paged" id="closed-table-wrap">
     <div class="table-filter-bar">
+      <label>Ativo:</label>
+      <select class="tf-select" id="closed-asset-filter" onchange="closedPage=1;renderClosedTable()" title="Filtrar por ativo">
+        <option value="all">Todos</option>
+      </select>
+      <span class="tf-sep">|</span>
       <label>Wallet:</label>
       <select class="tf-select" id="closed-wallet-filter" onchange="closedPage=1;renderClosedTable()" title="Filtrar por wallet">
         <option value="all">Todas</option>
@@ -4253,6 +4266,11 @@
     </div>
   <div class="table-wrap-paged" id="hist-table-wrap">
     <div class="table-filter-bar">
+      <label>Ativo:</label>
+      <select class="tf-select" id="hist-asset-filter" onchange="histPage=1;renderHistoryTable()" title="Filtrar por ativo">
+        <option value="all">Todos</option>
+      </select>
+      <span class="tf-sep">|</span>
       <label>Wallet:</label>
       <select class="tf-select" id="hist-wallet-filter" onchange="histPage=1;renderHistoryTable()" title="Filtrar por wallet">
         <option value="all">Todas</option>
@@ -7533,6 +7551,17 @@
 
   function renderOpsTable() {
 
+    // Populate asset filter dropdown
+    const aSel = document.getElementById('ops-asset-filter');
+    if (aSel) {
+      const curAsset = aSel.value;
+      const assetList = [...new Set(positions.map(p => p.pair).filter(Boolean))].sort();
+      let aOpts = '<option value="all">Todos</option>';
+      assetList.forEach(p => { aOpts += `<option value="${p}">${p}</option>`; });
+      aSel.innerHTML = aOpts;
+      if (curAsset && curAsset !== 'all') aSel.value = curAsset;
+    }
+
     // Populate wallet filter dropdown
     const wSel = document.getElementById('ops-wallet-filter');
     if (wSel) {
@@ -7548,6 +7577,7 @@
     }
 
     // Read filters
+    const fAsset  = (document.getElementById('ops-asset-filter')  || {}).value || 'all';
     const fWallet = (document.getElementById('ops-wallet-filter') || {}).value || 'all';
     const fDir    = (document.getElementById('ops-dir-filter')    || {}).value || 'all';
     const fPnl    = (document.getElementById('ops-pnl-filter')    || {}).value || 'all';
@@ -7557,6 +7587,7 @@
       if (_pairEnabled[p.pair] === false) return false;
       if (walletEnabled[p.addr.toLowerCase()] === false) return false;
       if (isWalletFiltered(p.addr)) return false;
+      if (fAsset  !== 'all' && p.pair !== fAsset) return false;
       if (fWallet !== 'all' && p.addr.toLowerCase() !== fWallet.toLowerCase()) return false;
       if (fDir !== 'all' && p.side !== fDir) return false;
       if (fPnl === 'pos' && (p.pnl || 0) < 0) return false;
@@ -7702,6 +7733,17 @@
       return (b.closedAt || '').localeCompare(a.closedAt || '');
     });
 
+    // Populate asset filter dropdown
+    const aSel = document.getElementById('closed-asset-filter');
+    if (aSel) {
+      const curAsset = aSel.value;
+      const assetList = [...new Set(combined.map(p => p.pair).filter(Boolean))].sort();
+      let aOpts = '<option value="all">Todos</option>';
+      assetList.forEach(p => { aOpts += `<option value="${p}">${p}</option>`; });
+      aSel.innerHTML = aOpts;
+      if (curAsset && curAsset !== 'all') aSel.value = curAsset;
+    }
+
     // Populate wallet filter dropdown
     const wSel = document.getElementById('closed-wallet-filter');
     if (wSel) {
@@ -7717,6 +7759,7 @@
     }
 
     // Read filters
+    const fAsset  = (document.getElementById('closed-asset-filter')  || {}).value || 'all';
     const fWallet = (document.getElementById('closed-wallet-filter') || {}).value || 'all';
     const fDir    = (document.getElementById('closed-dir-filter')    || {}).value || 'all';
     const fPnl    = (document.getElementById('closed-pnl-filter')    || {}).value || 'all';
@@ -7724,6 +7767,7 @@
     // Apply filters
     const filtered = combined.filter(p => {
       if (isWalletFiltered(p.addr)) return false;
+      if (fAsset  !== 'all' && p.pair !== fAsset) return false;
       if (fWallet !== 'all' && (p.addr || '').toLowerCase() !== fWallet.toLowerCase()) return false;
       if (fDir !== 'all' && p.side !== fDir) return false;
       if (fPnl === 'pos' && (p.finalPnl || 0) < 0) return false;
@@ -7813,6 +7857,17 @@
 
     const countEl = document.getElementById('hist-count');
 
+    // Populate asset filter dropdown
+    const aSel = document.getElementById('hist-asset-filter');
+    if (aSel) {
+      const curAsset = aSel.value;
+      const assetList = [...new Set(combined.map(h => h.pair).filter(Boolean))].sort();
+      let aOpts = '<option value="all">Todos</option>';
+      assetList.forEach(p => { aOpts += `<option value="${p}">${p}</option>`; });
+      aSel.innerHTML = aOpts;
+      if (curAsset && curAsset !== 'all') aSel.value = curAsset;
+    }
+
     // Populate wallet filter dropdown
     const wSel = document.getElementById('hist-wallet-filter');
     if (wSel) {
@@ -7828,6 +7883,7 @@
     }
 
     // Read filters
+    const fAsset  = (document.getElementById('hist-asset-filter')  || {}).value || 'all';
     const fWallet = (document.getElementById('hist-wallet-filter') || {}).value || 'all';
     const fDir    = (document.getElementById('hist-dir-filter')    || {}).value || 'all';
     const fPnl    = (document.getElementById('hist-pnl-filter')    || {}).value || 'all';
@@ -7838,6 +7894,7 @@
       if (_pairEnabled[h.pair] === false) return false;
       if (walletEnabled[(h.addr || '').toLowerCase()] === false) return false;
       if (isWalletFiltered(h.addr)) return false;
+      if (fAsset !== 'all' && h.pair !== fAsset) return false;
       if (fWallet !== 'all' && (h.addr || '').toLowerCase() !== fWallet.toLowerCase()) return false;
       if (fDir !== 'all' && h.side !== fDir) return false;
       if (fPnl === 'pos' && (h.finalPnl || 0) < 0) return false;
@@ -10215,6 +10272,19 @@
     updateMomentumSnapshot();
 
     const pairs = [...new Set([...Object.keys(_momentumCurr), ...Object.keys(_momentumPrev)])];
+
+    // ── Popula filtro de ativo ───────────────────────────────────────────────
+    const aSel = document.getElementById('mom-asset-filter');
+    if (aSel) {
+      const curAsset = aSel.value;
+      const activePairs = pairs.filter(p => (_momentumCurr[p]||{longUsdc:0,shortUsdc:0}).longUsdc + (_momentumCurr[p]||{longUsdc:0,shortUsdc:0}).shortUsdc > 0).sort();
+      let aOpts = '<option value="all">Todos os ativos</option>';
+      activePairs.forEach(p => { aOpts += `<option value="${p}">${p}</option>`; });
+      aSel.innerHTML = aOpts;
+      if (curAsset && curAsset !== 'all') aSel.value = curAsset;
+    }
+    const fAsset = (aSel || {}).value || 'all';
+
     if (!pairs.length) {
       _momentumOrderKeys = [];
       body.innerHTML = '<div class="momentum-empty">Aguardando posições abertas...</div>';
@@ -10247,6 +10317,7 @@
 
     // ── Aplica filtros ──────────────────────────────────────────────────────
     momentumData = momentumData.filter(d => {
+      if (fAsset !== 'all' && d.pair !== fAsset) return false;
       if (fDir === 'long'  && !d.isLong) return false;
       if (fDir === 'short' &&  d.isLong) return false;
       if (fGrade !== 'all' && d.grade !== fGrade) return false;
