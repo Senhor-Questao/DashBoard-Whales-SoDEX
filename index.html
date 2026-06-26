@@ -1534,7 +1534,7 @@
   /* ── PATRIMONY SPLIT LAYOUT ── */
   .patrimony-split-body {
     display: grid;
-    grid-template-columns: 1fr 340px;
+    grid-template-columns: 1fr 320px 270px;
     min-height: 300px;
   }
   .patrimony-chart-col {
@@ -1654,10 +1654,119 @@
   .pat-footer-pnl.pos { color: var(--green); }
   .pat-footer-pnl.neg { color: var(--red); }
   .pat-footer-pnl.neut { color: var(--muted); }
+  /* ── MOVIMENTAÇÕES RECENTES (3ª coluna do patrimony panel) ── */
+  .mov-col {
+    display: flex; flex-direction: column;
+    min-width: 0; border-left: 1px solid var(--border); overflow: hidden;
+  }
+  .mov-head {
+    padding: 7px 12px; font-family: var(--sans); font-size: 9px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase; color: var(--muted2);
+    background: var(--bg3); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 6px;
+  }
+  .mov-ver-todas {
+    font-family: var(--mono); font-size: 8px; color: var(--blue);
+    background: var(--blue-dim); border: 1px solid rgba(79,151,255,0.22);
+    border-radius: 6px; padding: 2px 7px; cursor: pointer; letter-spacing: 0.3px;
+    text-transform: none; font-weight: 500;
+    transition: background 0.15s, border-color 0.15s; white-space: nowrap;
+  }
+  .mov-ver-todas:hover { background: rgba(79,151,255,0.18); border-color: rgba(79,151,255,0.4); }
+  .mov-filters {
+    display: flex; align-items: center; gap: 4px; flex-wrap: wrap; flex: 1;
+  }
+  .mov-filter-chip {
+    font-family: var(--mono); font-size: 7.5px; font-weight: 600;
+    padding: 2px 6px; border-radius: 5px; cursor: pointer; white-space: nowrap;
+    border: 1px solid var(--border2); background: var(--bg4); color: var(--muted2);
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+    text-transform: uppercase; letter-spacing: 0.4px; line-height: 1.6;
+  }
+  .mov-filter-chip:hover { color: var(--text); border-color: var(--border3); background: rgba(255,255,255,0.05); }
+  .mov-filter-chip.active-long  { background: var(--green-dim); color: var(--green); border-color: rgba(46,229,145,0.35); }
+  .mov-filter-chip.active-short { background: var(--red-dim); color: var(--red); border-color: rgba(255,77,97,0.35); }
+  .mov-filter-chip.active-reduce { background: var(--amber-dim); color: var(--amber); border-color: rgba(247,177,61,0.35); }
+  .mov-filter-chip.active-increase { background: rgba(79,151,255,0.12); color: var(--blue); border-color: rgba(79,151,255,0.35); }
+  .mov-filter-chip.active-liq { background: rgba(255,77,97,0.18); color: var(--red); border-color: rgba(255,77,97,0.5); }
+  .mov-filter-chip.active-partial { background: rgba(247,177,61,0.12); color: var(--amber); border-color: rgba(247,177,61,0.3); }
+  .mov-filter-chip.active-all { background: rgba(255,255,255,0.07); color: var(--text); border-color: var(--border3); }
+  .mov-filter-row {
+    display: flex; align-items: center; gap: 4px; padding: 5px 10px;
+    background: var(--bg3); border-bottom: 1px solid var(--border); flex-shrink: 0; flex-wrap: wrap;
+  }
+  .mov-scroll { overflow-y: auto; flex: 1; max-height: 356px; }
+  .mov-empty { color: var(--muted2); font-size: 10px; text-align: center; padding: 24px 12px; }
+  .mov-row {
+    display: flex; align-items: flex-start; gap: 7px;
+    padding: 6px 10px; border-bottom: 1px solid var(--border);
+    transition: background 0.12s; cursor: default;
+    animation: slideIn 0.25s var(--ease) both;
+  }
+  .mov-row:last-child { border-bottom: none; }
+  .mov-row:hover { background: rgba(255,255,255,0.025); }
+  .mov-time {
+    font-size: 9px; color: var(--muted2); white-space: nowrap;
+    flex-shrink: 0; margin-top: 2px; font-family: var(--mono);
+  }
+  .mov-icon {
+    flex-shrink: 0; width: 15px; height: 15px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; margin-top: 1px;
+  }
+  .mov-icon svg { width: 8px; height: 8px; }
+  .mov-icon.open   { background: rgba(46,229,145,0.18); }
+  .mov-icon.close  { background: rgba(255,77,97,0.18); }
+  .mov-icon.update { background: rgba(247,177,61,0.18); }
+  .mov-icon.liq    { background: rgba(255,77,97,0.28); }
+  .mov-icon.fund   { background: rgba(247,177,61,0.15); }
+  .mov-dot {
+    flex-shrink: 0; width: 6px; height: 6px; border-radius: 50%; margin-top: 4px;
+  }
+  .mov-dot.open   { background: var(--green); box-shadow: 0 0 4px var(--green); }
+  .mov-dot.close  { background: var(--red);   box-shadow: 0 0 4px var(--red); }
+  .mov-dot.update { background: var(--amber); }
+  .mov-dot.liq    { background: var(--red);   box-shadow: 0 0 6px var(--red); }
+  .mov-dot.fund   { background: var(--amber); box-shadow: 0 0 3px var(--amber); }
+  .mov-dot.new    { background: var(--blue); }
+  .mov-body { flex: 1; min-width: 0; }
+  .mov-main { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; line-height: 1.5; }
+  .mov-wallet-name { font-size: 9.5px; font-weight: 600; }
+  .mov-action { color: var(--muted); font-size: 9px; }
+  .mov-sym { font-weight: 700; color: #fff; font-size: 10px; }
+  .mov-badge-long {
+    font-size: 7.5px; font-weight: 700; padding: 1px 4px; border-radius: 3px;
+    background: var(--green-dim); color: var(--green);
+    border: 1px solid rgba(46,229,145,0.25); text-transform: uppercase;
+  }
+  .mov-badge-short {
+    font-size: 7.5px; font-weight: 700; padding: 1px 4px; border-radius: 3px;
+    background: var(--red-dim); color: var(--red);
+    border: 1px solid rgba(255,77,97,0.25); text-transform: uppercase;
+  }
+  .mov-badge-neg {
+    font-size: 7.5px; font-weight: 700; padding: 1px 4px; border-radius: 3px;
+    background: rgba(255,77,97,0.13); color: var(--red);
+    border: 1px solid rgba(255,77,97,0.22); text-transform: uppercase;
+  }
+  .mov-val-pos { color: var(--green); font-weight: 700; font-size: 10px; }
+  .mov-val-neg { color: var(--red);   font-weight: 700; font-size: 10px; }
+  .mov-detail  { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 2px; }
+  .mov-size    { font-size: 9.5px; color: var(--text); font-weight: 600; }
+  .mov-meta    { font-size: 9px; color: var(--muted); }
+  .mov-dur     { font-size: 8.5px; color: var(--amber); background: var(--amber-dim);
+                 border-radius: 3px; padding: 1px 5px; white-space: nowrap; }
+  .mov-lev     { font-size: 7.5px; font-weight: 600; padding: 1px 4px; border-radius: 3px;
+                 background: var(--bg4); border: 1px solid var(--border2); color: var(--muted); }
+  .mov-row-open  { border-left: 2px solid rgba(46,229,145,0.35); }
+  .mov-row-close { border-left: 2px solid rgba(255,77,97,0.35); }
+  .mov-row-liq   { border-left: 2px solid var(--red); }
+
   @media (max-width: 900px) {
     .patrimony-split-body { grid-template-columns: 1fr; }
     .patrimony-chart-col { border-right: none; border-bottom: 1px solid var(--border); }
     .patrimony-ops-scroll { max-height: 180px; }
+    .mov-col { border-left: none; border-top: 1px solid var(--border); }
+    .mov-scroll { max-height: 180px; }
   }
 
   /* ── DIRECTION DOMINANCE PANEL ── */
@@ -2916,7 +3025,6 @@
   .panel-collapsed .patrimony-body,
   .panel-collapsed .patrimony-split-body,
   .panel-collapsed .patrimony-filter-bar,
-  .panel-collapsed .patrimony-legend,
   .panel-collapsed .panel-filter-bar { display: none !important; }
   /* Remove border-bottom from panel-head when panel is collapsed (no body below) */
   .panel-collapsed > .panel-head { border-bottom: none; }
@@ -3513,6 +3621,25 @@
           <span style="color:var(--muted)">PnL Total Atual</span>
           <span style="color:var(--muted2)" id="pat-ops-breakdown"></span>
           <span class="pat-footer-pnl neut" id="pat-ops-total-pnl" style="margin-left:auto">$0.00</span>
+        </div>
+      </div>
+      <!-- 3ª coluna: Movimentações Recentes -->
+      <div class="mov-col">
+        <div class="mov-head">
+          <span>Movimentações Recentes</span>
+          <button class="mov-ver-todas" onclick="toggleMovExpand()" id="mov-ver-btn">Ver todas</button>
+        </div>
+        <div class="mov-filter-row">
+          <button class="mov-filter-chip active-all" data-mov-filter="all" onclick="setMovFilter(this,'all')">Todos</button>
+          <button class="mov-filter-chip" data-mov-filter="long" onclick="setMovFilter(this,'long')">Long</button>
+          <button class="mov-filter-chip" data-mov-filter="short" onclick="setMovFilter(this,'short')">Short</button>
+          <button class="mov-filter-chip" data-mov-filter="increase" onclick="setMovFilter(this,'increase')">↑ Aumento</button>
+          <button class="mov-filter-chip" data-mov-filter="reduce" onclick="setMovFilter(this,'reduce')">↓ Redução</button>
+          <button class="mov-filter-chip" data-mov-filter="liq" onclick="setMovFilter(this,'liq')">Liquidação</button>
+          <button class="mov-filter-chip" data-mov-filter="partial" onclick="setMovFilter(this,'partial')">Saída Parcial</button>
+        </div>
+        <div class="mov-scroll" id="mov-scroll">
+          <div class="mov-empty">Aguardando movimentações...</div>
         </div>
       </div>
     </div>
@@ -6870,6 +6997,217 @@
     }).join('');
   }
 
+  /* ── MOVIMENTAÇÕES RECENTES ── */
+  let _movExpanded = false;
+  function toggleMovExpand() {
+    _movExpanded = !_movExpanded;
+    const scroll = document.getElementById('mov-scroll');
+    const btn    = document.getElementById('mov-ver-btn');
+    if (scroll) scroll.style.maxHeight = _movExpanded ? 'none' : '';
+    if (btn)    btn.textContent = _movExpanded ? 'Recolher' : 'Ver todas';
+  }
+
+  // Formata duração desde abertura: "2h 14m", "35m", "4d 3h"
+  function fmtDuration(tsMs) {
+    if (!tsMs) return null;
+    const ms  = Date.now() - tsMs;
+    const s   = Math.floor(ms / 1000);
+    const m   = Math.floor(s / 60);
+    const h   = Math.floor(m / 60);
+    const d   = Math.floor(h / 24);
+    if (d > 0)  return d + 'd ' + (h % 24) + 'h';
+    if (h > 0)  return h + 'h ' + (m % 60) + 'm';
+    if (m > 0)  return m + 'm';
+    return s + 's';
+  }
+
+  // Formata size em USDC de forma compacta: $2.3M, $430K, $1.8K
+  function fmtSize(v) {
+    if (v == null || isNaN(v)) return null;
+    if (v >= 1e6) return '$' + (v / 1e6).toFixed(2) + 'M';
+    if (v >= 1e3) return '$' + (v / 1e3).toFixed(1) + 'K';
+    return '$' + v.toFixed(0);
+  }
+
+  let _movFilter = 'all'; // 'all' | 'long' | 'short' | 'increase' | 'reduce' | 'liq' | 'partial'
+
+  function setMovFilter(btn, filter) {
+    _movFilter = filter;
+    // Update active chip styling
+    document.querySelectorAll('.mov-filter-chip').forEach(c => {
+      c.className = 'mov-filter-chip';
+    });
+    const activeClass = {
+      all:      'active-all',
+      long:     'active-long',
+      short:    'active-short',
+      increase: 'active-increase',
+      reduce:   'active-reduce',
+      liq:      'active-liq',
+      partial:  'active-partial',
+    }[filter] || 'active-all';
+    btn.classList.add(activeClass);
+    renderMovimentacoes();
+  }
+
+  function renderMovimentacoes() {
+    const scroll = document.getElementById('mov-scroll');
+    if (!scroll) return;
+
+    // ── Constrói lista unificada: posições abertas + fechadas recentes ──────
+    // Cada item tem: { kind:'open'|'close'|'liq', pos, sortTs }
+    const items = [];
+
+    // Posições abertas (monitoradas em tempo real desde a abertura)
+    positions.forEach(pos => {
+      items.push({ kind: 'open', pos, sortTs: pos.openedAtTs || 0 });
+    });
+
+    // Posições fechadas recentes (array `closed` — últimas MAX_CLOSED)
+    closed.forEach(pos => {
+      const isLiq = pos.reason === 'Liquidation' || pos.reason === 'Liquidação' || /liquida/i.test(pos.reason || '');
+      items.push({ kind: isLiq ? 'liq' : 'close', pos, sortTs: pos.closedAtTs || 0 });
+    });
+
+    // Abertas primeiro (mais recente por openedAtTs desc), depois fechadas
+    const opened = items.filter(i => i.kind === 'open')
+                        .sort((a, b) => b.sortTs - a.sortTs);
+    const others = items.filter(i => i.kind !== 'open')
+                        .sort((a, b) => b.sortTs - a.sortTs);
+    const sorted = [...opened, ...others];
+
+    // ── Aplica filtro ativo ──────────────────────────────────────────────────
+    function matchesMovFilter(item) {
+      if (_movFilter === 'all') return true;
+      const { kind, pos } = item;
+      const isLong  = (pos.side || '').toUpperCase() === 'LONG';
+      const isShort = (pos.side || '').toUpperCase() === 'SHORT';
+      if (_movFilter === 'long')     return kind === 'open' && isLong;
+      if (_movFilter === 'short')    return kind === 'open' && isShort;
+      if (_movFilter === 'liq')      return kind === 'liq';
+      if (_movFilter === 'partial') {
+        const reason = (pos.reason || pos.closeReason || '').toLowerCase();
+        return kind === 'close' && (reason.includes('parcial') || reason.includes('partial') || reason.includes('reduce'));
+      }
+      if (_movFilter === 'reduce') {
+        const reason = (pos.reason || pos.closeReason || pos.updateReason || '').toLowerCase();
+        return (kind === 'close' || kind === 'update') && !/(liquida|liquidat)/i.test(pos.reason || '') &&
+               (reason.includes('reduc') || reason.includes('decrease') || reason.includes('reduce') || kind === 'close');
+      }
+      if (_movFilter === 'increase') {
+        const reason = (pos.reason || pos.updateReason || '').toLowerCase();
+        return kind === 'open' || (kind === 'update' &&
+               (reason.includes('increas') || reason.includes('aument') || reason.includes('add')));
+      }
+      return true;
+    }
+    const filtered = sorted.filter(matchesMovFilter);
+    // ────────────────────────────────────────────────────────────────────────
+
+    if (!filtered.length) {
+      const emptyMsg = _movFilter === 'all'
+        ? 'Aguardando movimentações...'
+        : 'Nenhuma movimentação para este filtro.';
+      scroll.innerHTML = `<div class="mov-empty">${emptyMsg}</div>`;
+      return;
+    }
+
+    const limit = _movExpanded ? filtered.length : Math.min(filtered.length, 20);
+
+    const ICONS = {
+      open:  { path: '<path d="M5 12h14M12 5l7 7-7 7"/>', color: 'var(--green)' },
+      close: { path: '<circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/>', color: 'var(--red)' },
+      liq:   { path: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>', color: 'var(--red)' },
+    };
+
+    scroll.innerHTML = filtered.slice(0, limit).map(item => {
+      const { kind, pos } = item;
+      const wColor = walletColor(pos.addr);
+      // Rótulo da wallet: "Wallet #N" pelo índice em trackedWallets
+      const wIdx  = trackedWallets.findIndex(a => a && pos.addr && a.toLowerCase() === pos.addr.toLowerCase());
+      const wLabel = wIdx >= 0 ? 'Wallet #' + (wIdx + 1) : (pos.wallet || shortAddr(pos.addr) || 'Wallet');
+
+      const isLong = pos.side === 'LONG';
+      const dirBadge = isLong
+        ? '<span class="mov-badge-long">LONG</span>'
+        : '<span class="mov-badge-short">SHORT</span>';
+
+      const icon = ICONS[kind] || ICONS.open;
+      const dotClass = kind; // 'open' | 'close' | 'liq'
+
+      // ── Linha principal ──────────────────────────────────────────────────
+      // Ação
+      let actionLabel = kind === 'open'  ? 'posição aberta'
+                      : kind === 'liq'   ? 'LIQUIDAÇÃO'
+                      : 'posição fechada';
+
+      // Par / símbolo
+      const sym = pos.pair || '';
+
+      // PnL
+      const pnlVal  = kind === 'open' ? (pos.pnl || 0) : (pos.finalPnl || 0);
+      const pnlCls  = pnlVal >= 0 ? 'mov-val-pos' : 'mov-val-neg';
+      const pnlHtml = `<span class="${pnlCls}">${fmtPnl(pnlVal)}</span>`;
+
+      // Size em USDC
+      const sizeUsd = pos.sizeUsdc != null ? pos.sizeUsdc
+                    : (pos.entry > 0 && pos.size > 0 ? pos.size * pos.entry : null);
+      const sizeHtml = sizeUsd ? `<span class="mov-size">${fmtSize(sizeUsd)}</span>` : '';
+
+      // Preço de entrada
+      const entryHtml = pos.entry ? `<span class="mov-meta">@ ${fmt(pos.entry)}</span>` : '';
+
+      // Tempo aberto / fechado
+      let timeHtml = '';
+      if (kind === 'open') {
+        const dur = pos.openedAtTs ? fmtDuration(pos.openedAtTs) : null;
+        if (dur) timeHtml = `<span class="mov-dur" title="Aberta há ${dur}">⏱ ${dur}</span>`;
+        else if (pos.openedAt && pos.openedAt !== '—') timeHtml = `<span class="mov-dur">${pos.openedAt}</span>`;
+      } else {
+        if (pos.closedAt) timeHtml = `<span class="mov-dur">${pos.closedAt}</span>`;
+      }
+
+      // Mark price atual (só para abertas)
+      const markHtml = kind === 'open' && pos.mark
+        ? `<span class="mov-meta">mark ${fmt(pos.mark)}</span>`
+        : '';
+
+      // Leverage
+      const levHtml = pos.leverage != null
+        ? `<span class="mov-lev">${pos.leverage}x</span>`
+        : '';
+
+      // Horário da movimentação
+      const timeLabel = kind === 'open'
+        ? (pos.openedAt && pos.openedAt !== '—' ? pos.openedAt.slice(-8) : '—')
+        : (pos.closedAt ? pos.closedAt.slice(-8) : '—');
+
+      return `<div class="mov-row mov-row-${kind}">
+        <span class="mov-time">${timeLabel}</span>
+        <div class="mov-icon ${dotClass}">
+          <svg viewBox="0 0 24 24" stroke="${icon.color}" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${icon.path}</svg>
+        </div>
+        <div class="mov-dot ${dotClass}"></div>
+        <div class="mov-body">
+          <div class="mov-main">
+            <span class="mov-wallet-name" style="color:${wColor}">${wLabel}</span>
+            <span class="mov-action">${actionLabel}</span>
+            ${dirBadge}
+            <span class="mov-sym">${sym}</span>
+            ${levHtml}
+            ${sizeHtml}
+          </div>
+          <div class="mov-detail">
+            ${entryHtml}
+            ${markHtml}
+            ${pnlHtml}
+            ${timeHtml}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
   function toggleWalletTracking(addr, checked) {
     walletEnabled[addr.toLowerCase()] = checked;
     if (!checked) {
@@ -8694,6 +9032,52 @@
       });
     });
 
+    const MARKER_R = 5.5;
+
+    // ── Resolve overlapping markers: stack them vertically ───────────────────
+    // Group markers that share the same canvas pixel (or are within 2×MARKER_R of each other).
+    // Within each group, offset them vertically so every marker is independently hoverable.
+    (function resolveMarkerOverlap() {
+      const R = MARKER_R;
+      const SPACING = R * 2 + 3; // gap between stacked circles
+      // Assign base pixel coords first (without offset)
+      tradeMarkers.forEach(m => {
+        m._bx = toX(m.ts);
+        m._by = toY(m.value ?? 0);
+        m._offsetY = 0;
+      });
+
+      // Build clusters: markers whose base positions overlap (within 2R)
+      const visited = new Set();
+      for (let i = 0; i < tradeMarkers.length; i++) {
+        if (visited.has(i)) continue;
+        const a = tradeMarkers[i];
+        const cluster = [i];
+        for (let j = i + 1; j < tradeMarkers.length; j++) {
+          if (visited.has(j)) continue;
+          const b = tradeMarkers[j];
+          const dx = a._bx - b._bx;
+          const dy = a._by - b._by;
+          if (Math.sqrt(dx*dx + dy*dy) < R * 2 + 2) cluster.push(j);
+        }
+        if (cluster.length > 1) {
+          // Sort: open positions first, then by pnl descending
+          cluster.sort((ia, ib) => {
+            const ma = tradeMarkers[ia], mb = tradeMarkers[ib];
+            if (ma.isOpen !== mb.isOpen) return ma.isOpen ? -1 : 1;
+            return (mb.trade.pnl || 0) - (ma.trade.pnl || 0);
+          });
+          // Distribute vertically centered around base Y
+          const total = cluster.length;
+          const groupH = (total - 1) * SPACING;
+          cluster.forEach((idx, k) => {
+            tradeMarkers[idx]._offsetY = -groupH / 2 + k * SPACING;
+          });
+        }
+        cluster.forEach(idx => visited.add(idx));
+      }
+    })();
+
     // ── Draw lines + area fills first (below markers) ─────────────────────────
     visibleSeries.forEach(s => {
       if (s.pts.length < 2) return;
@@ -8763,12 +9147,39 @@
     // ── Draw trade markers on top of lines ────────────────────────────────────
     // LONG closed  → filled green circle  (border: darker green)
     // SHORT closed → filled red circle    (border: darker red)
-    // LONG open    → hollow green circle  (dashed border, animated via JS)
+    // LONG open    → hollow green circle  (dashed border)
     // SHORT open   → hollow red circle    (dashed border)
-    const MARKER_R = 5.5;
+    // Stacked markers (overlapping) are offset vertically and linked by a thin line
+
+    // Group markers by cluster (same _bx) to draw connector lines first
+    const clusterMap = new Map();
+    tradeMarkers.forEach((m, idx) => {
+      if (m._bx == null) return;
+      const key = Math.round(m._bx);
+      if (!clusterMap.has(key)) clusterMap.set(key, []);
+      clusterMap.get(key).push(m);
+    });
+    clusterMap.forEach(group => {
+      if (group.length < 2) return;
+      // Draw a thin vertical connector line through the stack
+      const xs = group[0]._bx;
+      const ys = group.map(m => m._by + m._offsetY);
+      const yTop = Math.min(...ys);
+      const yBot = Math.max(...ys);
+      ctx.beginPath();
+      ctx.moveTo(xs, yTop);
+      ctx.lineTo(xs, yBot);
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([2, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    });
+
     tradeMarkers.forEach(m => {
-      const mx2 = toX(m.ts);
-      const my2 = toY(m.value ?? m.pnl ?? 0);
+      const mx2 = m._bx;
+      const my2 = m._by + (m._offsetY || 0);
+      if (mx2 == null) return;
       // Clip to chart area
       if (mx2 < PAD_L - MARKER_R || mx2 > W - PAD_R + MARKER_R) return;
       if (my2 < PAD_T - MARKER_R || my2 > H - PAD_B + MARKER_R) return;
@@ -8781,7 +9192,7 @@
       ctx.arc(mx2, my2, MARKER_R, 0, Math.PI * 2);
 
       if (m.isOpen) {
-        // Hollow (open position) — pulsing outline
+        // Hollow (open position) — dashed outline
         ctx.fillStyle   = (isLong ? 'rgba(46,229,145,0.15)' : 'rgba(255,77,97,0.15)');
         ctx.fill();
         ctx.strokeStyle = fillCol;
@@ -8808,7 +9219,7 @@
         ctx.fill();
       }
 
-      // Store pixel coords back for mouse hit-testing
+      // Store final pixel coords for mouse hit-testing
       m._cx = mx2; m._cy = my2;
     });
 
@@ -10971,6 +11382,7 @@
     renderStats();
     renderOpenList();
     renderEvents();
+    renderMovimentacoes();
     renderRanking();
     renderPnlChart();
     snapshotPatrimony();
