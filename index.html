@@ -7659,9 +7659,16 @@
       if (!alreadyInFeed) items.push(ev);
     });
 
+    // ── Filtra pelo estado dos cards de wallet do painel Evolução do Patrimônio ──
+    // Se o usuário desmarcou cards (clicando na legenda), só exibe movimentações
+    // das wallets cujo card está visível (não está em _patrimonyHiddenWallets).
+    const _activeItems = _patrimonyHiddenWallets.size > 0
+      ? items.filter(item => !_patrimonyHiddenWallets.has((item.pos.addr || '').toLowerCase()))
+      : items;
+
     // Ordena todos os eventos cronologicamente — mais recente no topo.
     // Posições sem timestamp (sortTs=0) ficam no topo por representarem estado ao vivo.
-    const sorted = items.slice().sort((a, b) => {
+    const sorted = _activeItems.slice().sort((a, b) => {
       const tsA = a.sortTs || 0;
       const tsB = b.sortTs || 0;
       if (tsA === 0 && tsB === 0) return 0;
@@ -8950,6 +8957,7 @@
     }
     renderPatrimonyChart();
     renderPatOps();
+    renderMovimentacoes();
   }
 
   let _patrimonyPeriod = '1m'; // período ativo nos botões
