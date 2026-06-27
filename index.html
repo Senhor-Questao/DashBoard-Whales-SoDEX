@@ -1599,7 +1599,7 @@
   /* Open position rows in patrimony panel */
   .pat-op-row {
     display: grid;
-    grid-template-columns: 8px minmax(44px,1fr) 62px 62px 62px 52px 66px;
+    grid-template-columns: 8px minmax(44px,1fr) 62px 62px 52px 66px;
     align-items: center;
     gap: 0 5px;
     padding: 5px 10px;
@@ -1612,7 +1612,7 @@
   .pat-op-row:hover { background: rgba(255,255,255,0.025); }
   .pat-op-head {
     display: grid;
-    grid-template-columns: 8px minmax(44px,1fr) 62px 62px 62px 52px 66px;
+    grid-template-columns: 8px minmax(44px,1fr) 62px 62px 52px 66px;
     align-items: center;
     gap: 0 5px;
     padding: 4px 10px 5px;
@@ -3640,7 +3640,6 @@
           <span></span>
           <span>Par</span>
           <span style="text-align:right">Entrada</span>
-          <span style="text-align:right">Market</span>
           <span style="text-align:right">PnL (USDC)</span>
           <span style="text-align:right">Size</span>
           <span style="text-align:right;cursor:pointer;user-select:none" id="pat-op-sort-abertura" onclick="togglePatOpsDateSort()" title="Ordenar por data de abertura">Abertura <span id="pat-op-sort-icon">↓</span></span>
@@ -7523,8 +7522,8 @@
   function fmtSize(v) {
     if (v == null || isNaN(v)) return null;
     if (v >= 1e6) return '$' + (v / 1e6).toFixed(2) + 'M';
-    if (v >= 1e3) return '$' + (v / 1e3).toFixed(1) + 'K';
-    return '$' + v.toFixed(0);
+    if (v >= 1e3) return '$' + (v / 1e3).toFixed(2) + 'K';
+    return '$' + v.toFixed(2);
   }
 
   // Multi-select: Set de filtros ativos. Set vazio = 'Todos' implícito.
@@ -7774,8 +7773,8 @@
         if (v == null) return null;
         const abs = Math.abs(v);
         if (abs >= 1e6)  return (v / 1e6).toFixed(2) + 'M';
-        if (abs >= 1000) return (v / 1000).toFixed(1) + 'k';
-        return v.toFixed(0);
+        if (abs >= 1000) return (v / 1000).toFixed(2) + 'k';
+        return v.toFixed(2);
       };
 
       // ── Narrativa por tipo de evento ─────────────────────────────────────
@@ -10092,7 +10091,43 @@
     if (!canvas._patrimonyHoverBound) {
       canvas._patrimonyHoverBound = true;
 
-      const TIP_CSS = 'position:absolute;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:8px 11px;font-size:9.5px;font-family:var(--mono);color:var(--text);pointer-events:none;z-index:300;white-space:nowrap;box-shadow:var(--shadow-lg);min-width:160px;transition:opacity 0.1s';
+      const TIP_CSS = 'position:absolute;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:8px 11px;font-size:9.5px;font-family:var(--mono);color:var(--text);pointer-events:none;z-index:300;white-space:normal;word-break:break-word;box-shadow:var(--shadow-lg);min-width:160px;max-width:220px;width:220px;transition:opacity 0.1s';
+
+      // Helper: posiciona o tooltip com flip horizontal automático
+      // Testa se cabe à direita do cursor; se não, abre à esquerda.
+      function _placeTip(tip, cursorXInParent, cursorYInParent, parentW, parentH) {
+        const tw = tip.offsetWidth  || 220;
+        const th = tip.offsetHeight || 80;
+        const HGAP = 14;
+        const VGAP = 10;
+
+        // ── Flip horizontal ──
+        const spaceRight = parentW - (cursorXInParent + HGAP);
+        const spaceLeft  = cursorXInParent - HGAP;
+        let x;
+        if (spaceRight >= tw || spaceRight >= spaceLeft) {
+          x = cursorXInParent + HGAP;
+          if (x + tw > parentW - 4) x = parentW - tw - 4;
+        } else {
+          x = cursorXInParent - HGAP - tw;
+          if (x < 4) x = 4;
+        }
+
+        // ── Flip vertical ──
+        const spaceBelow = parentH - (cursorYInParent + VGAP);
+        const spaceAbove = cursorYInParent - VGAP;
+        let y;
+        if (spaceBelow >= th || spaceBelow >= spaceAbove) {
+          y = cursorYInParent + VGAP;
+          if (y + th > parentH - 4) y = parentH - th - 4;
+        } else {
+          y = cursorYInParent - VGAP - th;
+          if (y < 4) y = 4;
+        }
+
+        tip.style.left = x + 'px';
+        tip.style.top  = y + 'px';
+      }
 
       canvas.addEventListener('mousemove', function(e) {
         const rect    = canvas.getBoundingClientRect();
@@ -10105,12 +10140,8 @@
         if (!meta) return;
 
         const parentRect = canvas.parentElement.getBoundingClientRect();
-        const TIP_W = 210; // estimated tooltip width
-        const TIP_H = 210; // estimated tooltip height (trade marker tooltip)
-        const rawX = e.clientX - parentRect.left + 14;
-        const rawY = e.clientY - parentRect.top  - 20;
-        const tipX = Math.min(rawX, parentRect.width  - TIP_W - 8);
-        const tipY = Math.max(4, Math.min(rawY, parentRect.height - TIP_H - 8));
+        const curX = e.clientX - parentRect.left;
+        const curY = e.clientY - parentRect.top;
 
         // ── Priority 1: check if mouse is near a trade marker (hit radius = MARKER_R+3) ──
         const HIT = MARKER_R + 4;
@@ -10173,10 +10204,9 @@
                 <td style="color:${hitMarker.walletColor}">${hitMarker.walletLabel}</td>
               </tr>
             </table>`;
-          tip.style.left    = tipX + 'px';
-          tip.style.top     = tipY + 'px';
-          tip.style.display = 'block';
           tip.style.borderColor = isLong ? 'rgba(46,229,145,0.35)' : 'rgba(255,77,97,0.35)';
+          tip.style.display = 'block';
+          _placeTip(tip, curX, curY, parentRect.width, parentRect.height);
           canvas.style.cursor = 'pointer';
           return;
         }
@@ -10208,9 +10238,8 @@
           </div>
           <div style="font-size:13px;font-weight:800;color:var(--green)">${valFmt} <span style="font-size:9px;font-weight:400;color:var(--muted)">USDC</span></div>`;
         tip.style.borderColor = 'var(--border2)';
-        tip.style.left    = tipX + 'px';
-        tip.style.top     = tipY + 'px';
         tip.style.display = 'block';
+        _placeTip(tip, curX, curY, parentRect.width, parentRect.height);
       });
 
       canvas.addEventListener('mouseleave', function() {
@@ -10309,9 +10338,6 @@
       // Preço de entrada
       const entry     = p.entryPrice ?? p.entry ?? p.ep ?? p.avgPrice ?? null;
       const entryFmt  = entry != null ? (parseFloat(entry) >= 1000 ? parseFloat(entry).toLocaleString('en-US', {maximumFractionDigits:1}) : parseFloat(entry).toFixed(4)) : '—';
-      // Preço de mercado (mark price)
-      const mp        = markPrices[p.pair] ?? markPrices[(p.pair || '').replace('-USD','') + '-USD'] ?? null;
-      const mpFmt     = mp != null ? (parseFloat(mp) >= 1000 ? parseFloat(mp).toLocaleString('en-US', {maximumFractionDigits:1}) : parseFloat(mp).toFixed(4)) : '—';
       const openedTs  = p.openedAtTs || p.openedTs || 0;
       let dateFmt = '—';
       if (openedTs > 0) {
@@ -10329,7 +10355,6 @@
           <div class="pat-op-sub" style="color:${wColor}">${wLabel}</div>
         </span>
         <span class="pat-op-entry" style="text-align:right;color:var(--muted)">${entryFmt}</span>
-        <span class="pat-op-entry" style="text-align:right;color:var(--blue)">${mpFmt}</span>
         <span class="pat-op-pnl ${pnlClass}" style="text-align:right">${pnlFmt}</span>
         <span class="pat-op-entry" style="text-align:right">${sizeFmt}</span>
         <span class="pat-op-entry" style="text-align:right;font-size:9px">${dateFmt}</span>
