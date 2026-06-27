@@ -1690,6 +1690,7 @@
   .mov-filter-chip.active-increase { background: rgba(79,151,255,0.12); color: var(--blue); border-color: rgba(79,151,255,0.35); }
   .mov-filter-chip.active-liq { background: rgba(255,77,97,0.18); color: var(--red); border-color: rgba(255,77,97,0.5); }
   .mov-filter-chip.active-partial { background: rgba(247,177,61,0.12); color: var(--amber); border-color: rgba(247,177,61,0.3); }
+  .mov-filter-chip.active-close   { background: var(--red-dim); color: var(--red); border-color: rgba(255,77,97,0.35); }
   .mov-filter-chip.active-all { background: rgba(255,255,255,0.07); color: var(--text); border-color: var(--border3); }
   /* Size filter active states */
   .mov-filter-chip.active-size-all    { background: rgba(255,255,255,0.07); color: var(--text); border-color: var(--border3); }
@@ -3652,6 +3653,7 @@
           <button class="mov-filter-chip" data-mov-filter="reduce" onclick="setMovFilter(this,'reduce')">↓ Redução</button>
           <button class="mov-filter-chip" data-mov-filter="liq" onclick="setMovFilter(this,'liq')">Liquidação</button>
           <button class="mov-filter-chip" data-mov-filter="partial" onclick="setMovFilter(this,'partial')">Saída Parcial</button>
+          <button class="mov-filter-chip" data-mov-filter="close" onclick="setMovFilter(this,'close')">Fechada</button>
         </div>
         <div class="mov-filter-row size-row">
           <span class="mov-size-label">Size</span>
@@ -4509,6 +4511,7 @@
   const DISCOVERY_MIN_TRADERS = 90;
   const MAX_EVENTS     = 50;
   const MAX_CLOSED     = 25;
+  const MAX_MOV_FEED   = 100; // Máximo de eventos de redução/aumento/parcial no feed
   const MAX_HISTORY    = 200; // Máximo de entradas no Histórico de Posições
   const RENDER_MS      = 5_000;
   const MARK_POLL_MS   = 3_000;   // Polling REST de mark prices (fallback quando WS falha)
@@ -4631,6 +4634,8 @@
 
   let positions      = [];   // Posições abertas de todas as wallets
   let events         = [];   // Log de eventos (Live events panel)
+  let _movFeed       = [];   // Feed de eventos de redução/aumento/saída parcial (tempo real)
+  let _movHistPartials = []; // Feed de saídas parciais detectadas no histórico REST de trades
   let closed         = [];   // Posições fechadas recentes (sessão atual — mesmo dia)
   let history        = [];   // Histórico completo de posições fechadas
   let historyRestData = [];  // Dados brutos vindos da API REST de histórico
@@ -5362,6 +5367,53 @@
       debugLog(`hydrateWalletState ${shortAddr(addr)}: payload inválido — sem array positions`, 'err');
       return;
     }
+
+    // ── Diff REST: detecta fechamentos (posições que existiam e não vieram no snapshot) ──
+    // Só aplica quando já há posições em memória para esta wallet (não é o primeiro load)
+    const _existingForAddr = positions.filter(p => p.addr === addr);
+    if (_existingForAddr.length > 0) {
+      const _incomingSyms = new Set(
+        data.positions.map(p => cleanSym(p.symbol || p.s || '')).filter(Boolean)
+      );
+      _existingForAddr.forEach(oldPos => {
+        if (!_incomingSyms.has(oldPos.pair)) {
+          // Posição desapareceu no REST → fechamento detectado via polling
+          const closePrice = oldPos.mark || oldPos.entry;
+          let pctRest = null;
+          if (oldPos.entry > 0 && closePrice > 0) {
+            pctRest = oldPos.side === 'LONG'
+              ? ((closePrice - oldPos.entry) / oldPos.entry) * 100
+              : ((oldPos.entry - closePrice) / oldPos.entry) * 100;
+          }
+          const sizeUsdcRest = oldPos.entry > 0
+            ? oldPos.size * oldPos.entry
+            : (closePrice > 0 ? oldPos.size * closePrice : null);
+          // Evita duplicar se WS já registrou este fechamento (checa últimos 10s no `closed`)
+          const alreadyClosed = closed.some(c =>
+            c.addr === addr && c.pair === oldPos.pair &&
+            c.closedAtTs && (Date.now() - c.closedAtTs) < 10000
+          );
+          if (!alreadyClosed) {
+            const snap = {
+              ...oldPos,
+              reason: 'Closed',
+              finalPnl: oldPos.pnl ?? 0,
+              closePrice: closePrice,
+              pct: pctRest,
+              fee: null,
+              sizeUsdc: sizeUsdcRest,
+              closedAtTs: Date.now(),
+              closedAt: (() => { const d = new Date(); const pad = n => String(n).padStart(2,'0'); return pad(d.getDate())+'/'+pad(d.getMonth()+1)+' '+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds()); })()
+            };
+            closed.unshift(snap);
+            if (closed.length > MAX_CLOSED) closed.pop();
+            addEvent('close', `${oldPos.pair} ${oldPos.side} fechado (REST) — ${shortAddr(addr)}`, oldPos);
+            debugLog(`hydrateWalletState: fechamento detectado via REST — ${oldPos.pair} ${shortAddr(addr)}`, 'ok');
+          }
+        }
+      });
+    }
+
     if (data.positions.length === 0) {
       // Sem posições abertas: remove eventuais posições antigas desta wallet do estado
       positions = positions.filter(p => p.addr !== addr);
@@ -5410,9 +5462,39 @@
       const posId = p.id ?? p.i ?? p.positionId ?? p.positionID;
       const s = stops[String(posId)] || {};
 
-      // Remove duplicata (WS pode ter chegado antes do snapshot)
+      // ── Diff REST: detecta redução / aumento / saída parcial em posições existentes ──
       const dup = positions.findIndex(x => x.addr === addr && x.pair === sym);
       if (dup >= 0) {
+        const oldPos     = positions[dup];
+        const oldSize    = oldPos.size || 0;
+        const newSize    = Math.abs(size);
+        const sizeDiff   = newSize - oldSize;
+        // Só dispara evento se variação > 0.5% (mesma regra do handleAccountUpdate via WS)
+        if (oldSize > 0 && Math.abs(sizeDiff) / oldSize > 0.005) {
+          const oldSizeUsdc = oldPos.sizeUsdc || (oldSize * (oldPos.entry || 0));
+          const newSizeUsdc = newSize * ((isNaN(entry) ? 0 : entry) || oldPos.entry || 0);
+          const snap = { ...oldPos };
+          snap.prevSize     = oldSize;
+          snap.prevSizeUsdc = oldSizeUsdc;
+          snap.newSize      = newSize;
+          snap.newSizeUsdc  = newSizeUsdc;
+          snap.deltaUsdc    = newSizeUsdc - oldSizeUsdc;
+          snap.deltaPct     = (sizeDiff / oldSize) * 100;
+          snap.movTs        = Date.now();
+          const isPartial   = sizeDiff < 0 && newSize > 0;
+          const isReduce    = sizeDiff < 0;
+          const movKind     = isPartial ? 'partial' : isReduce ? 'reduce' : 'increase';
+          // Evita duplicar evento se WS já o registrou nos últimos 8s
+          const recentDup = _movFeed.some(ev =>
+            ev.pos && ev.pos.addr === addr && ev.pos.pair === sym &&
+            ev.kind === movKind && (Date.now() - (ev.sortTs || 0)) < 8000
+          );
+          if (!recentDup) {
+            _movFeed.unshift({ kind: movKind, pos: snap, sortTs: snap.movTs });
+            if (_movFeed.length > MAX_MOV_FEED) _movFeed.pop();
+            debugLog(`hydrateWalletState: ${movKind} detectado via REST — ${sym} ${shortAddr(addr)} (${sizeDiff > 0 ? '+' : ''}${snap.deltaPct.toFixed(1)}%)`, 'ok');
+          }
+        }
         debugLog(`hydrateWalletState: duplicata removida ${sym} ${shortAddr(addr)}`, 'info');
         positions.splice(dup, 1);
       }
@@ -6084,16 +6166,16 @@
     renderHistoryTable();
   }
 
-  /* ── ENRIQUECE FEE VIA /accounts/{addr}/trades ────────────────
-     Busca o histórico de trades para o período e cruza com
-     historyRestData pelo par+wallet, preenchendo o fee onde
-     /positions/history não retornou o campo.
+  /* ── ENRIQUECE FEE E DETECTA PARCIAIS HISTÓRICAS ─────────────
+     Busca o histórico de trades para o período, cruza com
+     historyRestData para preencher fee, e detecta saídas parciais
+     históricas (múltiplos closing trades no mesmo par → parciais).
   ─────────────────────────────────────────────────────────────── */
   async function enrichFeesFromTrades(fromMs, nowMs) {
     for (const addr of trackedWallets) {
       try {
         const url = `${SODEX_REST_PERPS}/accounts/${addr}/trades?limit=500&startTime=${fromMs}&endTime=${nowMs}`;
-        debugLog(`Trades REST ${shortAddr(addr)} para fee enrichment`, 'info');
+        debugLog(`Trades REST ${shortAddr(addr)} para fee enrichment + parciais`, 'info');
         const res = await corsAwareFetch(url);
         if (!res.ok) { debugLog(`Trades ${shortAddr(addr)}: HTTP ${res.status}`, 'warn'); continue; }
         const envelope = await res.json();
@@ -6105,22 +6187,90 @@
         if (trades.length > 0) {
           debugLog('Trade sample keys: ' + JSON.stringify(Object.keys(trades[0])), 'info');
           const tf = trades[0];
-          debugLog(`Trade sample vals: fee=${tf.fee} qty=${tf.quantity ?? tf.q} sym=${tf.symbol ?? tf.s}`, 'info');
+          debugLog(`Trade sample vals: fee=${tf.fee} qty=${tf.quantity ?? tf.q} sym=${tf.symbol ?? tf.s} closingTrade=${tf.closingTrade}`, 'info');
         }
 
         // Agrupa fee total por símbolo limpo (soma todos os trades do par)
         const feeByPair = {};
         const sizeByPair = {};
+        // Agrupa closing trades por símbolo para detectar parciais históricas
+        // closingTrade=true OU side='CLOSE' → redução/fechamento de posição
+        const closingByPair = {}; // sym → [{ts, qty, price, pnl}]
+
         trades.forEach(t => {
           const sym = cleanSym(t.symbol || t.s || '');
           if (!sym) return;
           const feeVal = parseFloat(t.fee ?? t.f ?? t.commission ?? 0) || 0;
           const qtyVal = parseFloat(t.quantity ?? t.q ?? t.qty ?? t.size ?? 0) || 0;
-          if (!feeByPair[sym])  feeByPair[sym]  = 0;
-          if (!sizeByPair[sym]) sizeByPair[sym] = 0;
+          const price  = parseFloat(t.price ?? t.p ?? t.fillPrice ?? 0) || 0;
+          const pnlVal = parseFloat(t.realizedPnL ?? t.realizedPnl ?? t.pnl ?? 0) || 0;
+          const tsVal  = Number(t.timestamp ?? t.ts ?? t.time ?? t.createdAt ?? t.ct ?? 0) || 0;
+          const sideT  = (t.positionSide ?? t.side ?? t.S ?? '').toString().toUpperCase();
+          const isClosing = (t.closingTrade === true) || sideT.includes('CLOSE') || qtyVal < 0;
+
+          if (!feeByPair[sym])     feeByPair[sym]     = 0;
+          if (!sizeByPair[sym])    sizeByPair[sym]     = 0;
+          if (!closingByPair[sym]) closingByPair[sym]  = [];
           feeByPair[sym]  += feeVal;
           sizeByPair[sym] += Math.abs(qtyVal);
+          if (isClosing && Math.abs(qtyVal) > 0) {
+            closingByPair[sym].push({ ts: tsVal, qty: Math.abs(qtyVal), price, pnl: pnlVal });
+          }
         });
+
+        // ── Detecta parciais históricas ─────────────────────────────────────────
+        // Para cada símbolo com 2+ closing trades, todos exceto o último (que fecha) são parciais.
+        // O último closing trade corresponde ao fechamento total (que já está em historyRestData).
+        Object.entries(closingByPair).forEach(([sym, closings]) => {
+          if (closings.length < 2) return; // só 1 closing = fechamento total, sem parcial
+          // Ordena por timestamp crescente
+          closings.sort((a, b) => a.ts - b.ts);
+          // Busca a posição histórica correspondente para obter entry/side/sizeUsdc
+          const histEntry = historyRestData.find(h => h.addr === addr && h.pair === sym);
+          const entry     = histEntry ? (histEntry.entry || 0) : 0;
+          const side      = histEntry ? (histEntry.side || 'LONG') : 'LONG';
+          const totalSize = histEntry ? (histEntry.size || 0) : 0;
+
+          // Todos exceto o último são saídas parciais
+          let accumulatedQty = 0;
+          for (let ci = 0; ci < closings.length - 1; ci++) {
+            const c = closings[ci];
+            accumulatedQty += c.qty;
+            const prevSizeUsdc = entry > 0 ? ((totalSize + accumulatedQty) * entry) : null;
+            const newSizeUsdc  = entry > 0 ? ((totalSize + accumulatedQty - c.qty) * entry) : null;
+            const deltaPct     = totalSize + accumulatedQty > 0
+              ? -(c.qty / (totalSize + accumulatedQty)) * 100
+              : null;
+            // Evita duplicar parciais já registradas nesta sessão (janela de 8s)
+            const alreadyInLive = _movFeed.some(ev =>
+              ev.pos && ev.pos.addr === addr && ev.pos.pair === sym &&
+              ev.kind === 'partial' && c.ts > 0 && Math.abs((ev.sortTs || 0) - c.ts) < 8000
+            );
+            if (!alreadyInLive) {
+              const snap = {
+                addr, pair: sym, side,
+                entry,
+                mark: c.price || entry,
+                size: totalSize,
+                sizeUsdc: prevSizeUsdc,
+                prevSize: totalSize + accumulatedQty,
+                prevSizeUsdc,
+                newSize: totalSize + accumulatedQty - c.qty,
+                newSizeUsdc,
+                deltaPct,
+                deltaUsdc: newSizeUsdc != null && prevSizeUsdc != null ? newSizeUsdc - prevSizeUsdc : null,
+                finalPnl: c.pnl,
+                movTs: c.ts || 0,
+                closedAt: c.ts ? (() => { const d = new Date(c.ts); const pad = n => String(n).padStart(2,'0'); return pad(d.getDate())+'/'+pad(d.getMonth()+1)+' '+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds()); })() : '—',
+                wallet: shortAddr(addr),
+                leverage: histEntry ? histEntry.leverage : null
+              };
+              _movHistPartials.push({ kind: 'partial', pos: snap, sortTs: c.ts || 0 });
+            }
+          }
+        });
+
+        debugLog(`Parciais históricas detectadas para ${shortAddr(addr)}: ${Object.entries(closingByPair).filter(([,v])=>v.length>=2).length} pares`, 'ok');
 
         // Preenche fee em historyRestData para esta wallet
         historyRestData.forEach(h => {
@@ -6141,6 +6291,9 @@
         debugLog(`Trades enrichment ${shortAddr(addr)}: ${err.message}`, 'warn');
       }
     }
+    // Ordena parciais históricas mais recente primeiro e deduplica
+    _movHistPartials.sort((a, b) => (b.sortTs || 0) - (a.sortTs || 0));
+    debugLog(`Total parciais históricas: ${_movHistPartials.length}`, 'ok');
   }
 
   function handleTrade(addr, sa, t) {
@@ -6165,6 +6318,58 @@
     if (isClose) {
       const idx = positions.findIndex(p => p.addr === addr && p.pair === sym);
       if (idx >= 0) {
+        // Verifica se é saída parcial ou fechamento total.
+        // CORREÇÃO: a checagem antiga (`tradeQty < size*1.05`) era quase sempre
+        // verdadeira — inclusive em fechamentos totais (tradeQty === size também
+        // satisfazia `< size*1.05`) — então NUNCA distinguia parcial de total.
+        // Critério correto: é fechamento total apenas quando a quantidade negociada
+        // cobre (quase) 100% do tamanho restante (margem de 1% p/ arredondamento).
+        const existingPos = positions[idx];
+        const tradeQty    = Math.abs(qty);
+        const remaining   = existingPos.size - tradeQty;
+        const isFullClose = existingPos.size > 0 && remaining <= existingPos.size * 0.01;
+
+        if (!isFullClose && tradeQty > 0 && existingPos.size > 0) {
+          // Evita duplicar se o canal account_updates já processou este mesmo
+          // movimento nos últimos segundos (ordem de chegada das mensagens WS
+          // não é garantida entre os canais 'trades' e 'account_updates').
+          const recentDupTrade = _movFeed.some(ev =>
+            ev.pos && ev.pos.addr === addr && ev.pos.pair === sym &&
+            ev.kind === 'partial' && (Date.now() - (ev.sortTs || 0)) < 5000
+          );
+          if (recentDupTrade) return; // já registrado pelo outro canal — nada a fazer
+
+          // ── Saída parcial: a posição CONTINUA ABERTA com tamanho reduzido ──────
+          // BUG ANTIGO: o código removia a posição de `positions` mesmo em saídas
+          // parciais (tratando-a como fechamento total). Isso fazia a próxima
+          // atualização da SoDEX (ex: um aumento posterior via bot) ser vista como
+          // uma posição "nova" em vez de uma variação da posição existente —
+          // por isso aumentos e novas saídas parciais deixavam de ser detectados.
+          const snap = { ...existingPos };
+          snap.prevSize     = existingPos.size;
+          snap.prevSizeUsdc = existingPos.sizeUsdc || (existingPos.size * existingPos.entry);
+          snap.newSize      = Math.max(0, remaining);
+          snap.newSizeUsdc  = snap.newSize * existingPos.entry;
+          snap.deltaUsdc    = snap.newSizeUsdc - snap.prevSizeUsdc;
+          snap.deltaPct     = -((tradeQty / existingPos.size) * 100);
+          snap.movTs        = Date.now();
+          snap.finalPnl     = parseFloat(t.realizedPnL ?? t.realizedPnl ?? t.pnl ?? 0);
+          _movFeed.unshift({ kind: 'partial', pos: snap, sortTs: snap.movTs });
+          if (_movFeed.length > MAX_MOV_FEED) _movFeed.pop();
+
+          // Evento descritivo no mini-feed de Movimentações Recentes
+          const _partialPct = existingPos.size > 0 ? (tradeQty / existingPos.size * 100).toFixed(1) : '?';
+          addEvent('update', sym + ' ' + existingPos.side + ' saída parcial −' + _partialPct + '% — ' + sa, existingPos);
+
+          // Mantém a posição viva (apenas com size/sizeUsdc atualizados) — NÃO
+          // remove de `positions` e NÃO registra em `closed`/histórico, pois a
+          // posição ainda existe na exchange.
+          existingPos.size     = snap.newSize;
+          existingPos.sizeUsdc = snap.newSizeUsdc;
+          recalcPnl();
+          return; // tratado como saída parcial — não segue para o fluxo de fechamento total
+        }
+
         const pos      = positions.splice(idx, 1)[0];
         // realizedPnL (L maiúsculo) conforme documentação SoDEX
         const finalPnl = parseFloat(t.realizedPnL ?? t.realizedPnl ?? t.pnl ?? pos.pnl);
@@ -6240,6 +6445,48 @@
       }
 
       if (idx >= 0) {
+        // ── Detecta redução / aumento / saída parcial ─────────────────────────
+        const oldSize     = positions[idx].size || 0;
+        const newSize     = Math.abs(size);
+        const oldSizeUsdc = positions[idx].sizeUsdc || (oldSize * (positions[idx].entry || 0));
+        const newSizeUsdc = newSize * ((isNaN(entry) ? 0 : entry) || positions[idx].entry || 0);
+        const sizeDiff    = newSize - oldSize;
+        let _addedMovEvent = false; // flag para evitar evento genérico duplicado
+        if (oldSize > 0 && Math.abs(sizeDiff) / oldSize > 0.005) { // variação > 0.5%
+          const movKindPre = (sizeDiff < 0 && newSize > 0) ? 'partial' : sizeDiff < 0 ? 'reduce' : 'increase';
+          // Evita duplicar se handleTrade (canal de trades) já registrou este
+          // mesmo movimento nos últimos segundos — as duas fontes (trade e
+          // account_updates) podem chegar para o mesmo evento real.
+          const recentDupAcc = _movFeed.some(ev =>
+            ev.pos && ev.pos.addr === addr && ev.pos.pair === sym &&
+            ev.kind === movKindPre && (Date.now() - (ev.sortTs || 0)) < 5000
+          );
+          if (!recentDupAcc) {
+            const snap = { ...positions[idx] };
+            snap.prevSize      = oldSize;
+            snap.prevSizeUsdc  = oldSizeUsdc;
+            snap.newSize       = newSize;
+            snap.newSizeUsdc   = newSizeUsdc;
+            snap.deltaUsdc     = newSizeUsdc - oldSizeUsdc;
+            snap.deltaPct      = ((newSize - oldSize) / oldSize) * 100;
+            snap.movTs         = Date.now();
+            _movFeed.unshift({ kind: movKindPre, pos: snap, sortTs: snap.movTs });
+            if (_movFeed.length > MAX_MOV_FEED) _movFeed.pop();
+            // Evento descritivo no mini-feed de Movimentações Recentes
+            const _pctStr = Math.abs(snap.deltaPct).toFixed(1) + '%';
+            if (movKindPre === 'increase') {
+              addEvent('update', `${sym} ${side} AUMENTADA +${_pctStr} — ${sa}`, positions[idx]);
+              _addedMovEvent = true;
+            } else if (movKindPre === 'partial') {
+              addEvent('update', `${sym} ${side} saída parcial −${_pctStr} — ${sa}`, positions[idx]);
+              _addedMovEvent = true;
+            } else if (movKindPre === 'reduce') {
+              addEvent('update', `${sym} ${side} reduzida −${_pctStr} — ${sa}`, positions[idx]);
+              _addedMovEvent = true;
+            }
+          }
+        }
+        // ─────────────────────────────────────────────────────────────────────
         positions[idx].size  = Math.abs(size);
         positions[idx].side  = side; // atualiza caso tenha mudado
         if (!isNaN(entry)) positions[idx].entry = entry;
@@ -6250,7 +6497,7 @@
           ? positions[idx].size * positions[idx].entry
           : (mkU > 0 ? positions[idx].size * mkU : null);
         recalcPnl();
-        addEvent('update', `${sym} ${side} atualizado — ${sa}`, positions[idx]);
+        if (!_addedMovEvent) addEvent('update', `${sym} ${side} atualizado — ${sa}`, positions[idx]);
       } else {
         // Timestamp real de abertura da posição (SoDEX) — usa campo da API se disponível
         const openTsU = p.openTime ?? p.openedAt ?? p.createdAt ?? p.openTs ?? p.ot ?? p.ct ?? p.timestamp ?? null;
@@ -6472,6 +6719,8 @@
     discoveredAddrs   = {};
     _openPairOrder    = [];
     _pairEnabled      = {};
+    _movFeed          = [];
+    _movHistPartials  = [];
     updateCount       = 0;
     msgCount          = 0;
     msgWindow         = [];
@@ -7079,7 +7328,7 @@
     return '$' + v.toFixed(0);
   }
 
-  let _movFilter = 'all'; // 'all' | 'long' | 'short' | 'increase' | 'reduce' | 'liq' | 'partial'
+  let _movFilter = 'all'; // 'all' | 'long' | 'short' | 'increase' | 'reduce' | 'liq' | 'partial' | 'close'
   let _movSizeFilter = 'all'; // 'all' | 'micro' | 'small' | 'mid' | 'large' | 'whale'
 
   function setMovSizeFilter(btn, filter) {
@@ -7113,6 +7362,7 @@
       reduce:   'active-reduce',
       liq:      'active-liq',
       partial:  'active-partial',
+      close:    'active-close',
     }[filter] || 'active-all';
     btn.classList.add(activeClass);
     renderMovimentacoes();
@@ -7122,8 +7372,8 @@
     const scroll = document.getElementById('mov-scroll');
     if (!scroll) return;
 
-    // ── Constrói lista unificada: posições abertas + fechadas recentes ──────
-    // Cada item tem: { kind:'open'|'close'|'liq', pos, sortTs }
+    // ── Constrói lista unificada: posições abertas + fechadas (sessão + histórico REST) + feed de mudanças ──
+    // Cada item tem: { kind:'open'|'close'|'liq'|'reduce'|'increase'|'partial', pos, sortTs }
     const items = [];
 
     // Posições abertas (monitoradas em tempo real desde a abertura)
@@ -7131,13 +7381,63 @@
       items.push({ kind: 'open', pos, sortTs: pos.openedAtTs || 0 });
     });
 
-    // Posições fechadas recentes (array `closed` — últimas MAX_CLOSED)
+    // Posições fechadas da sessão atual (array `closed` — últimas MAX_CLOSED)
+    const sessionKeys = new Set();
     closed.forEach(pos => {
+      const key = `${pos.addr}|${pos.pair}|${pos.closedAt || ''}`;
+      sessionKeys.add(key);
       const isLiq = pos.reason === 'Liquidation' || pos.reason === 'Liquidação' || /liquida/i.test(pos.reason || '');
       items.push({ kind: isLiq ? 'liq' : 'close', pos, sortTs: pos.closedAtTs || 0 });
     });
 
-    // Abertas primeiro (mais recente por openedAtTs desc), depois fechadas
+    // ── Posições fechadas do histórico REST (todo o período carregado) ──────────
+    // Converte historyRestData para o formato de item do feed, deduplicando com `closed`
+    historyRestData.forEach(h => {
+      if (walletEnabled[(h.addr || '').toLowerCase()] === false) return;
+      // Deduplicação: evita duplicar o que já está em `closed` (sessão atual)
+      const key = `${h.addr}|${h.pair}|${h.closedAt || ''}`;
+      if (sessionKeys.has(key)) return;
+      const isLiq = h.isLiq || /liquida/i.test(h.closeReason || '');
+      const pos = {
+        addr:       h.addr,
+        wallet:     h.wallet,
+        pair:       h.pair,
+        side:       h.side,
+        entry:      h.entry,
+        mark:       h.closePrice || h.entry,
+        closePrice: h.closePrice,
+        size:       h.size,
+        sizeUsdc:   h.sizeUsdc,
+        leverage:   h.leverage,
+        marginMode: h.marginMode,
+        finalPnl:   h.finalPnl,
+        pnl:        h.finalPnl,
+        pct:        h.pct,
+        fee:        h.fee,
+        closedAt:   h.closedAt,
+        closedAtTs: h.closedTs || 0,
+        reason:     isLiq ? 'Liquidação' : 'Closed'
+      };
+      items.push({ kind: isLiq ? 'liq' : 'close', pos, sortTs: h.closedTs || 0 });
+    });
+
+    // Feed de reduções, aumentos e saídas parciais (tempo real — WS + REST polling)
+    _movFeed.forEach(ev => items.push(ev));
+
+    // ── Saídas parciais históricas detectadas via /trades ────────────────────────
+    // Deduplicação: evita duplicar parciais já registradas no _movFeed (janela de 8s)
+    _movHistPartials.forEach(ev => {
+      const alreadyInFeed = _movFeed.some(live =>
+        live.pos && ev.pos &&
+        live.pos.addr === ev.pos.addr &&
+        live.pos.pair === ev.pos.pair &&
+        live.kind === 'partial' &&
+        Math.abs((live.sortTs || 0) - (ev.sortTs || 0)) < 8000
+      );
+      if (!alreadyInFeed) items.push(ev);
+    });
+
+    // Abertas primeiro (mais recente por openedAtTs desc), depois todos por timestamp desc
     const opened = items.filter(i => i.kind === 'open')
                         .sort((a, b) => b.sortTs - a.sortTs);
     const others = items.filter(i => i.kind !== 'open')
@@ -7153,19 +7453,23 @@
       if (_movFilter === 'long')     return kind === 'open' && isLong;
       if (_movFilter === 'short')    return kind === 'open' && isShort;
       if (_movFilter === 'liq')      return kind === 'liq';
+      if (_movFilter === 'close')    return kind === 'close';
       if (_movFilter === 'partial') {
+        if (kind === 'partial') return true; // eventos do _movFeed/_movHistPartials já são kind='partial'
         const reason = (pos.reason || pos.closeReason || '').toLowerCase();
         return kind === 'close' && (reason.includes('parcial') || reason.includes('partial') || reason.includes('reduce'));
       }
       if (_movFilter === 'reduce') {
+        if (kind === 'reduce') return true; // único caso válido: evento real de redução (_movFeed)
         const reason = (pos.reason || pos.closeReason || pos.updateReason || '').toLowerCase();
-        return (kind === 'close' || kind === 'update') && !/(liquida|liquidat)/i.test(pos.reason || '') &&
-               (reason.includes('reduc') || reason.includes('decrease') || reason.includes('reduce') || kind === 'close');
+        return kind === 'update' && !/(liquida|liquidat)/i.test(pos.reason || '') &&
+               (reason.includes('reduc') || reason.includes('decrease') || reason.includes('reduce'));
       }
       if (_movFilter === 'increase') {
+        if (kind === 'increase') return true; // único caso válido: evento real de aumento (_movFeed)
         const reason = (pos.reason || pos.updateReason || '').toLowerCase();
-        return kind === 'open' || (kind === 'update' &&
-               (reason.includes('increas') || reason.includes('aument') || reason.includes('add')));
+        return kind === 'update' &&
+               (reason.includes('increas') || reason.includes('aument') || reason.includes('add'));
       }
       return true;
     }
@@ -7203,9 +7507,12 @@
     const limit = _movExpanded ? filteredFinal.length : Math.min(filteredFinal.length, 20);
 
     const ICONS = {
-      open:  { path: '<path d="M5 12h14M12 5l7 7-7 7"/>', color: 'var(--green)' },
-      close: { path: '<circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/>', color: 'var(--red)' },
-      liq:   { path: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>', color: 'var(--red)' },
+      open:     { path: '<path d="M5 12h14M12 5l7 7-7 7"/>', color: 'var(--green)' },
+      close:    { path: '<circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/>', color: 'var(--red)' },
+      liq:      { path: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>', color: 'var(--red)' },
+      reduce:   { path: '<path d="M5 12h14M19 12l-4-4m4 4l-4 4"/>', color: 'var(--amber)' },
+      increase: { path: '<path d="M5 12h14M12 5l7 7-7 7"/>', color: 'var(--blue)' },
+      partial:  { path: '<path d="M5 12h14"/><circle cx="12" cy="12" r="3"/>', color: 'var(--amber)' },
     };
 
     scroll.innerHTML = filteredFinal.slice(0, limit).map(item => {
@@ -7221,44 +7528,12 @@
         : '<span class="mov-badge-short">SHORT</span>';
 
       const icon = ICONS[kind] || ICONS.open;
-      const dotClass = kind; // 'open' | 'close' | 'liq'
-
-      // ── Linha principal ──────────────────────────────────────────────────
-      // Ação
-      let actionLabel = kind === 'open'  ? 'posição aberta'
-                      : kind === 'liq'   ? 'LIQUIDAÇÃO'
-                      : 'posição fechada';
+      const dotClass = (kind === 'reduce' || kind === 'partial') ? 'close'
+                     : kind === 'increase' ? 'open'
+                     : kind; // 'open' | 'close' | 'liq'
 
       // Par / símbolo
       const sym = pos.pair || '';
-
-      // PnL
-      const pnlVal  = kind === 'open' ? (pos.pnl || 0) : (pos.finalPnl || 0);
-      const pnlCls  = pnlVal >= 0 ? 'mov-val-pos' : 'mov-val-neg';
-      const pnlHtml = `<span class="${pnlCls}">${fmtPnl(pnlVal)}</span>`;
-
-      // Size em USDC
-      const sizeUsd = pos.sizeUsdc != null ? pos.sizeUsdc
-                    : (pos.entry > 0 && pos.size > 0 ? pos.size * pos.entry : null);
-      const sizeHtml = sizeUsd ? `<span class="mov-size">${fmtSize(sizeUsd)}</span>` : '';
-
-      // Preço de entrada
-      const entryHtml = pos.entry ? `<span class="mov-meta">@ ${fmt(pos.entry)}</span>` : '';
-
-      // Tempo aberto / fechado
-      let timeHtml = '';
-      if (kind === 'open') {
-        const dur = pos.openedAtTs ? fmtDuration(pos.openedAtTs) : null;
-        if (dur) timeHtml = `<span class="mov-dur" title="Aberta há ${dur}">⏱ ${dur}</span>`;
-        else if (pos.openedAt && pos.openedAt !== '—') timeHtml = `<span class="mov-dur">${pos.openedAt}</span>`;
-      } else {
-        if (pos.closedAt) timeHtml = `<span class="mov-dur">${pos.closedAt}</span>`;
-      }
-
-      // Mark price atual (só para abertas)
-      const markHtml = kind === 'open' && pos.mark
-        ? `<span class="mov-meta">mark ${fmt(pos.mark)}</span>`
-        : '';
 
       // Leverage
       const levHtml = pos.leverage != null
@@ -7268,7 +7543,153 @@
       // Horário da movimentação
       const timeLabel = kind === 'open'
         ? (pos.openedAt && pos.openedAt !== '—' ? pos.openedAt.slice(-8) : '—')
-        : (pos.closedAt ? pos.closedAt.slice(-8) : '—');
+        : (kind === 'reduce' || kind === 'increase' || kind === 'partial') && pos.movTs
+          ? (() => { const d = new Date(pos.movTs); const pad = n => String(n).padStart(2,'0'); return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds()); })()
+          : (pos.closedAt ? pos.closedAt.slice(-8) : '—');
+
+      // ── Helpers de formatação ────────────────────────────────────────────
+      const _fmtUsd = v => {
+        if (v == null) return null;
+        const abs = Math.abs(v);
+        if (abs >= 1e6)  return (v / 1e6).toFixed(2) + 'M';
+        if (abs >= 1000) return (v / 1000).toFixed(1) + 'k';
+        return v.toFixed(0);
+      };
+
+      // ── Narrativa por tipo de evento ─────────────────────────────────────
+      let mainHtml = '';
+      let detailHtml = '';
+
+      if (kind === 'reduce' || kind === 'increase' || kind === 'partial') {
+        // — Narrativa: "Wallet N [verbo] [SYM] de $X → $Y (±Z%)"
+        const verb = kind === 'reduce'   ? 'reduziu posição em'
+                   : kind === 'increase' ? 'aumentou posição em'
+                   :                       'fez saída parcial em';
+
+        const prevU = pos.prevSizeUsdc != null ? pos.prevSizeUsdc
+                    : (pos.prevSize != null && pos.entry > 0 ? pos.prevSize * pos.entry : null);
+        const newU  = pos.newSizeUsdc  != null ? pos.newSizeUsdc
+                    : (pos.newSize  != null && pos.entry > 0 ? pos.newSize  * pos.entry : null);
+
+        const prevStr = _fmtUsd(prevU);
+        const newStr  = _fmtUsd(newU);
+
+        // Percentual: usa deltaPct se disponível; recalcula do delta USDC se possível
+        let pct = pos.deltaPct;
+        if (pct == null && prevU != null && prevU > 0 && newU != null) {
+          pct = ((newU - prevU) / prevU) * 100;
+        }
+        const pctAbs  = pct != null ? Math.abs(pct) : null;
+        const pctSign = pct != null ? (pct > 0 ? '+' : '-') : '';
+        const pctStr  = pctAbs != null ? `${pctSign}${pctAbs.toFixed(0)}%` : null;
+
+        // Cor do percentual: reduce/partial = vermelho, increase = verde
+        const pctColor = kind === 'increase' ? 'var(--green)' : 'var(--red)';
+        const pctHtml  = pctStr
+          ? `<span style="color:${pctColor};font-weight:700">${pctStr}</span>`
+          : '';
+
+        // Seta de transição "$X → $Y"
+        const arrowHtml = (prevStr && newStr)
+          ? `<span class="mov-meta" style="font-weight:600">$${prevStr}</span>`
+          + `<span class="mov-meta" style="color:var(--muted2);margin:0 2px">→</span>`
+          + `<span class="mov-meta" style="font-weight:600">$${newStr}</span>`
+          : prevStr
+            ? `<span class="mov-meta" style="font-weight:600">$${prevStr}</span>`
+            : newStr
+              ? `<span class="mov-meta" style="font-weight:600">$${newStr}</span>`
+              : '';
+
+        mainHtml = `
+          <span class="mov-wallet-name" style="color:${wColor}">${wLabel}</span>
+          <span class="mov-action">${verb}</span>
+          ${dirBadge}
+          <span class="mov-sym">${sym}</span>
+          ${levHtml}
+          ${prevStr ? `<span class="mov-meta">de <strong>$${prevStr}</strong></span>` : ''}
+          ${newStr  ? `<span class="mov-meta">para <strong>$${newStr}</strong></span>` : ''}
+          ${pctHtml ? `<span class="mov-meta" style="color:var(--muted2)">→</span>${pctHtml}` : ''}`;
+
+        // Linha de detalhe: PnL + horário (a transição já está na linha principal)
+        const pnlVal = pos.finalPnl != null ? pos.finalPnl : (pos.pnl || 0);
+        const pnlCls = pnlVal >= 0 ? 'mov-val-pos' : 'mov-val-neg';
+        const pnlHtml = pnlVal !== 0
+          ? `<span class="${pnlCls}">${fmtPnl(pnlVal)}</span>`
+          : '';
+        const timeDHtml = pos.closedAt
+          ? `<span class="mov-dur">${pos.closedAt.slice(-8)}</span>`
+          : '';
+
+        detailHtml = `${pnlHtml}${timeDHtml}`;
+
+      } else if (kind === 'liq') {
+        // — Narrativa: "Wallet N LIQUIDAÇÃO [SYM] [SIDE] $size"
+        const sizeUsd = pos.sizeUsdc != null ? pos.sizeUsdc
+                      : (pos.entry > 0 && pos.size > 0 ? pos.size * pos.entry : null);
+        const sizeStr = sizeUsd ? `<span class="mov-size">$${_fmtUsd(sizeUsd)}</span>` : '';
+        const pnlVal  = pos.finalPnl != null ? pos.finalPnl : (pos.pnl || 0);
+        const pnlCls  = pnlVal >= 0 ? 'mov-val-pos' : 'mov-val-neg';
+        const pnlHtml = `<span class="${pnlCls}">${fmtPnl(pnlVal)}</span>`;
+        const entryH  = pos.entry ? `<span class="mov-meta">@ ${fmt(pos.entry)}</span>` : '';
+        const timeDH  = pos.closedAt ? `<span class="mov-dur">${pos.closedAt.slice(-8)}</span>` : '';
+
+        mainHtml = `
+          <span class="mov-wallet-name" style="color:${wColor}">${wLabel}</span>
+          <span class="mov-action" style="color:var(--red);font-weight:700">LIQUIDAÇÃO</span>
+          ${dirBadge}
+          <span class="mov-sym">${sym}</span>
+          ${levHtml}
+          ${sizeStr}`;
+
+        detailHtml = `${entryH}${pnlHtml}${timeDH}`;
+
+      } else if (kind === 'open') {
+        // — Posição aberta (sem alteração no layout existente)
+        const sizeUsd = pos.sizeUsdc != null ? pos.sizeUsdc
+                      : (pos.entry > 0 && pos.size > 0 ? pos.size * pos.entry : null);
+        const sizeHtml = sizeUsd ? `<span class="mov-size">${fmtSize(sizeUsd)}</span>` : '';
+        const pnlVal   = pos.pnl || 0;
+        const pnlCls   = pnlVal >= 0 ? 'mov-val-pos' : 'mov-val-neg';
+        const pnlHtml  = `<span class="${pnlCls}">${fmtPnl(pnlVal)}</span>`;
+        const entryH   = pos.entry ? `<span class="mov-meta">@ ${fmt(pos.entry)}</span>` : '';
+        const markH    = pos.mark  ? `<span class="mov-meta">mark ${fmt(pos.mark)}</span>` : '';
+        const dur      = pos.openedAtTs ? fmtDuration(pos.openedAtTs) : null;
+        const timeHtml = dur
+          ? `<span class="mov-dur" title="Aberta há ${dur}">⏱ ${dur}</span>`
+          : (pos.openedAt && pos.openedAt !== '—' ? `<span class="mov-dur">${pos.openedAt}</span>` : '');
+
+        mainHtml = `
+          <span class="mov-wallet-name" style="color:${wColor}">${wLabel}</span>
+          <span class="mov-action">posição aberta</span>
+          ${dirBadge}
+          <span class="mov-sym">${sym}</span>
+          ${levHtml}
+          ${sizeHtml}`;
+
+        detailHtml = `${entryH}${markH}${pnlHtml}${timeHtml}`;
+
+      } else {
+        // — Posição fechada (close)
+        const sizeUsd = pos.sizeUsdc != null ? pos.sizeUsdc
+                      : (pos.entry > 0 && pos.size > 0 ? pos.size * pos.entry : null);
+        const sizeStr = sizeUsd ? `<span class="mov-size">$${_fmtUsd(sizeUsd)}</span>` : '';
+        const pnlVal  = pos.finalPnl != null ? pos.finalPnl : (pos.pnl || 0);
+        const pnlCls  = pnlVal >= 0 ? 'mov-val-pos' : 'mov-val-neg';
+        const pnlHtml = `<span class="${pnlCls}">${fmtPnl(pnlVal)}</span>`;
+        const entryH  = pos.entry ? `<span class="mov-meta">@ ${fmt(pos.entry)}</span>` : '';
+        const closeH  = pos.closePrice ? `<span class="mov-meta">→ ${fmt(pos.closePrice)}</span>` : '';
+        const timeDH  = pos.closedAt ? `<span class="mov-dur">${pos.closedAt.slice(-8)}</span>` : '';
+
+        mainHtml = `
+          <span class="mov-wallet-name" style="color:${wColor}">${wLabel}</span>
+          <span class="mov-action">fechou</span>
+          ${dirBadge}
+          <span class="mov-sym">${sym}</span>
+          ${levHtml}
+          ${sizeStr}`;
+
+        detailHtml = `${entryH}${closeH}${pnlHtml}${timeDH}`;
+      }
 
       return `<div class="mov-row mov-row-${kind}">
         <span class="mov-time">${timeLabel}</span>
@@ -7277,20 +7698,8 @@
         </div>
         <div class="mov-dot ${dotClass}"></div>
         <div class="mov-body">
-          <div class="mov-main">
-            <span class="mov-wallet-name" style="color:${wColor}">${wLabel}</span>
-            <span class="mov-action">${actionLabel}</span>
-            ${dirBadge}
-            <span class="mov-sym">${sym}</span>
-            ${levHtml}
-            ${sizeHtml}
-          </div>
-          <div class="mov-detail">
-            ${entryHtml}
-            ${markHtml}
-            ${pnlHtml}
-            ${timeHtml}
-          </div>
+          <div class="mov-main">${mainHtml}</div>
+          <div class="mov-detail">${detailHtml}</div>
         </div>
       </div>`;
     }).join('');
@@ -8557,7 +8966,7 @@
       const pnl = parseFloat(
         String(p.realizedPnL ?? p.realizedPnl ?? p.rpnl ?? p.pnl ?? p.profit ?? 0)
           .replace(',', '.')) || 0;
-      if (pnl === 0) return; // ignora posições sem PnL relevante
+      // CORREÇÃO: não filtra pnl === 0 — posições abertas ainda têm realizedPnL=0 mas são eventos válidos
       events.push({ ts, delta: pnl, type: 'pos' });
     });
 
@@ -8573,6 +8982,21 @@
       if (fee === 0) return;
       events.push({ ts, delta: -fee, type: 'fund' }); // inverte sinal: pagou fee → reduz PnL
     });
+
+    // 3c. Posições ABERTAS atualmente: contribuem com seu PnL não realizado
+    // como um evento com timestamp de abertura — assim aparecem na curva histórica
+    // mesmo antes de fechar. Se a posição ainda não tiver openedAtTs, usa Date.now().
+    positions
+      .filter(p => p.addr === addr)
+      .forEach(p => {
+        const openTs = p.openedAtTs || Date.now();
+        const unrealizedPnl = p.pnl || 0;
+        // Só adiciona se não há evento próximo (evita duplicar com closedPositions)
+        const alreadyCovered = events.some(ev => Math.abs(ev.ts - openTs) < 60000 && ev.type === 'pos');
+        if (!alreadyCovered) {
+          events.push({ ts: openTs, delta: unrealizedPnl, type: 'open_pos' });
+        }
+      });
 
     if (!events.length) {
       _setPatrimonyStatus('Sem dados históricos', 'var(--muted2)');
@@ -8622,15 +9046,21 @@
       } catch(e) { /* silencioso */ }
     }
 
+    // PnL não realizado das posições abertas desta wallet (flutuante)
+    const _openUnrealizedPnl = positions
+      .filter(p => p.addr === addr && _pairEnabled[p.pair] !== false)
+      .reduce((s, p) => s + (p.pnl || 0), 0);
+
     const currentTotal = currentPerp !== null ? (currentPerp + currentSpot) : null;
 
-    // pnl acumulado no ponto mais recente da curva
+    // pnl acumulado no ponto mais recente da curva (apenas realizado)
     const finalCumPnl = pnlCurve.length ? pnlCurve[pnlCurve.length - 1].deltaPnl : 0;
 
     let curve;
     if (currentTotal !== null) {
       // Ancora: valor_histórico_em_t = saldo_atual - (pnl_final - pnl_em_t)
-      // Isso converte a curva de PnL relativo em valores absolutos de patrimônio.
+      // currentTotal já inclui o efeito das posições abertas (saldo da conta perp = equity)
+      // portanto NÃO somamos _openUnrealizedPnl de novo para evitar dupla contagem.
       curve = pnlCurve.map(pt => ({
         ts: pt.ts,
         value: currentTotal - (finalCumPnl - pt.deltaPnl)
@@ -8638,15 +9068,11 @@
       // Adiciona ponto atual com valor real (perp + spot)
       curve.push({ ts: Date.now(), value: currentTotal });
     } else {
-      // Sem saldo ao vivo: usa PnL relativo como proxy (variação, não valor absoluto)
-      // Tenta ao menos ancorá-lo no PnL conhecido das stats
-      const stats   = walletStats[addr] || {};
-      const openPnl = positions
-        .filter(p => p.addr === addr && _pairEnabled[p.pair] !== false)
-        .reduce((s, p) => s + (p.pnl || 0), 0);
-      const knownBase = stats.pnl || 0;
+      // Sem saldo ao vivo: usa PnL relativo + posições abertas como proxy
+      // CORREÇÃO: inclui _openUnrealizedPnl no ponto atual para refletir
+      // posições abertas que ainda não fecharam (e portanto não estão em closedPositions)
       curve = pnlCurve.map(pt => ({ ts: pt.ts, value: pt.deltaPnl }));
-      curve.push({ ts: Date.now(), value: finalCumPnl + openPnl });
+      curve.push({ ts: Date.now(), value: finalCumPnl + _openUnrealizedPnl });
     }
 
     // ── 4. Merge com patrimonyHistory existente ─────────────────────────────
@@ -8664,6 +9090,63 @@
     patrimonyHistory[addr] = deduped;
     // Persiste no localStorage com compactação
     _savePatrimonyToLS(addr, deduped);
+
+    // ── 5. Alimenta historyRestData com TODAS as posições fechadas ──────────────
+    // Os pontinhos no gráfico são renderizados a partir de historyRestData.
+    // fetchHistoryForAllWallets() só busca os últimos N dias, então posições antigas
+    // não aparecem como marcadores. Aqui adicionamos tudo que veio da busca completa,
+    // deduplicando por (addr + par + timestamp de fechamento).
+    const _existingKeys = new Set(
+      historyRestData.filter(h => h.addr === addr).map(h => h.addr + '|' + h.pair + '|' + (h.closedTs || 0))
+    );
+    closedPositions.forEach(p => {
+      const sym = cleanSym(p.symbol || p.s || '');
+      if (!sym) return;
+      const closedTsRaw = p.closedAt ?? p.closeTime ?? p.closedTime ?? p.closeTs ?? p.ct ??
+                          p.endTime  ?? p.et ?? p.closeTimestamp ?? p.updatedAt ?? p.ut ?? p.createdAt ?? null;
+      const closedTs = closedTsRaw != null ? Number(closedTsRaw) : 0;
+      const dedupKey = addr + '|' + sym + '|' + closedTs;
+      if (_existingKeys.has(dedupKey)) return; // já existe em historyRestData
+      _existingKeys.add(dedupKey);
+
+      const sizeRaw  = p.cumClosedSize ?? p.size ?? p.sz ?? 0;
+      const absSize  = Math.abs(parseFloat(String(sizeRaw).replace(',', '.')) || 0);
+      const sideRaw  = (p.positionSide ?? p.side ?? p.ps ?? '').toString().toUpperCase();
+      const side     = sideRaw === 'SHORT' ? 'SHORT' : 'LONG';
+      const entry    = parseFloat(String(p.avgEntryPrice ?? p.ep ?? p.entryPrice ?? 0).replace(',', '.')) || 0;
+      const closeP   = parseFloat(String(p.closePrice ?? p.cp ?? p.avgClosePrice ?? p.exitPrice ?? 0).replace(',', '.')) || 0;
+      const pnl      = parseFloat(String(p.realizedPnL ?? p.realizedPnl ?? p.pnl ?? 0).replace(',', '.')) || 0;
+      const fee      = p.cumTradingFee != null ? (parseFloat(String(p.cumTradingFee).replace(',', '.')) || null) : null;
+      const lev      = p.leverage ?? p.lv ?? null;
+      const mmRaw    = p.marginMode ?? p.mm ?? null;
+      const mLabel   = mmRaw === 1 ? 'ISO' : mmRaw === 2 ? 'CROSS' :
+                       (typeof mmRaw === 'string' ? mmRaw.toUpperCase() : '—');
+      const sizeUsdc = entry > 0 ? absSize * entry : (closeP > 0 ? absSize * closeP : null);
+      let pct = null;
+      if (entry > 0 && closeP > 0) {
+        pct = side === 'LONG' ? ((closeP - entry) / entry) * 100 : ((entry - closeP) / entry) * 100;
+      }
+      let closedAtStr = '—';
+      if (closedTs > 0) {
+        const d = new Date(closedTs);
+        const pad = n => String(n).padStart(2,'0');
+        closedAtStr = pad(d.getDate())+'/'+pad(d.getMonth()+1)+' '+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
+      }
+      const openedTs = Number(p.openTime ?? p.openedAt ?? p.createdAt ?? p.openTs ?? p.ot ?? 0) || 0;
+      const isLiq    = (p.closeReason ?? p.reason ?? '').toString().toLowerCase().includes('liq');
+      historyRestData.push({
+        wallet: shortAddr(addr), addr, pair: sym, side, marginMode: mLabel,
+        entry, closePrice: closeP > 0 ? closeP : null,
+        size: absSize, sizeUsdc, leverage: lev, fee,
+        finalPnl: isNaN(pnl) ? 0 : pnl, pct,
+        closedAt: closedAtStr, closedTs: closedTs || 0,
+        openedTs, isLiq, isProfit: !isLiq && pnl >= 0,
+        _fromFullFetch: true // flag para identificar origem
+      });
+    });
+    // Ordena historyRestData mais recente primeiro (consistente com o restante do código)
+    historyRestData.sort((a, b) => (b.closedTs || 0) - (a.closedTs || 0));
+    debugLog(`PatrimonyFull [${shortAddr(addr)}]: ${closedPositions.length} posições adicionadas a historyRestData (total: ${historyRestData.length})`, 'ok');
 
     const firstDate = new Date(events[0].ts);
     const fmtDate = d => `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
@@ -8920,7 +9403,8 @@
         const fd = new Date(first.ts);
         const sinceStr = `${fd.getDate().toString().padStart(2,'0')}/${(fd.getMonth()+1).toString().padStart(2,'0')}/${fd.getFullYear()}`;
         const dotColor = s.isCombined ? 'var(--green)' : s.color;
-        const rankPfx  = s.isCombined ? '' : `${i + 1} `;
+        const trackedIdx = trackedWallets.findIndex(a => a && a.toLowerCase() === s.addr.toLowerCase());
+        const rankPfx  = s.isCombined ? '' : `${trackedIdx >= 0 ? trackedIdx + 1 : i + 1} `;
         const isHidden = isAll && _patrimonyHiddenWallets.has(s.addr.toLowerCase());
         const clickHandler = isAll ? ` onclick="_patrimonyToggleLegend('${s.addr}')"` : '';
         const activeClass = isAll ? (isHidden ? ' legend-dimmed' : ' legend-active') : '';
@@ -9081,11 +9565,17 @@
 
     const tradeMarkers = []; // { ts, value (on curve), addr, trade, isOpen }
 
-    // Helper: find the curve value at a given timestamp for a wallet
+    // Helper: find the curve value at a given timestamp for a wallet.
+    // Retorna o valor interpolado da curva no timestamp dado.
+    // Se não há curva, retorna 0 (marcador aparece na linha de base).
+    // Se o timestamp cai fora do range da curva, extrapola pelo extremo mais próximo.
     const _interpVal = (addr, ts) => {
       const pts = (patrimonyHistory[addr] || []);
-      if (!pts.length) return null;
-      // Find surrounding points
+      if (!pts.length) return 0; // sem curva → linha de base, mas exibe o marcador
+      // Extrapolação nos extremos: clamp ao primeiro/último ponto
+      if (ts <= pts[0].ts) return pts[0].value ?? pts[0].pnl ?? 0;
+      if (ts >= pts[pts.length - 1].ts) return pts[pts.length - 1].value ?? pts[pts.length - 1].pnl ?? 0;
+      // Interpolação linear entre os dois pontos vizinhos
       let lo = pts[0], hi = pts[pts.length - 1];
       for (let i = 0; i < pts.length - 1; i++) {
         if (pts[i].ts <= ts && pts[i+1].ts >= ts) { lo = pts[i]; hi = pts[i+1]; break; }
@@ -9104,7 +9594,7 @@
       // Check pairEnabled filter
       if (_pairEnabled[h.pair] === false) return;
       const curveVal = _interpVal(h.addr, h.closedTs);
-      if (curveVal === null) return;
+      // curveVal nunca é null agora (retorna 0 quando sem curva)
       // Duration: try to find open position timestamp from current positions (fallback: 0)
       const durMs = h.openedTs ? (h.closedTs - h.openedTs) : 0;
       tradeMarkers.push({
@@ -9136,7 +9626,6 @@
       const ts = Date.now();
       if (ts < cutoffTs) return;
       const curveVal = _interpVal(p.addr, ts);
-      if (curveVal === null) return;
       const openedTs = p.openedAtTs || 0;
       tradeMarkers.push({
         ts,
