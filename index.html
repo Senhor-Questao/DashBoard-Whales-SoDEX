@@ -1599,7 +1599,7 @@
   /* Open position rows in patrimony panel */
   .pat-op-row {
     display: grid;
-    grid-template-columns: 8px minmax(44px,1fr) 62px 62px 52px 66px;
+    grid-template-columns: 8px minmax(44px,1fr) 62px 62px 62px 52px 66px;
     align-items: center;
     gap: 0 5px;
     padding: 5px 10px;
@@ -1612,7 +1612,7 @@
   .pat-op-row:hover { background: rgba(255,255,255,0.025); }
   .pat-op-head {
     display: grid;
-    grid-template-columns: 8px minmax(44px,1fr) 62px 62px 52px 66px;
+    grid-template-columns: 8px minmax(44px,1fr) 62px 62px 62px 52px 66px;
     align-items: center;
     gap: 0 5px;
     padding: 4px 10px 5px;
@@ -3639,6 +3639,7 @@
         <div class="pat-op-head">
           <span></span>
           <span>Par</span>
+          <span style="text-align:right">Market</span>
           <span style="text-align:right">Entrada</span>
           <span style="text-align:right">PnL (USDC)</span>
           <span style="text-align:right">Size</span>
@@ -6269,13 +6270,16 @@
               ev.kind === 'partial' && c.ts > 0 && Math.abs((ev.sortTs || 0) - c.ts) < 8000
             );
             if (!alreadyInLive) {
+              // Descarta se não há dados de preço para calcular tamanho em USDC (evita $0.00 → $0.00)
+              const prevQty = totalSize + accumulatedQty;
+              if (prevQty <= 0 || c.qty <= 0) continue; // saída sem quantidade real
               const snap = {
                 addr, pair: sym, side,
                 entry,
                 mark: c.price || entry,
                 size: totalSize,
                 sizeUsdc: prevSizeUsdc,
-                prevSize: totalSize + accumulatedQty,
+                prevSize: prevQty,
                 prevSizeUsdc,
                 newSize: totalSize + accumulatedQty - c.qty,
                 newSizeUsdc,
@@ -6445,11 +6449,17 @@
             });
 
             // ── Passe 3: gera eventos ────────────────────────────────────────────
+            // A posição ainda está aberta com pos.size — nunca deixamos runningSize
+            // cair abaixo disso: seria mostrar um fechamento que não ocorreu.
             let runningSize = symTrades[0].qty;
             grouped.forEach(t => {
               const prevSize = runningSize;
-              runningSize = t.isClosing ? Math.max(0, runningSize - t.qty) : runningSize + t.qty;
+              runningSize = t.isClosing
+                ? Math.max(pos.size, runningSize - t.qty)  // piso = tamanho atual real
+                : runningSize + t.qty;
               if (Math.abs(prevSize - runningSize) < prevSize * 0.001) return;
+              // Descarta eventos onde tamanho anterior ou novo é zero — seriam exibidos como $0.00
+              if (prevSize <= 0 || runningSize < 0) return;
 
               const dup = (arr) => arr.some(ev =>
                 ev.pos && ev.pos.addr === addr && ev.pos.pair === sym &&
@@ -7644,7 +7654,19 @@
     });
 
     // Feed de reduções, aumentos e saídas parciais (tempo real — WS + REST polling)
-    _movFeed.forEach(ev => items.push(ev));
+    // Filtra eventos de partial/reduce/increase sem dados reais (prevSizeUsdc=0 e newSizeUsdc=0)
+    _movFeed.forEach(ev => {
+      if ((ev.kind === 'partial' || ev.kind === 'reduce' || ev.kind === 'increase')) {
+        const p = ev.pos || {};
+        const prevU = p.prevSizeUsdc;
+        const newU  = p.newSizeUsdc;
+        // Descarta se ambos são exatamente zero (nenhum valor real executado)
+        if (prevU === 0 && newU === 0) return;
+        // Descarta se prevSize e newSize são ambos zero ou ausentes
+        if ((p.prevSize != null && p.prevSize <= 0) && (p.newSize != null && p.newSize <= 0)) return;
+      }
+      items.push(ev);
+    });
 
     // ── Saídas parciais históricas detectadas via /trades ────────────────────────
     // Deduplicação: evita duplicar parciais já registradas no _movFeed (janela de 8s)
@@ -7656,7 +7678,14 @@
         live.kind === 'partial' &&
         Math.abs((live.sortTs || 0) - (ev.sortTs || 0)) < 8000
       );
-      if (!alreadyInFeed) items.push(ev);
+      if (alreadyInFeed) return;
+      // Descarta eventos sem dados reais (tamanhos zero — seriam exibidos como $0.00 → $0.00)
+      if (ev.kind === 'partial' || ev.kind === 'reduce' || ev.kind === 'increase') {
+        const p = ev.pos || {};
+        if ((p.prevSizeUsdc === 0 && p.newSizeUsdc === 0) ||
+            (p.prevSize != null && p.prevSize <= 0)) return;
+      }
+      items.push(ev);
     });
 
     // ── Filtra pelo estado dos cards de wallet do painel Evolução do Patrimônio ──
@@ -10342,10 +10371,13 @@
       const pnlSign   = pnl >= 0 ? '+' : '';
       const pnlFmt    = pnlSign + (Math.abs(pnl) >= 1000 ? (pnl/1000).toFixed(2)+'K' : pnl.toFixed(2));
       const size      = p.sizeUsdc ?? p.size ?? null;
-      const sizeFmt   = size != null ? '$' + (Math.abs(size) >= 1000 ? (size/1000).toFixed(1)+'K' : size.toFixed(0)) : '—';
+      const sizeFmt   = size != null ? '$' + (Math.abs(size) >= 1000 ? (size/1000).toFixed(2)+'K' : size.toFixed(2)) : '—';
+      // Preço de mercado (mark price)
+      const mark      = p.mark ?? p.markPrice ?? markPrices[p.pair] ?? null;
+      const markFmt   = mark != null ? (parseFloat(mark) >= 1000 ? parseFloat(mark).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) : parseFloat(mark).toFixed(2)) : '—';
       // Preço de entrada
       const entry     = p.entryPrice ?? p.entry ?? p.ep ?? p.avgPrice ?? null;
-      const entryFmt  = entry != null ? (parseFloat(entry) >= 1000 ? parseFloat(entry).toLocaleString('en-US', {maximumFractionDigits:1}) : parseFloat(entry).toFixed(4)) : '—';
+      const entryFmt  = entry != null ? (parseFloat(entry) >= 1000 ? parseFloat(entry).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) : parseFloat(entry).toFixed(2)) : '—';
       const openedTs  = p.openedAtTs || p.openedTs || 0;
       let dateFmt = '—';
       if (openedTs > 0) {
@@ -10362,6 +10394,7 @@
           <div class="pat-op-pair">${pairLabel}</div>
           <div class="pat-op-sub" style="color:${wColor}">${wLabel}</div>
         </span>
+        <span class="pat-op-entry" style="text-align:right;color:var(--text)">${markFmt}</span>
         <span class="pat-op-entry" style="text-align:right;color:var(--muted)">${entryFmt}</span>
         <span class="pat-op-pnl ${pnlClass}" style="text-align:right">${pnlFmt}</span>
         <span class="pat-op-entry" style="text-align:right">${sizeFmt}</span>
