@@ -7749,7 +7749,34 @@
     const filteredFinal = filtered.filter(matchesSizeFilter);
     // ────────────────────────────────────────────────────────────────────────
 
-    if (!filteredFinal.length) {
+    // ── Deduplicação de eventos visualmente idênticos ────────────────────
+    // Gera uma chave única por evento. Dois eventos com mesma chave são
+    // considerados duplicatas — mantém apenas a primeira ocorrência (mais
+    // recente, pois a lista já está ordenada com mais recente no topo).
+    const _seenKeys = new Set();
+    const dedupedFinal = filteredFinal.filter(item => {
+      const { kind, pos } = item;
+      // Chave: tipo + carteira + par + lado + timestamp principal
+      const tsKey = item.sortTs || pos.closedAtTs || pos.openedAtTs || 0;
+      const key = [
+        kind,
+        (pos.addr || '').toLowerCase(),
+        (pos.pair || '').toUpperCase(),
+        (pos.side || '').toUpperCase(),
+        tsKey,
+        // Para parciais/reduções/aumentos inclui também o delta para não
+        // colapsar dois eventos legítimos no mesmo par num intervalo curto
+        kind === 'partial' || kind === 'reduce' || kind === 'increase'
+          ? String(pos.prevSizeUsdc ?? '') + '>' + String(pos.newSizeUsdc ?? '')
+          : ''
+      ].join('|');
+      if (_seenKeys.has(key)) return false;
+      _seenKeys.add(key);
+      return true;
+    });
+    // ────────────────────────────────────────────────────────────────────────
+
+    if (!dedupedFinal.length) {
       const emptyMsg = (_movFilters.size === 0 && _movSizeFilters.size === 0)
         ? 'Aguardando movimentações...'
         : 'Nenhuma movimentação para este filtro.';
@@ -7757,7 +7784,7 @@
       return;
     }
 
-    const limit = _movExpanded ? filteredFinal.length : Math.min(filteredFinal.length, 20);
+    const limit = _movExpanded ? dedupedFinal.length : Math.min(dedupedFinal.length, 20);
 
     const ICONS = {
       open:     { path: '<path d="M5 12h14M12 5l7 7-7 7"/>', color: 'var(--green)' },
@@ -7768,7 +7795,7 @@
       partial:  { path: '<path d="M5 12h14"/><circle cx="12" cy="12" r="3"/>', color: 'var(--amber)' },
     };
 
-    scroll.innerHTML = filteredFinal.slice(0, limit).map(item => {
+    scroll.innerHTML = dedupedFinal.slice(0, limit).map(item => {
       const { kind, pos } = item;
       const wColor = walletColor(pos.addr);
       // Rótulo da wallet: "Wallet #N" pelo índice em trackedWallets
@@ -7793,16 +7820,18 @@
         ? `<span class="mov-lev">${pos.leverage}x</span>`
         : '';
 
-      // Horário da movimentação
-      // Eventos históricos (reconstruídos via /trades, pos.closedAt já vem com data)
-      // mostram data+hora completas — só hora seria confuso para um evento de dias atrás.
+      // Horário da movimentação — sempre exibe data e hora completas (DD/MM HH:MM:SS)
+      // para que o usuário possa identificar exatamente quando o evento ocorreu.
+      const _fmtFullTs = (tsMs) => {
+        const d = new Date(tsMs);
+        const pad = n => String(n).padStart(2, '0');
+        return `${pad(d.getDate())}/${pad(d.getMonth()+1)} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+      };
       const timeLabel = kind === 'open'
-        ? (pos.openedAt && pos.openedAt !== '—' ? pos.openedAt.slice(-8) : '—')
+        ? (pos.openedAt && pos.openedAt !== '—' ? pos.openedAt : '—')
         : (kind === 'reduce' || kind === 'increase' || kind === 'partial') && pos.movTs
-          ? (pos.closedAt && pos.closedAt !== '—'
-              ? pos.closedAt
-              : (() => { const d = new Date(pos.movTs); const pad = n => String(n).padStart(2,'0'); return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds()); })())
-          : (pos.closedAt ? pos.closedAt.slice(-8) : '—');
+          ? (pos.closedAt && pos.closedAt !== '—' ? pos.closedAt : _fmtFullTs(pos.movTs))
+          : (pos.closedAt ? pos.closedAt : '—');
 
       // ── Helpers de formatação ────────────────────────────────────────────
       const _fmtUsd = v => {
@@ -7917,7 +7946,7 @@
           ? `<span class="${pnlCls}">${fmtPnl(pnlVal)}</span>`
           : '';
         const timeDHtml = (pos.closedAt && !pos._historico)
-          ? `<span class="mov-dur">${pos.closedAt.slice(-8)}</span>`
+          ? `<span class="mov-dur">${pos.closedAt}</span>`
           : '';
         // Indica discretamente que o evento foi reconstruído do histórico de trades
         // (ocorreu antes do dashboard ser aberto) — distingue do feed em tempo real.
@@ -7936,7 +7965,7 @@
         const pnlCls  = pnlVal >= 0 ? 'mov-val-pos' : 'mov-val-neg';
         const pnlHtml = `<span class="${pnlCls}">${fmtPnl(pnlVal)}</span>`;
         const entryH  = pos.entry ? `<span class="mov-meta">@ ${fmt(pos.entry)}</span>` : '';
-        const timeDH  = pos.closedAt ? `<span class="mov-dur">${pos.closedAt.slice(-8)}</span>` : '';
+        const timeDH  = pos.closedAt ? `<span class="mov-dur">${pos.closedAt}</span>` : '';
 
         mainHtml = `
           <span class="mov-wallet-name" style="color:${wColor}">${wLabel}</span>
@@ -7986,7 +8015,7 @@
         const pnlHtml = `<span class="${pnlCls}">${fmtPnl(pnlVal)}</span>`;
         const entryH  = pos.entry ? `<span class="mov-meta">- abriu em $${fmt(pos.entry)}</span>` : '';
         const closeH  = pos.closePrice ? `<span class="mov-meta">fechou em $${fmt(pos.closePrice)}</span>` : '';
-        const timeDH  = pos.closedAt ? `<span class="mov-dur">${pos.closedAt.slice(-8)}</span>` : '';
+        const timeDH  = pos.closedAt ? `<span class="mov-dur">${pos.closedAt}</span>` : '';
         const levFraseHtml  = pos.leverage != null ? `<span class="mov-meta">alavancado em</span> ${levHtml}` : '';
         const sizeFraseHtml = sizeStr ? `<span class="mov-meta">no valor de</span> ${sizeStr}` : '';
 
