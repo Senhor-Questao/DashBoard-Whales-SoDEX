@@ -7820,8 +7820,8 @@
       if (kind === 'reduce' || kind === 'increase' || kind === 'partial') {
         // — Narrativa: "Wallet N [verbo] [SYM] de $X → $Y (±Z%)"
         const verb = kind === 'reduce'   ? 'reduziu posição em'
-                   : kind === 'increase' ? 'aumentou posição em'
-                   :                       'fez saída parcial em';
+                   : kind === 'increase' ? 'aumentou a posição no'
+                   :                       'fez saída parcial de';
 
         const prevU = pos.prevSizeUsdc != null ? pos.prevSizeUsdc
                     : (pos.prevSize != null && pos.entry > 0 ? pos.prevSize * pos.entry : null);
@@ -7861,14 +7861,44 @@
         const deltaU    = (prevU != null && newU != null) ? Math.abs(newU - prevU) : null;
         const deltaStr  = _fmtUsd(deltaU);
         const deltaHtml = deltaStr ? `<span class="mov-meta">em <strong>$${deltaStr}</strong></span>` : '';
+        // Delta sem o prefixo "em" — usado quando o verbo já termina em "de" (saída parcial)
+        const deltaOnlyHtml = deltaStr ? `<span class="mov-meta"><strong>$${deltaStr}</strong></span>` : '';
 
         // Preço no momento do movimento: prefere mark (preço da trade), senão entry
         const movPrice     = pos.mark || pos.entry || null;
         const movPriceHtml = movPrice
           ? `<span class="mov-meta">no preço de <strong>$${fmt(movPrice)}</strong></span>`
           : '';
+        // Aumento de posição: combina delta + preço em "adicionou $X ao preço de $Y"
+        const addedAtPriceHtml = (deltaStr && movPrice)
+          ? `<span class="mov-meta">adicionou <strong>$${deltaStr}</strong> ao preço de <strong>$${fmt(movPrice)}</strong></span>`
+          : (movPriceHtml || deltaHtml);
 
-        mainHtml = `
+        mainHtml = kind === 'partial' ? `
+          <span class="mov-wallet-name" style="color:${wColor}">${wLabel}</span>
+          <span class="mov-action">${verb}</span>
+          ${deltaOnlyHtml}
+          <span class="mov-action">no</span>
+          ${dirBadge}
+          <span class="mov-action">em</span>
+          <span class="mov-sym">${sym}</span>
+          ${levHtml}
+          ${movPriceHtml}
+          ${prevStr ? `<span class="mov-meta">saiu de <strong>$${prevStr}</strong></span>` : ''}
+          ${newStr  ? `<span class="mov-meta">para <strong>$${newStr}</strong></span>` : ''}
+          ${pctHtml ? `<span class="mov-meta" style="color:var(--muted2)">→</span>${pctHtml}` : ''}`
+        : kind === 'increase' ? `
+          <span class="mov-wallet-name" style="color:${wColor}">${wLabel}</span>
+          <span class="mov-action">${verb}</span>
+          ${dirBadge}
+          <span class="mov-action">em</span>
+          <span class="mov-sym">${sym}</span>
+          ${levHtml}
+          ${addedAtPriceHtml}
+          ${prevStr ? `<span class="mov-meta">saiu de <strong>$${prevStr}</strong></span>` : ''}
+          ${newStr  ? `<span class="mov-meta">para <strong>$${newStr}</strong></span>` : ''}
+          ${pctHtml ? `<span class="mov-meta" style="color:var(--muted2)">→</span>${pctHtml}` : ''}`
+        : `
           <span class="mov-wallet-name" style="color:${wColor}">${wLabel}</span>
           <span class="mov-action">${verb}</span>
           ${dirBadge}
@@ -7919,29 +7949,32 @@
         detailHtml = `${entryH}${pnlHtml}${timeDH}`;
 
       } else if (kind === 'open') {
-        // — Posição aberta (sem alteração no layout existente)
+        // — Posição aberta
         const sizeUsd = pos.sizeUsdc != null ? pos.sizeUsdc
                       : (pos.entry > 0 && pos.size > 0 ? pos.size * pos.entry : null);
         const sizeHtml = sizeUsd ? `<span class="mov-size">${fmtSize(sizeUsd)}</span>` : '';
         const pnlVal   = pos.pnl || 0;
         const pnlCls   = pnlVal >= 0 ? 'mov-val-pos' : 'mov-val-neg';
         const pnlHtml  = `<span class="${pnlCls}">${fmtPnl(pnlVal)}</span>`;
-        const entryH   = pos.entry ? `<span class="mov-meta">@ ${fmt(pos.entry)}</span>` : '';
-        const markH    = pos.mark  ? `<span class="mov-meta">mark ${fmt(pos.mark)}</span>` : '';
+        const entryH   = pos.entry ? `<span class="mov-meta">- abriu em $${fmt(pos.entry)}</span>` : '';
+        const markH    = pos.mark  ? `<span class="mov-meta">preço atual $${fmt(pos.mark)}</span>` : '';
         const dur      = pos.openedAtTs ? fmtDuration(pos.openedAtTs) : null;
         const timeHtml = dur
           ? `<span class="mov-dur" title="Aberta há ${dur}">⏱ ${dur}</span>`
           : (pos.openedAt && pos.openedAt !== '—' ? `<span class="mov-dur">${pos.openedAt}</span>` : '');
+        const levFraseHtml  = pos.leverage != null ? `<span class="mov-meta">alavancado em</span> ${levHtml}` : '';
+        const sizeFraseHtml = sizeHtml ? `<span class="mov-meta">no valor de</span> ${sizeHtml}` : '';
 
         mainHtml = `
           <span class="mov-wallet-name" style="color:${wColor}">${wLabel}</span>
-          <span class="mov-action">posição aberta</span>
+          <span class="mov-action">abriu o</span>
           ${dirBadge}
+          <span class="mov-meta">em</span>
           <span class="mov-sym">${sym}</span>
-          ${levHtml}
-          ${sizeHtml}`;
+          ${levFraseHtml}
+          ${sizeFraseHtml}`;
 
-        detailHtml = `${entryH}${markH}${pnlHtml}${timeHtml}`;
+        detailHtml = `${entryH}${markH}<span class="mov-meta">retorno</span>${pnlHtml}${timeHtml}`;
 
       } else {
         // — Posição fechada (close)
@@ -7951,19 +7984,22 @@
         const pnlVal  = pos.finalPnl != null ? pos.finalPnl : (pos.pnl || 0);
         const pnlCls  = pnlVal >= 0 ? 'mov-val-pos' : 'mov-val-neg';
         const pnlHtml = `<span class="${pnlCls}">${fmtPnl(pnlVal)}</span>`;
-        const entryH  = pos.entry ? `<span class="mov-meta">@ ${fmt(pos.entry)}</span>` : '';
-        const closeH  = pos.closePrice ? `<span class="mov-meta">→ ${fmt(pos.closePrice)}</span>` : '';
+        const entryH  = pos.entry ? `<span class="mov-meta">- abriu em $${fmt(pos.entry)}</span>` : '';
+        const closeH  = pos.closePrice ? `<span class="mov-meta">fechou em $${fmt(pos.closePrice)}</span>` : '';
         const timeDH  = pos.closedAt ? `<span class="mov-dur">${pos.closedAt.slice(-8)}</span>` : '';
+        const levFraseHtml  = pos.leverage != null ? `<span class="mov-meta">alavancado em</span> ${levHtml}` : '';
+        const sizeFraseHtml = sizeStr ? `<span class="mov-meta">no valor de</span> ${sizeStr}` : '';
 
         mainHtml = `
           <span class="mov-wallet-name" style="color:${wColor}">${wLabel}</span>
-          <span class="mov-action">fechou</span>
+          <span class="mov-action">fechou o</span>
           ${dirBadge}
+          <span class="mov-meta">em</span>
           <span class="mov-sym">${sym}</span>
-          ${levHtml}
-          ${sizeStr}`;
+          ${levFraseHtml}
+          ${sizeFraseHtml}`;
 
-        detailHtml = `${entryH}${closeH}${pnlHtml}${timeDH}`;
+        detailHtml = `${entryH}${closeH}<span class="mov-meta">retorno</span>${pnlHtml}${timeDH}`;
       }
 
       return `<div class="mov-row mov-row-${kind}">
