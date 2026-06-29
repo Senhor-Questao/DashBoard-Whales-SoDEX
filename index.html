@@ -7862,6 +7862,12 @@
         const deltaStr  = _fmtUsd(deltaU);
         const deltaHtml = deltaStr ? `<span class="mov-meta">em <strong>$${deltaStr}</strong></span>` : '';
 
+        // Preço no momento do movimento: prefere mark (preço da trade), senão entry
+        const movPrice     = pos.mark || pos.entry || null;
+        const movPriceHtml = movPrice
+          ? `<span class="mov-meta">no preço de <strong>$${fmt(movPrice)}</strong></span>`
+          : '';
+
         mainHtml = `
           <span class="mov-wallet-name" style="color:${wColor}">${wLabel}</span>
           <span class="mov-action">${verb}</span>
@@ -7869,6 +7875,7 @@
           <span class="mov-sym">${sym}</span>
           ${levHtml}
           ${deltaHtml}
+          ${movPriceHtml}
           ${prevStr ? `<span class="mov-meta">saiu de <strong>$${prevStr}</strong></span>` : ''}
           ${newStr  ? `<span class="mov-meta">para <strong>$${newStr}</strong></span>` : ''}
           ${pctHtml ? `<span class="mov-meta" style="color:var(--muted2)">→</span>${pctHtml}` : ''}`;
