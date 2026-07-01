@@ -4703,6 +4703,68 @@
   let historyPeriodDays = 3; // Período selecionado para histórico (default: 3 dias)
   let historyLoading    = false; // Flag de carregamento do histórico
   let markPrices     = {};   // símbolo → mark price atual
+
+  /* ──────────────────────────────────────────────────────────────
+     DEDUPLICAÇÃO POR HASH — "Movimentações Recentes"
+     ────────────────────────────────────────────────────────────────
+     Evita que o mesmo evento de fechamento/redução/aumento seja
+     registrado (e exibido) mais de uma vez quando múltiplas fontes
+     (WS trades, WS account_updates, polling REST) detectam o mesmo
+     movimento em sequência — cada detecção pode trazer um preço de
+     marcação ligeiramente diferente (mark price ao vivo), o que fazia
+     a antiga checagem por chave exata (timestamp + valores) falhar em
+     reconhecer que se tratava do mesmo evento.
+     A assinatura (hash) usa apenas os campos ESTÁVEIS do evento
+     (carteira, par, lado, preço de entrada e tamanho) — ignorando
+     campos voláteis como preço de fechamento/retorno/pnl, que mudam
+     a cada nova leitura de mark price mesmo sendo o mesmo evento real. */
+  const _movHashRegistry     = new Map(); // hash → timestamp da última aceitação
+  const MOV_DEDUP_WINDOW_MS  = 15000;     // janela em que o mesmo hash é considerado duplicata
+  const MOV_COMPARE_DELAY_MS = 350;       // pequeno delay antes de confirmar e logar o evento
+
+  // Hash determinístico simples (djb2) — suficiente para identificar duplicatas,
+  // não precisa de força criptográfica.
+  function _movHashOf(parts) {
+    const str = parts.join('|');
+    let h = 5381;
+    for (let i = 0; i < str.length; i++) h = ((h * 33) ^ str.charCodeAt(i)) >>> 0;
+    return h.toString(36);
+  }
+
+  // Limpa entradas antigas do registro para não crescer indefinidamente.
+  function _cleanupMovHashRegistry() {
+    const now = Date.now();
+    for (const [k, ts] of _movHashRegistry) {
+      if (now - ts > MOV_DEDUP_WINDOW_MS * 4) _movHashRegistry.delete(k);
+    }
+  }
+
+  // Agenda a confirmação de um evento após um pequeno delay de comparação.
+  // Se, dentro da janela de dedup, já existir um evento com a MESMA assinatura
+  // (hash), o novo evento é descartado silenciosamente — só chegam ao log
+  // (addEvent / closed / _movFeed) informações verificadas como únicas.
+  //   hashParts → array de campos estáveis que identificam o evento
+  //   commit()  → callback que efetivamente registra o evento (closed.unshift,
+  //               _movFeed.unshift, addEvent, etc.) — só roda se for único
+  function scheduleUniqueMovEvent(hashParts, commit) {
+    const hash = _movHashOf(hashParts);
+    const now  = Date.now();
+    const lastSeen = _movHashRegistry.get(hash);
+    if (lastSeen != null && (now - lastSeen) < MOV_DEDUP_WINDOW_MS) {
+      // Já visto recentemente — estende a janela e ignora (evento duplicado).
+      _movHashRegistry.set(hash, now);
+      return false;
+    }
+    // Marca como "visto" imediatamente para que outra fonte chegando na mesma
+    // janela síncrona (antes do delay abaixo concluir) já reconheça a duplicata.
+    _movHashRegistry.set(hash, now);
+    setTimeout(() => {
+      _cleanupMovHashRegistry();
+      commit();
+    }, MOV_COMPARE_DELAY_MS);
+    return true;
+  }
+
   let trackedWallets = [];   // Endereços finais monitorados
   let walletStats    = {};   // addr → { pnl, trades }
   let patrimonyHistory = {}; // addr → [{ ts, value }] — histórico temporal de Patrimônio (USDC perp+spot) por wallet
@@ -5052,6 +5114,24 @@
   }
 
   function startPositionsPolling() {
+    // ── Guarda contra polling REST duplicado ──────────────────────────────
+    // `applyWallets()` já inicia `_continuousPollTimer`, que roda a cada 5s e
+    // chama exatamente a mesma rotina (fetchWalletState → hydrateWalletState)
+    // para todas as wallets, incondicionalmente. Se este segundo timer também
+    // for iniciado (fallback quando o probe de canal WS de conta falha), as
+    // DUAS rotinas passam a chamar hydrateWalletState de forma concorrente e
+    // dessincronizada — cada uma faz sua própria leitura REST da mesma
+    // wallet quase ao mesmo tempo, e pequenas diferenças de timing entre as
+    // duas respostas (mark price, ordem de chegada) podiam gerar detecções
+    // de fechamento "quase iguais mas não idênticas", escapando da janela de
+    // deduplicação por hash. Como `_continuousPollTimer` já cobre 100% dessa
+    // responsabilidade, iniciar o segundo timer é sempre redundante — a
+    // causa raiz definitiva é eliminar essa concorrência, não apenas filtrar
+    // o resultado depois.
+    if (_continuousPollTimer) {
+      debugLog('Polling REST de posições: já coberto por _continuousPollTimer — não iniciando timer redundante', 'info');
+      return;
+    }
     if (positionsPollTimer) clearInterval(positionsPollTimer);
     positionsPollTimer = setInterval(pollPositions, POSITIONS_POLL_MS);
     debugLog(`Polling REST de posições iniciado (${POSITIONS_POLL_MS}ms)`, 'info');
@@ -5456,28 +5536,33 @@
           const sizeUsdcRest = oldPos.entry > 0
             ? oldPos.size * oldPos.entry
             : (closePrice > 0 ? oldPos.size * closePrice : null);
-          // Evita duplicar se WS já registrou este fechamento (checa últimos 10s no `closed`)
-          const alreadyClosed = closed.some(c =>
-            c.addr === addr && c.pair === oldPos.pair &&
-            c.closedAtTs && (Date.now() - c.closedAtTs) < 10000
+          // ── Verificação de unicidade por hash + pequeno delay de comparação ──
+          // Assinatura baseada em campos ESTÁVEIS (carteira, par, lado, entrada,
+          // tamanho) — ignora closePrice/pct, que variam a cada leitura de mark
+          // price mesmo quando se trata do mesmo evento real de fechamento.
+          // Isso evita que o mesmo fechamento seja logado repetidamente a cada
+          // ciclo de polling REST (ou quando WS e REST detectam o mesmo evento).
+          scheduleUniqueMovEvent(
+            ['close', addr.toLowerCase(), oldPos.pair, oldPos.side, (oldPos.entry || 0).toFixed(4), (oldPos.size || 0).toFixed(4)],
+            () => {
+              const snap = {
+                ...oldPos,
+                reason: 'Closed',
+                finalPnl: oldPos.pnl ?? 0,
+                closePrice: closePrice,
+                pct: pctRest,
+                fee: null,
+                sizeUsdc: sizeUsdcRest,
+                closedAtTs: Date.now(),
+                closedAt: (() => { const d = new Date(); const pad = n => String(n).padStart(2,'0'); return pad(d.getDate())+'/'+pad(d.getMonth()+1)+' '+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds()); })()
+              };
+              closed.unshift(snap);
+              if (closed.length > MAX_CLOSED) closed.pop();
+              addEvent('close', `${oldPos.pair} ${oldPos.side} fechado (REST) — ${shortAddr(addr)}`, oldPos);
+              debugLog(`hydrateWalletState: fechamento detectado via REST — ${oldPos.pair} ${shortAddr(addr)}`, 'ok');
+              renderMovimentacoes();
+            }
           );
-          if (!alreadyClosed) {
-            const snap = {
-              ...oldPos,
-              reason: 'Closed',
-              finalPnl: oldPos.pnl ?? 0,
-              closePrice: closePrice,
-              pct: pctRest,
-              fee: null,
-              sizeUsdc: sizeUsdcRest,
-              closedAtTs: Date.now(),
-              closedAt: (() => { const d = new Date(); const pad = n => String(n).padStart(2,'0'); return pad(d.getDate())+'/'+pad(d.getMonth()+1)+' '+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds()); })()
-            };
-            closed.unshift(snap);
-            if (closed.length > MAX_CLOSED) closed.pop();
-            addEvent('close', `${oldPos.pair} ${oldPos.side} fechado (REST) — ${shortAddr(addr)}`, oldPos);
-            debugLog(`hydrateWalletState: fechamento detectado via REST — ${oldPos.pair} ${shortAddr(addr)}`, 'ok');
-          }
         }
       });
     }
@@ -6640,10 +6725,19 @@
         }
         const feeWs = parseFloat(t.fee || t.f || t.commission || 0) || null;
         const sizeUsdcWs = pos.entry > 0 ? pos.size * pos.entry : (pos.mark > 0 ? pos.size * pos.mark : null);
-        closed.unshift({ ...pos, reason, finalPnl, closePrice: closePriceWs, pct: pctWs, fee: feeWs, sizeUsdc: sizeUsdcWs });
-        if (closed.length > MAX_CLOSED) closed.pop();
-        addToHistory(pos, t);
-        addEvent('close', `${sym} ${pos.side} fechado (${reason}) — ${sa}`, pos);
+        // ── Verificação de unicidade por hash + pequeno delay de comparação ──
+        // Evita registrar o mesmo fechamento duas vezes caso o canal de
+        // account_updates também detecte este evento quase simultaneamente.
+        scheduleUniqueMovEvent(
+          ['close', addr.toLowerCase(), sym, pos.side, (pos.entry || 0).toFixed(4), (pos.size || 0).toFixed(4)],
+          () => {
+            closed.unshift({ ...pos, reason, finalPnl, closePrice: closePriceWs, pct: pctWs, fee: feeWs, sizeUsdc: sizeUsdcWs });
+            if (closed.length > MAX_CLOSED) closed.pop();
+            addToHistory(pos, t);
+            addEvent('close', `${sym} ${pos.side} fechado (${reason}) — ${sa}`, pos);
+            renderMovimentacoes();
+          }
+        );
       }
     } else if (sym) {
       addEvent('new', `${sym} ${side || 'trade'} executado — ${sa}`, null);
@@ -6676,10 +6770,20 @@
               : ((pos.entry - closeMarkPrice) / pos.entry) * 100;
           }
           const sizeUsdcAcc = pos.entry > 0 ? pos.size * pos.entry : (pos.mark > 0 ? pos.size * pos.mark : null);
-          closed.unshift({ ...pos, reason: 'Closed', finalPnl: pos.pnl, closePrice: closeMarkPrice, pct: pctAcc, fee: null, sizeUsdc: sizeUsdcAcc });
-          if (closed.length > MAX_CLOSED) closed.pop();
-          addToHistory(pos, null);
-          addEvent('close', `${sym} ${pos.side} fechado — ${sa}`, pos);
+          // ── Verificação de unicidade por hash + pequeno delay de comparação ──
+          // Este é o canal mais propenso a "flapping" (a posição some e volta a
+          // aparecer em atualizações consecutivas) — a assinatura estável evita
+          // que cada oscilação vire uma entrada nova em Movimentações Recentes.
+          scheduleUniqueMovEvent(
+            ['close', addr.toLowerCase(), sym, pos.side, (pos.entry || 0).toFixed(4), (pos.size || 0).toFixed(4)],
+            () => {
+              closed.unshift({ ...pos, reason: 'Closed', finalPnl: pos.pnl, closePrice: closeMarkPrice, pct: pctAcc, fee: null, sizeUsdc: sizeUsdcAcc });
+              if (closed.length > MAX_CLOSED) closed.pop();
+              addToHistory(pos, null);
+              addEvent('close', `${sym} ${pos.side} fechado — ${sa}`, pos);
+              renderMovimentacoes();
+            }
+          );
         }
         return;
       }
@@ -7799,6 +7903,13 @@
     // considerados duplicatas — mantém apenas a primeira ocorrência (mais
     // recente, pois a lista já está ordenada com mais recente no topo).
     const _seenKeys = new Set();
+    // Verificação extra por HASH DE CONTEÚDO (rede de segurança) — cobre casos
+    // em que o mesmo fechamento chega por fontes diferentes (REST bulk, feed
+    // ao vivo) com timestamps ligeiramente diferentes: a assinatura usa apenas
+    // campos estáveis (carteira, par, lado, entrada, tamanho) + um "balde" de
+    // tempo do tamanho da janela de dedup, então duas detecções do mesmo
+    // fechamento dentro dessa janela colapsam numa única entrada exibida.
+    const _seenContentHashes = new Set();
     const dedupedFinal = filteredFinal.filter(item => {
       const { kind, pos } = item;
       // Chave: tipo + carteira + par + lado + timestamp principal
@@ -7809,14 +7920,23 @@
         (pos.pair || '').toUpperCase(),
         (pos.side || '').toUpperCase(),
         tsKey,
-        // Para parciais/reduções/aumentos inclui também o delta para não
-        // colapsar dois eventos legítimos no mesmo par num intervalo curto
         kind === 'partial' || kind === 'reduce' || kind === 'increase'
           ? String(pos.prevSizeUsdc ?? '') + '>' + String(pos.newSizeUsdc ?? '')
           : ''
       ].join('|');
       if (_seenKeys.has(key)) return false;
       _seenKeys.add(key);
+
+      if (kind === 'close' || kind === 'liq') {
+        const timeBucket = Math.floor(tsKey / MOV_DEDUP_WINDOW_MS);
+        const contentHash = _movHashOf([
+          kind, (pos.addr || '').toLowerCase(), (pos.pair || '').toUpperCase(),
+          (pos.side || '').toUpperCase(), (pos.entry || 0).toFixed(4),
+          (pos.size || 0).toFixed(4), timeBucket
+        ]);
+        if (_seenContentHashes.has(contentHash)) return false;
+        _seenContentHashes.add(contentHash);
+      }
       return true;
     });
     // ────────────────────────────────────────────────────────────────────────
