@@ -1483,6 +1483,20 @@
     font-size: 10px; color: var(--muted); background: var(--bg2);
   }
   .patrimony-filter-bar label { font-size: 9px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted2); }
+  /* ── Marker-type legend (toggle exibição dos pontos de posições no gráfico) ── */
+  .pm-marker-legend { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .pm-marker-legend-label { font-size: 9px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted2); }
+  .pm-toggle {
+    display: flex; align-items: center; gap: 4px;
+    cursor: pointer; user-select: none;
+    font-size: 9px; color: var(--muted);
+    padding: 2px 5px; border-radius: 5px;
+    border: 1px solid transparent;
+    transition: opacity 0.15s, background 0.15s, border-color 0.15s;
+  }
+  .pm-toggle:hover { background: rgba(255,255,255,0.04); border-color: var(--border2); }
+  .pm-toggle.inactive { opacity: 0.32; }
+  .pm-toggle svg { flex-shrink: 0; display: block; }
   .patrimony-body { padding: 12px 14px 10px; position: relative; }
   #patrimony-canvas { width: 100%; display: block; }
   .patrimony-empty { color: var(--muted2); font-size: 11px; text-align: center; padding: 32px 0; }
@@ -1987,6 +2001,19 @@
   .score-card-dot {
     width: 6px; height: 6px;
     border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .score-card-rank {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--muted2);
+    min-width: 14px;
+  }
+  .score-card-rank.gold   { color: #ffd700; }
+  .score-card-rank.silver { color: #c0c0c0; }
+  .score-card-rank.bronze { color: #cd7f32; }
+  .score-card-addr .w-copy {
+    margin-left: auto;
     flex-shrink: 0;
   }
   .score-card-metrics {
@@ -3579,6 +3606,24 @@
         <option value="3">Top 3</option>
         <option value="5">Top 5</option>
       </select>
+      <span class="pm-marker-legend" id="patrimony-marker-legend">
+        <label class="pm-toggle" data-type="closedLong" title="Exibir/ocultar posições Long fechadas" onclick="_patrimonyToggleMarkerType('closedLong',this)">
+          <svg width="11" height="11" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="#2ee591" stroke="#1aa860" stroke-width="1.2"/><circle cx="6" cy="6" r="1.4" fill="rgba(255,255,255,0.8)"/></svg>
+          <span>Long</span>
+        </label>
+        <label class="pm-toggle" data-type="closedShort" title="Exibir/ocultar posições Short fechadas" onclick="_patrimonyToggleMarkerType('closedShort',this)">
+          <svg width="11" height="11" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="#ff4d61" stroke="#c2293d" stroke-width="1.2"/><circle cx="6" cy="6" r="1.4" fill="rgba(255,255,255,0.8)"/></svg>
+          <span>Short</span>
+        </label>
+        <label class="pm-toggle" data-type="openLong" title="Exibir/ocultar posições Long abertas" onclick="_patrimonyToggleMarkerType('openLong',this)">
+          <svg width="11" height="11" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="rgba(46,229,145,0.15)" stroke="#2ee591" stroke-width="1.4" stroke-dasharray="2 1.5"/><circle cx="6" cy="6" r="1.3" fill="#2ee591"/></svg>
+          <span>Long aberto</span>
+        </label>
+        <label class="pm-toggle" data-type="openShort" title="Exibir/ocultar posições Short abertas" onclick="_patrimonyToggleMarkerType('openShort',this)">
+          <svg width="11" height="11" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="rgba(255,77,97,0.15)" stroke="#ff4d61" stroke-width="1.4" stroke-dasharray="2 1.5"/><circle cx="6" cy="6" r="1.3" fill="#ff4d61"/></svg>
+          <span>Short aberto</span>
+        </label>
+      </span>
       <span style="color:var(--border2);margin:0 2px">|</span>
       <div id="patrimony-period-btns" style="display:flex;gap:4px;flex-wrap:wrap">
         <button class="period-btn" data-period="1d"  onclick="selectPatrimonyPeriod('1d',this)">1D</button>
@@ -9064,6 +9109,16 @@
   let _patrimonyPeriod = '1m'; // período ativo nos botões
   let _patrimonyHiddenWallets = new Set(); // wallets ocultas via clique na legenda (só no modo "Todas")
 
+  // ── Legenda de tipos de marcador no gráfico de Evolução do Patrimônio ──
+  // Controla a exibição/ocultação dos pontos de posições históricas (longs,
+  // shorts, long aberto e short aberto) plotados sobre o gráfico.
+  let _patrimonyMarkerVisibility = { closedLong: true, closedShort: true, openLong: true, openShort: true };
+  function _patrimonyToggleMarkerType(type, el) {
+    _patrimonyMarkerVisibility[type] = !_patrimonyMarkerVisibility[type];
+    if (el) el.classList.toggle('inactive', !_patrimonyMarkerVisibility[type]);
+    renderPatrimonyChart();
+  }
+
   function _patrimonyLsKey(addr) {
     return PATRIMONY_LS_PREFIX + addr.toLowerCase();
   }
@@ -9989,6 +10044,16 @@
       });
     });
 
+    // Aplica a legenda de tipos de marcador (Long / Short / Long aberto / Short aberto):
+    // remove do array os marcadores dos tipos desmarcados antes de resolver
+    // sobreposição e desenhar, para que fiquem realmente ocultos no gráfico.
+    for (let _mi = tradeMarkers.length - 1; _mi >= 0; _mi--) {
+      const _m = tradeMarkers[_mi];
+      const _isLongM = (_m.trade.side || '').toUpperCase() === 'LONG';
+      const _typeKey = (_m.isOpen ? 'open' : 'closed') + (_isLongM ? 'Long' : 'Short');
+      if (_patrimonyMarkerVisibility[_typeKey] === false) tradeMarkers.splice(_mi, 1);
+    }
+
     const MARKER_R = 5.5;
 
     // ── Resolve overlapping markers: stack them vertically ───────────────────
@@ -10683,12 +10748,23 @@
       const _isSelW = selectedWalletAddr && selectedWalletAddr.toLowerCase() === addr.toLowerCase();
       const selCls  = _isSelW ? ' is-selected' : '';
       const cardAttrs = `style="--row-color:${wc}" onclick="selectWallet('${addr}')" title="Clique para filtrar todos os painéis por esta wallet"`;
+      // Índice correspondente exatamente ao mostrado em "Ranking PnL realizado"
+      // (trackedWallets já vem ordenado por PnL — mesma ordem usada em renderRanking)
+      const _rankIdx = trackedWallets.findIndex(a => a && a.toLowerCase() === addr.toLowerCase());
+      const _rankPos = _rankIdx >= 0 ? _rankIdx + 1 : null;
+      const _rankCls = _rankIdx === 0 ? ' gold' : _rankIdx === 1 ? ' silver' : _rankIdx === 2 ? ' bronze' : '';
+      const rankBadge = _rankPos != null
+        ? `<span class="score-card-rank${_rankCls}" title="Posição no Ranking PnL realizado">#${_rankPos}</span>`
+        : '';
+      const copyBtn = `<button class="w-copy" title="Copiar endereço" onclick="event.stopPropagation();copyWalletAddr(this,'${addr}')">⧉</button>`;
 
       if (!s) {
         return `<div class="score-card tier-mid${selCls}" ${cardAttrs}>
           <div class="score-card-addr">
+            ${rankBadge}
             <span class="score-card-dot" style="background:${wc}"></span>
             <span>${shortA}</span>
+            ${copyBtn}
           </div>
           <div class="score-metric-label" style="color:var(--muted2)">Sem histórico suficiente</div>
           <div class="score-final">
@@ -10704,8 +10780,10 @@
 
       return `<div class="score-card tier-${tier}${selCls}" ${cardAttrs}>
         <div class="score-card-addr">
+          ${rankBadge}
           <span class="score-card-dot" style="background:${wc}"></span>
           <span>${shortA}</span>
+          ${copyBtn}
         </div>
         <div class="score-card-metrics">
           <div class="score-metric">
