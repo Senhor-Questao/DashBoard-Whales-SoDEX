@@ -1619,11 +1619,31 @@
     padding: 5px 10px;
     border-bottom: 1px solid var(--border);
     font-size: 10px;
-    transition: background 0.12s;
-    cursor: default;
+    transition: background 0.12s, border-left-color 0.12s;
+    cursor: pointer;
+    border-left: 2px solid transparent;
   }
   .pat-op-row:last-child { border-bottom: none; }
   .pat-op-row:hover { background: rgba(255,255,255,0.025); }
+  .pat-op-row.selected { background: rgba(79,151,255,0.10); border-left-color: var(--blue); }
+  .pat-op-row.selected:hover { background: rgba(79,151,255,0.15); }
+  .pat-ops-asset-clear {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    background: rgba(79,151,255,0.12);
+    border: 1px solid rgba(79,151,255,0.3);
+    color: var(--blue);
+    font-family: var(--mono);
+    font-size: 8.5px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 5px;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+  .pat-ops-asset-clear.show { display: inline-flex; }
   .pat-op-head {
     display: grid;
     grid-template-columns: 8px minmax(44px,1fr) 62px 62px 62px 52px 66px;
@@ -3665,7 +3685,12 @@
       <!-- Right: open positions detail -->
       <div class="patrimony-ops-col">
         <div class="patrimony-ops-head">
-          <span>Operações Abertas</span>
+          <span style="display:flex;align-items:center;gap:8px">
+            Operações Abertas
+            <button class="pat-ops-asset-clear" id="pat-ops-asset-clear" onclick="clearPatOpsAssetFilter()" title="Limpar seleção de ativos">
+              <span id="pat-ops-asset-clear-label">0 ativos</span> ✕
+            </button>
+          </span>
           <span style="display:flex;align-items:center;gap:10px;flex-shrink:0">
             <span style="display:flex;align-items:center;gap:7px">
               <span style="display:flex;align-items:center;gap:3px;font-size:8.5px;color:var(--muted);text-transform:none;letter-spacing:0.3px">
@@ -3686,9 +3711,9 @@
           <span>Par</span>
           <span style="text-align:right">Market</span>
           <span style="text-align:right">Entrada</span>
-          <span style="text-align:right">PnL (USDC)</span>
-          <span style="text-align:right">Size</span>
-          <span style="text-align:right;cursor:pointer;user-select:none" id="pat-op-sort-abertura" onclick="togglePatOpsDateSort()" title="Ordenar por data de abertura">Abertura <span id="pat-op-sort-icon">↓</span></span>
+          <span style="text-align:right;cursor:pointer;user-select:none" id="pat-op-sort-pnl" onclick="togglePatOpsSort('pnl')" title="Ordenar por PnL">PnL (USDC) <span id="pat-op-sort-icon-pnl"></span></span>
+          <span style="text-align:right;cursor:pointer;user-select:none" id="pat-op-sort-size" onclick="togglePatOpsSort('size')" title="Ordenar por Size">Size <span id="pat-op-sort-icon-size"></span></span>
+          <span style="text-align:right;cursor:pointer;user-select:none" id="pat-op-sort-abertura" onclick="togglePatOpsSort('abertura')" title="Ordenar por data de abertura">Abertura <span id="pat-op-sort-icon-abertura">↓</span></span>
         </div>
         <div class="patrimony-ops-scroll" id="pat-ops-scroll">
           <div class="patrimony-ops-empty" id="pat-ops-empty">Nenhuma posição aberta</div>
@@ -7898,6 +7923,14 @@
     const filteredFinal = filtered.filter(matchesSizeFilter);
     // ────────────────────────────────────────────────────────────────────────
 
+    // ── Aplica filtro de ativo (multi-select via clique em "Operações Abertas") ──
+    function matchesAssetFilter(item) {
+      if (_patOpsAssetFilters.size === 0) return true; // nada selecionado = todos os ativos
+      return _patOpsAssetFilters.has(item.pos.pair);
+    }
+    const filteredByAsset = filteredFinal.filter(matchesAssetFilter);
+    // ────────────────────────────────────────────────────────────────────────
+
     // ── Deduplicação de eventos visualmente idênticos ────────────────────
     // Gera uma chave única por evento. Dois eventos com mesma chave são
     // considerados duplicatas — mantém apenas a primeira ocorrência (mais
@@ -7910,7 +7943,7 @@
     // tempo do tamanho da janela de dedup, então duas detecções do mesmo
     // fechamento dentro dessa janela colapsam numa única entrada exibida.
     const _seenContentHashes = new Set();
-    const dedupedFinal = filteredFinal.filter(item => {
+    const dedupedFinal = filteredByAsset.filter(item => {
       const { kind, pos } = item;
       // Chave: tipo + carteira + par + lado + timestamp principal
       const tsKey = item.sortTs || pos.closedAtTs || pos.openedAtTs || 0;
@@ -7942,7 +7975,7 @@
     // ────────────────────────────────────────────────────────────────────────
 
     if (!dedupedFinal.length) {
-      const emptyMsg = (_movFilters.size === 0 && _movSizeFilters.size === 0)
+      const emptyMsg = (_movFilters.size === 0 && _movSizeFilters.size === 0 && _patOpsAssetFilters.size === 0)
         ? 'Aguardando movimentações...'
         : 'Nenhuma movimentação para este filtro.';
       scroll.innerHTML = `<div class="mov-empty">${emptyMsg}</div>`;
@@ -10547,13 +10580,52 @@
   }
 
   /* ── OPEN POSITIONS DETAIL (patrimony panel right column) ─────────────── */
-  // ── Pat-ops date sort state: 'desc' = mais recente primeiro (padrão), 'asc' = mais antiga primeiro
-  let _patOpsDateSort = 'desc';
-  function togglePatOpsDateSort() {
-    _patOpsDateSort = _patOpsDateSort === 'desc' ? 'asc' : 'desc';
-    const icon = document.getElementById('pat-op-sort-icon');
-    if (icon) icon.textContent = _patOpsDateSort === 'desc' ? '↓' : '↑';
+  // ── Pat-ops sort state: campo ativo ('abertura' | 'pnl' | 'size') + direção
+  //    'desc' = maior/mais recente primeiro (padrão), 'asc' = menor/mais antiga primeiro
+  let _patOpsSortField = 'abertura';
+  let _patOpsSortDir   = 'desc';
+  function togglePatOpsSort(field) {
+    if (_patOpsSortField === field) {
+      _patOpsSortDir = _patOpsSortDir === 'desc' ? 'asc' : 'desc';
+    } else {
+      _patOpsSortField = field;
+      _patOpsSortDir = 'desc';
+    }
+    ['abertura','pnl','size'].forEach(f => {
+      const icon = document.getElementById('pat-op-sort-icon-' + f);
+      if (icon) icon.textContent = (f === _patOpsSortField) ? (_patOpsSortDir === 'desc' ? '↓' : '↑') : '';
+    });
     renderPatOps();
+  }
+
+  // Multi-select de ativos: clique num card de "Operações Abertas" filtra
+  // "Movimentações Recentes" para mostrar só o(s) ativo(s) selecionado(s).
+  let _patOpsAssetFilters = new Set(); // valores: pos.pair (ex.: "BTCUSDT")
+
+  function togglePatOpAsset(pair) {
+    if (!pair) return;
+    if (_patOpsAssetFilters.has(pair)) {
+      _patOpsAssetFilters.delete(pair);
+    } else {
+      _patOpsAssetFilters.add(pair);
+    }
+    renderPatOps();
+    renderMovimentacoes();
+  }
+
+  function clearPatOpsAssetFilter() {
+    _patOpsAssetFilters.clear();
+    renderPatOps();
+    renderMovimentacoes();
+  }
+
+  function _updatePatOpsAssetClearUI() {
+    const btn   = document.getElementById('pat-ops-asset-clear');
+    const label = document.getElementById('pat-ops-asset-clear-label');
+    if (!btn || !label) return;
+    const n = _patOpsAssetFilters.size;
+    label.textContent = n + (n === 1 ? ' ativo' : ' ativos');
+    btn.classList.toggle('show', n > 0);
   }
 
   function renderPatOps() {
@@ -10604,17 +10676,27 @@
       if (empty) { empty.style.display = 'block'; empty.textContent = 'Nenhuma posição aberta'; }
       if (countEl) countEl.textContent = '0';
       if (footer) footer.style.display = 'none';
+      _updatePatOpsAssetClearUI();
       return;
     }
 
     if (empty) empty.style.display = 'none';
     if (countEl) countEl.textContent = activePos.length;
 
-    // Sort por data de abertura (respeita estado _patOpsDateSort)
+    // Sort pelo campo ativo (respeita estado _patOpsSortField / _patOpsSortDir)
     const sorted = [...activePos].sort((a, b) => {
-      const ta = a.openedAtTs || a.openedTs || 0;
-      const tb = b.openedAtTs || b.openedTs || 0;
-      return _patOpsDateSort === 'desc' ? tb - ta : ta - tb;
+      let va, vb;
+      if (_patOpsSortField === 'pnl') {
+        va = a.pnl ?? 0;
+        vb = b.pnl ?? 0;
+      } else if (_patOpsSortField === 'size') {
+        va = a.sizeUsdc ?? a.size ?? 0;
+        vb = b.sizeUsdc ?? b.size ?? 0;
+      } else {
+        va = a.openedAtTs || a.openedTs || 0;
+        vb = b.openedAtTs || b.openedTs || 0;
+      }
+      return _patOpsSortDir === 'desc' ? vb - va : va - vb;
     });
 
     let totalPnl = 0, longCount = 0, shortCount = 0;
@@ -10645,7 +10727,8 @@
       const pairLabel = (p.pair || p.sym || '—').replace('USDT','').replace('PERP','');
       const wColor    = walletColor(p.addr || '');
       const wLabel    = p.addr ? p.addr.slice(0,4)+'…'+p.addr.slice(-3) : '—';
-      return `<div class="pat-op-row" title="Wallet: ${p.addr || '—'} | ${p.side} ${p.pair}">
+      const isSelected = _patOpsAssetFilters.has(p.pair);
+      return `<div class="pat-op-row${isSelected ? ' selected' : ''}" onclick="togglePatOpAsset('${(p.pair || '').replace(/'/g,"\\'")}')" title="Wallet: ${p.addr || '—'} | ${p.side} ${p.pair} — clique para filtrar Movimentações Recentes por este ativo">
         <span class="pat-op-side-dot" style="background:${dotColor}"></span>
         <span>
           <div class="pat-op-pair">${pairLabel}</div>
@@ -10670,6 +10753,8 @@
       if (totalEl) { totalEl.textContent = '$' + tFmt; totalEl.className = 'pat-footer-pnl ' + tCls; }
       if (brkEl) brkEl.textContent = longCount + 'L / ' + shortCount + 'S';
     }
+
+    _updatePatOpsAssetClearUI();
   }
 
   /* ── DIRECTION DOMINANCE ──────────────────────────────────────────────────
@@ -10763,10 +10848,13 @@
       const pctLabel  = dominates === 'neut' ? '~50%' : dominates === 'long' ? '+'+lp.toFixed(0)+'%L' : '+'+sp.toFixed(0)+'%S';
       const _isSelW = selectedWalletAddr && selectedWalletAddr.toLowerCase() === d.addr.toLowerCase();
       const selStyle = _isSelW ? `;background:${d.color}0d;box-shadow:inset 0 0 0 1px ${d.color}30;border-radius:4px` : '';
+      // Índice da wallet: mesmo número (#N) usado no painel "PnL por Wallet"
+      const wIdx = trackedWallets.findIndex(a => a && a.toLowerCase() === d.addr.toLowerCase());
+      const wNumLabel = (wIdx >= 0 ? '#' + (wIdx + 1) + ' ' : '') + d.label;
       return `
         <div class="dir-dom-wallet-row" style="cursor:pointer${selStyle}" onclick="selectWallet('${d.addr}')" title="Filtrar todos os painéis por esta wallet">
           <div class="dir-dom-wallet-label" title="${d.addr}">
-            <span class="wallet-color-bar" style="background:${d.color}"></span>${d.label}
+            <span class="wallet-color-bar" style="background:${d.color}"></span>${wNumLabel}
           </div>
           <div class="dir-dom-wallet-bar-track">
             <div class="dir-dom-wallet-bar-long"  style="width:${lp.toFixed(1)}%"></div>
