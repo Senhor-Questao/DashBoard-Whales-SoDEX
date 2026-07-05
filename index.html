@@ -673,6 +673,7 @@
   .c-pct      { width: 58px; }
   .c-tp       { width: 68px; }
   .c-sl       { width: 68px; }
+  .c-liq      { width: 68px; }
   .c-status   { width: 48px; }
   .c-reason   { width: 84px; }
   .c-fpnl     { width: 72px; }
@@ -3399,7 +3400,7 @@
       <span class="sidebar-item-label">Risk Score</span>
     </a>
     <a class="sidebar-item" data-target="hist-prob-panel" data-tooltip="Prob. Histórica" onclick="sidebarNav(this)">
-      <span class="sidebar-item-icon">📈</span>
+      <span class="sidebar-item-icon">⏳</span>
       <span class="sidebar-item-label">Prob. Histórica</span>
     </a>
     <a class="sidebar-item" data-target="section-ops" data-tooltip="Operações Abertas" onclick="sidebarNav(this)">
@@ -3760,7 +3761,7 @@
   <div class="dir-dom-panel" id="dir-dom-panel">
     <div class="dir-dom-head">
       <div class="dir-dom-head-left">
-        <span>⚖️ Predominância de Direção</span>
+        <span>🧭 Predominância de Direção</span>
         <span class="panel-count" id="dir-dom-count">0 wallets</span>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -3817,7 +3818,7 @@
   <!-- CONVICTION SCORE -->
   <div class="whale-conviction-panel" id="whale-conviction-panel">
     <div class="whale-conviction-head">
-      <span>⚖️ Conviction Score</span>
+      <span>💎 Conviction Score</span>
       <div class="panel-filter-group" style="flex:1">
         <select id="conv-dir-filter" class="panel-filter-select" onchange="renderConvictionScore()" title="Filtrar por direção">
           <option value="all">Todos</option>
@@ -3883,7 +3884,7 @@
   <!-- WHALE HEATMAP -->
   <div class="whale-heatmap-panel" id="whale-heatmap-panel">
     <div class="whale-heatmap-head">
-      <span>🌡️ Whale Heatmap</span>
+      <span>🔥 Whale Heatmap</span>
       <span class="panel-count" id="whale-heatmap-count">0 ativos</span>
       <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-heatmap-panel',this)" title="Minimizar"></button>
     </div>
@@ -3917,7 +3918,7 @@
   <!-- WHALE LEADERBOARD -->
   <div class="whale-leaderboard-panel" id="whale-leaderboard-panel">
     <div class="whale-leaderboard-head">
-      <span>🏆 Whale Leaderboard</span>
+      <span>👑 Whale Leaderboard</span>
       <span class="panel-count" id="whale-leaderboard-count">0 wallets</span>
       <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-leaderboard-panel',this)" title="Minimizar"></button>
     </div>
@@ -4083,7 +4084,7 @@
   <!-- SMART EXIT MONITOR -->
   <div class="smart-exit-panel" id="smart-exit-panel">
     <div class="smart-exit-head">
-      <span>⚠️ Smart Exit Monitor</span>
+      <span>🚪 Smart Exit Monitor</span>
       <span class="panel-count" id="smart-exit-count">0 ativos</span>
       <button class="btn-panel-minimize" onclick="togglePanelMinimize('smart-exit-panel',this)" title="Minimizar"></button>
     </div>
@@ -4117,7 +4118,7 @@
   <!-- RISK SCORE DO MERCADO -->
   <div class="risk-score-panel" id="risk-score-panel">
     <div class="risk-score-head">
-      <span>🎯 Risk Score do Mercado</span>
+      <span>⚠️ Risk Score do Mercado</span>
       <span class="panel-count" id="risk-score-count">0 pares</span>
       <button class="btn-panel-minimize" onclick="togglePanelMinimize('risk-score-panel',this)" title="Minimizar"></button>
     </div>
@@ -4157,7 +4158,7 @@
   <!-- PROBABILIDADE HISTÓRICA -->
   <div class="hist-prob-panel" id="hist-prob-panel">
     <div class="hist-prob-head">
-      <span>📊 Probabilidade Histórica</span>
+      <span>⏳ Probabilidade Histórica</span>
       <span class="panel-count" id="hist-prob-count">0 pares</span>
       <button class="btn-panel-minimize" onclick="togglePanelMinimize('hist-prob-panel',this)" title="Minimizar"></button>
     </div>
@@ -4219,11 +4220,12 @@
             <th class="c-size">Size (USDC)</th>
             <th class="c-tp">TP</th>
             <th class="c-sl">SL</th>
+            <th class="c-liq">LIQ</th>
             <th class="c-status">Status</th>
             <th class="c-date">Data Abertura</th>
           </tr>
         </thead>
-        <tbody id="ops-body"><tr class="empty-row"><td colspan="13">Aguardando posições...</td></tr></tbody>
+        <tbody id="ops-body"><tr class="empty-row"><td colspan="14">Aguardando posições...</td></tr></tbody>
       </table>
     </div>
     <div class="pagination-bar" id="ops-pg-bar">
@@ -4396,6 +4398,7 @@
             <th class="c-mode">Mode</th>
             <th class="c-entry">Entry</th>
             <th class="c-close">Close</th>
+            <th class="c-liq" title="Preço de liquidação monitorado pela SoDEX (diferente do SL)">LIQ</th>
             <th class="c-size">Size (USDC)</th>
             <th class="c-leverage">Lev</th>
             <th class="c-fee">Fee</th>
@@ -4405,7 +4408,7 @@
             <th class="c-date">Data Fechamento</th>
           </tr>
         </thead>
-        <tbody id="history-body"><tr class="empty-row"><td colspan="14">Nenhuma posição no histórico ainda</td></tr></tbody>
+        <tbody id="history-body"><tr class="empty-row"><td colspan="15">Nenhuma posição no histórico ainda</td></tr></tbody>
       </table>
     </div>
     <div class="pagination-bar" id="hist-pg-bar">
@@ -4726,6 +4729,16 @@
   let history        = [];   // Histórico completo de posições fechadas
   let historyRestData = [];  // Dados brutos vindos da API REST de histórico
   let historyPeriodDays = 3; // Período selecionado para histórico (default: 3 dias)
+
+  // ── Liquidações históricas (long-range) ───────────────────────────────────
+  // Array independente do período escolhido em "Histórico de Posições": guarda
+  // SOMENTE posições liquidadas (isLiq === true), buscadas numa janela ampla
+  // (LIQ_HISTORY_LOOKBACK_DAYS), para que o filtro "Liquidação" em Movimentações
+  // Recentes continue mostrando liquidações antigas mesmo quando o usuário não
+  // ampliou o período do painel de Histórico (que por padrão carrega só 3 dias).
+  let liquidationHistoryData = [];
+  let liqHistoryLoading = false;
+  const LIQ_HISTORY_LOOKBACK_DAYS = 360; // mesma janela máxima disponível nos botões de período
   let historyLoading    = false; // Flag de carregamento do histórico
   let markPrices     = {};   // símbolo → mark price atual
 
@@ -4850,6 +4863,76 @@
     if (!a || a.length < 10) return a;
     return a.slice(0, 6) + '…' + a.slice(-4);
   }
+
+  // ── Preço de liquidação (SoDEX) ──────────────────────────────────────────
+  // Extrai o preço de liquidação de um objeto de posição vindo da API SoDEX
+  // (REST /positions, /positions/history ou payload de account_updates).
+  // IMPORTANTE: este preço é DIFERENTE do stop loss (SL) — o SL é uma ordem
+  // configurada pelo usuário, enquanto o preço de liquidação é calculado e
+  // monitorado pela própria exchange (baseado em margem/leverage) e não pode
+  // ser cancelado. Aceita múltiplos aliases pois a API pode variar o nome do
+  // campo entre endpoints/versões.
+  function extractLiqPx(p) {
+    if (!p) return null;
+    // Aceita objeto plano ou aninhado (algumas respostas trazem os campos de
+    // risco dentro de p.risk / p.riskInfo / p.liquidation).
+    const src = p.risk || p.riskInfo || p.liquidation || p;
+    const raw = p.take_over_price ?? // campo real (snake_case) retornado pelo endpoint REST /positions/history
+                p.takeOverPrice ?? // alias camelCase (fallback, caso a API varie o formato)
+                p.liquidationPrice ?? p.liqPrice ?? p.liquidationPx ?? p.liqPx ??
+                p.estLiqPrice ?? p.estimatedLiqPrice ?? p.bankruptcyPrice ??
+                p.bkPx ?? p.lqPx ?? p.lqp ?? p.lp ??
+                p.liquidation_price ?? p.liq_price ?? p.est_liq_price ??
+                p.bankruptcy_price ?? p.bankruptcyPx ??
+                src.liquidationPrice ?? src.liqPrice ?? src.price ?? null;
+    if (raw == null) return null;
+    const v = parseFloat(String(raw).replace(',', '.'));
+    return (!isNaN(v) && v > 0) ? v : null;
+  }
+
+  // Compara um preço de fechamento contra o preço de liquidação monitorado
+  // da posição, com pequena tolerância relativa (arredondamento/float) —
+  // usado para classificar um fechamento como "Liquidação" quando o evento
+  // de liquidação explícito da exchange não estiver disponível no canal
+  // que detectou o fechamento.
+  function isCloseAtLiqPx(closePrice, liqPx) {
+    if (liqPx == null || closePrice == null) return false;
+    const cp = parseFloat(closePrice);
+    if (isNaN(cp) || cp <= 0) return false;
+    const tol = Math.max(liqPx * 0.0005, 1e-8); // 0.05% de tolerância
+    return Math.abs(cp - liqPx) <= tol;
+  }
+
+  // ── Fallback: estimativa de preço de liquidação ──────────────────────────
+  // Quando a API/WS da SoDEX não traz o campo de liquidação explícito para
+  // uma posição (ex.: canal ainda não retornou o dado), estimamos o preço
+  // usando a fórmula padrão de margem isolada (entry, leverage, lado), com
+  // uma taxa de manutenção de margem aproximada (0.5%). É apenas uma
+  // estimativa client-side — sempre que a exchange fornecer o valor real via
+  // extractLiqPx(), esse valor prevalece (ver resolveLiqPx()).
+  const DEFAULT_MMR = 0.005; // 0.5% — aproximação genérica quando MMR real é desconhecido
+  function estimateLiqPx(entry, leverage, side) {
+    const ep  = parseFloat(entry);
+    const lev = parseFloat(leverage);
+    if (!ep || ep <= 0 || !lev || lev <= 0) return null;
+    const factor = (1 / lev) - DEFAULT_MMR;
+    if (factor <= 0) return null; // leverage baixo demais p/ esta aproximação simples
+    const v = side === 'LONG' ? ep * (1 - factor) : ep * (1 + factor);
+    return (v > 0) ? v : null;
+  }
+
+  // Resolve o preço de liquidação de uma posição: prioriza o valor explícito
+  // vindo da SoDEX (extractLiqPx) e só recorre à estimativa client-side
+  // (estimateLiqPx) quando a exchange não fornece o campo. Retorna também
+  // uma flag `estimated` para que a UI possa sinalizar quando o valor exibido
+  // é uma aproximação (e não o dado oficial monitorado pela exchange).
+  function resolveLiqPx(p, entry, leverage, side) {
+    const explicit = extractLiqPx(p);
+    if (explicit != null) return { value: explicit, estimated: false };
+    const est = estimateLiqPx(entry, leverage, side);
+    return { value: est, estimated: est != null };
+  }
+
 
   // Retorna cor CSS associada à wallet pelo índice em trackedWallets
   function walletColor(addr) {
@@ -5439,6 +5522,15 @@
     // Carrega histórico REST com o período padrão (3 dias)
     fetchHistoryForAllWallets();
 
+    // Busca liquidações históricas numa janela ampla (360d), independente do
+    // período padrão acima, para que "Liquidação" em Movimentações Recentes
+    // mostre liquidações antigas de wallets mesmo antes do usuário ampliar o
+    // período no painel de Histórico de Posições. Delay para não concorrer
+    // com fetchHistoryForAllWallets/snapshots iniciais.
+    setTimeout(() => {
+      if (trackedWallets.length > 0) fetchLiquidationHistoryForAllWallets();
+    }, 2500);
+
     // Reconstrói o histórico de eventos (aumentos/reduções/saídas parciais) que as
     // posições JÁ ABERTAS sofreram antes do dashboard ser carregado — preenche
     // "Movimentações Recentes" com o histórico completo de cada posição aberta.
@@ -5570,9 +5662,14 @@
           scheduleUniqueMovEvent(
             ['close', addr.toLowerCase(), oldPos.pair, oldPos.side, (oldPos.entry || 0).toFixed(4), (oldPos.size || 0).toFixed(4)],
             () => {
+              // Fechamento detectado via diff (posição não veio mais no REST) —
+              // não há closeReason explícito aqui, então classificamos como
+              // Liquidação se o preço de fechamento coincidir com o preço de
+              // liquidação monitorado da posição (diferente do SL).
+              const isLiqRest = isCloseAtLiqPx(closePrice, oldPos.liqPx);
               const snap = {
                 ...oldPos,
-                reason: 'Closed',
+                reason: isLiqRest ? 'Liquidated' : 'Closed',
                 finalPnl: oldPos.pnl ?? 0,
                 closePrice: closePrice,
                 pct: pctRest,
@@ -5705,12 +5802,15 @@
 
       const absSizeH = Math.abs(size);
       const markForSizeH = markPrices[sym] || entry;
+      const liqResH = resolveLiqPx(p, entry, leverage, side);
       const pos = {
         id: String(posId ?? Math.random()),
         wallet: sa, addr, pair: sym, side, entry,
         size: absSizeH,
         tp: s.tp ?? null,
         sl: s.sl ?? null,
+        liqPx: liqResH.value,
+        liqPxEstimated: liqResH.estimated,
         mark: markForSizeH,
         pnl: 0,
         openedAt: openedAtStr,
@@ -6076,7 +6176,7 @@
      adicionamos uma entrada rica no array history com todos os campos
      do novo painel: Mode, Entry, Close, Size USDC, Leverage, Fee, PnL, %, Date.
   ────────────────────────────────────────────────────────────── */
-  function addToHistory(pos, closeTrade) {
+  function addToHistory(pos, closeTrade, isLiqHint) {
     // closeTrade pode ser o objeto de trade WS (com fee, closePrice) ou null
     const closePrice = closeTrade
       ? parseFloat(closeTrade.p || closeTrade.price || closeTrade.closePrice || 0) || pos.mark || pos.entry
@@ -6094,6 +6194,14 @@
         : ((pos.entry - closePrice) / pos.entry) * 100;
     }
 
+    // Resultado "Liquidação": usa o indicativo explícito recebido do chamador
+    // (isLiqHint — já resolvido via closeReason/canal de liquidação da SoDEX)
+    // e, como reforço, compara o preço de fechamento com o preço de
+    // liquidação monitorado da posição (liqPx, diferente do SL). Mantém a
+    // MESMA lógica usada no filtro "LIQUIDAÇÃO" de Movimentações Recentes,
+    // para que "Histórico de Posições" fique consistente.
+    const isLiq = !!isLiqHint || isCloseAtLiqPx(closePrice, pos.liqPx);
+
     const entry = {
       wallet:      pos.wallet,
       addr:        pos.addr,
@@ -6108,7 +6216,9 @@
       fee:         fee,
       finalPnl:    pos.pnl ?? 0,
       pct:         pct,
-      closedAt:    tsLong()
+      closedAt:    tsLong(),
+      isLiq:       isLiq,
+      isProfit:    !isLiq && (pos.pnl ?? 0) >= 0
     };
     history.unshift(entry);
     if (history.length > MAX_HISTORY) history.pop();
@@ -6164,9 +6274,15 @@
     for (const addr of trackedWallets) {
       let page = 0;
       let hasMore = true;
+      // Cursor de paginação: avança para trás a cada página usando o menor
+      // closedAt da página anterior (mesma estratégia de _paginateEndpoint).
+      // Sem isso, toda página repetia startTime/endTime fixos e a API
+      // devolvia sempre o MESMO lote de registros — causando duplicação
+      // (cada posição aparecia até 10x, uma por iteração do loop).
+      let curEndTime = nowMs;
       while (hasMore) {
         try {
-          const url = `${SODEX_REST_PERPS}/accounts/${addr}/positions/history?limit=${LIMIT}&startTime=${fromMs}&endTime=${nowMs}`;
+          const url = `${SODEX_REST_PERPS}/accounts/${addr}/positions/history?limit=${LIMIT}&startTime=${fromMs}&endTime=${curEndTime}`;
           debugLog(`Histórico REST ${shortAddr(addr)} ${historyPeriodDays}d pág ${page + 1}`, 'info');
           const res = await corsAwareFetch(url);
           if (!res.ok) {
@@ -6179,6 +6295,7 @@
 
           if (!list.length) { hasMore = false; break; }
 
+          let minTsInPage = curEndTime;
           list.forEach(p => {
             // Log diagnóstico do primeiro registro: keys + valores dos campos relevantes
             if (historyRestData.length === 0) {
@@ -6251,6 +6368,7 @@
                                 p.createdAt ?? null;
             // Normaliza: se vier como string numérica, converte
             const closedTsNum = closedTsRaw != null ? Number(closedTsRaw) : 0;
+            if (closedTsNum > 0 && closedTsNum < minTsInPage) minTsInPage = closedTsNum;
             let closedAtStr = '—';
             if (closedTsNum && !isNaN(closedTsNum) && closedTsNum > 0) {
               const d = new Date(closedTsNum);
@@ -6285,8 +6403,22 @@
             }
 
             // ── Resultado ─────────────────────────────────────────────────
+            // Fonte primária e autoritativa (schema real do endpoint REST
+            // /positions/history): o campo `take_over_price` (snake_case).
+            // Regra: se vier 0 (ou ausente), a posição NÃO foi liquidada;
+            // qualquer valor de preço diferente de 0 é o indicador de que a
+            // posição FOI liquidada (e é o próprio preço de liquidação).
+            // closeReason/isCloseAtLiqPx são mantidos apenas como fallback
+            // inofensivo para o raro caso do campo não vir na resposta.
+            const takeOverPriceRaw = p.take_over_price ?? p.takeOverPrice ?? null;
+            const takeOverPrice = takeOverPriceRaw != null
+              ? (parseFloat(String(takeOverPriceRaw).replace(',', '.')) || 0)
+              : null;
             const closeReason = (p.closeReason ?? p.reason ?? p.exitReason ?? '').toLowerCase();
-            const isLiq    = closeReason.includes('liq');
+            const isLiq = takeOverPrice != null
+              ? takeOverPrice !== 0
+              : (closeReason.includes('liq') || isCloseAtLiqPx(close, extractLiqPx(p)));
+            const liqPxHist = (isLiq && takeOverPrice) ? takeOverPrice : extractLiqPx(p);
             const isProfit = !isLiq && pnl >= 0;
 
             historyRestData.push({
@@ -6305,6 +6437,7 @@
               pct,
               closedAt:   closedAtStr,
               closedTs:   closedTsNum || 0,
+              liqPx:      liqPxHist,
               isLiq,
               isProfit
             });
@@ -6315,7 +6448,18 @@
           page++;
           // Evita loop infinito
           if (page > 10) hasMore = false;
-          if (hasMore) await sleep(REST_DELAY_MS);
+          // Avança o cursor para a próxima página usando o menor closedAt
+          // desta página como novo endTime. Sem progresso real (minTsInPage
+          // não avançou) ou já além do início do período — encerra, para
+          // não repetir a mesma janela e duplicar registros.
+          if (hasMore) {
+            if (minTsInPage >= curEndTime || minTsInPage <= fromMs) {
+              hasMore = false;
+            } else {
+              curEndTime = minTsInPage - 1;
+              await sleep(REST_DELAY_MS);
+            }
+          }
         } catch (err) {
           debugLog(`Histórico ${shortAddr(addr)}: erro — ${err.message}`, 'err');
           break;
@@ -6342,6 +6486,185 @@
     if (countEl) countEl.textContent = historyRestData.length + ' registros';
 
     renderHistoryTable();
+  }
+
+  /* ── LIQUIDAÇÕES HISTÓRICAS (LONG-RANGE) ────────────────────────────────
+     Busca, numa janela ampla (LIQ_HISTORY_LOOKBACK_DAYS = 360d) e independente
+     do período selecionado no painel "Histórico de Posições", TODAS as
+     posições fechadas de cada wallet e mantém apenas as que foram liquidadas
+     (mesma lógica de detecção usada em fetchHistoryForAllWallets: closeReason
+     explícito da SoDEX OU preço de fechamento == preço de liquidação monitorado
+     via isCloseAtLiqPx/extractLiqPx). Isso garante que o filtro "Liquidação"
+     em Movimentações Recentes exiba liquidações antigas mesmo que o usuário
+     nunca tenha ampliado o período padrão (3 dias) do Histórico de Posições.
+  ──────────────────────────────────────────────────────────────────────── */
+  async function fetchLiquidationHistoryForAllWallets() {
+    if (liqHistoryLoading) return;
+    liqHistoryLoading = true;
+
+    const nowMs  = Date.now();
+    const fromMs = nowMs - LIQ_HISTORY_LOOKBACK_DAYS * 24 * 60 * 60 * 1000;
+    const LIMIT  = 500;
+    const found  = [];
+
+    for (const addr of trackedWallets) {
+      let page = 0;
+      let hasMore = true;
+      // Mesmo cursor de paginação usado em fetchHistoryForAllWallets: sem
+      // avançar endTime, cada página repetia a mesma janela e a API
+      // devolvia o mesmo lote de registros repetidamente (duplicação).
+      let curEndTime = nowMs;
+      while (hasMore) {
+        try {
+          const url = `${SODEX_REST_PERPS}/accounts/${addr}/positions/history?limit=${LIMIT}&startTime=${fromMs}&endTime=${curEndTime}`;
+          const res = await corsAwareFetch(url);
+          if (!res.ok) {
+            debugLog(`Liq. histórica ${shortAddr(addr)}: HTTP ${res.status}`, 'warn');
+            break;
+          }
+          const envelope = await res.json();
+          const inner    = (envelope.data != null) ? envelope.data : envelope;
+          const list     = inner.positions || inner.history || inner.data || (Array.isArray(inner) ? inner : []);
+
+          if (!list.length) { hasMore = false; break; }
+
+          let minTsInPage = curEndTime;
+          list.forEach(p => {
+            const sym  = cleanSym(p.symbol || p.s || p.sym || '');
+            const sizeRaw = p.cumClosedSize ?? p.size ?? p.sz ?? p.quantity ?? p.qty ?? p.positionAmt ?? 0;
+            const size = parseFloat(String(sizeRaw).replace(',', '.')) || 0;
+            const sideRaw = (p.positionSide ?? p.side ?? p.ps ?? '').toString().toUpperCase();
+            const side = sideRaw === 'LONG' ? 'LONG' : sideRaw === 'SHORT' ? 'SHORT' : (size >= 0 ? 'LONG' : 'SHORT');
+            const absSize = Math.abs(size);
+
+            const entryRaw = p.avgEntryPrice ?? p.ep ?? p.entryPrice ?? p.openPrice ??
+                             p.averageEntryPrice ?? p.avgOpenPrice ?? p.aep ?? 0;
+            const entry = parseFloat(String(entryRaw).replace(',', '.')) || 0;
+
+            const closeRaw = p.closePrice ?? p.cp ?? p.exitPrice ?? p.closingPrice ??
+                             p.avgClosePrice ?? p.avgExitPrice ?? p.closeAvgPrice ??
+                             p.closeP ?? p.lp ?? p.lastPrice ?? p.settlementPrice ??
+                             p.fillPrice ?? p.executionPrice ?? null;
+            const close = closeRaw != null ? (parseFloat(String(closeRaw).replace(',', '.')) || 0) : 0;
+
+            const pnlRaw = p.realizedPnL ?? p.realizedPnl ?? p.rpnl ?? p.rPnl ??
+                           p.pnl ?? p.profit ?? p.realPnl ?? p.realizedProfit ?? 0;
+            const pnl = parseFloat(String(pnlRaw).replace(',', '.')) || 0;
+
+            const feeRaw = p.cumTradingFee ?? p.fee ?? p.f ?? p.commission ??
+                           p.tradingFee ?? p.closeFee ?? p.totalFee ?? p.feeAmount ??
+                           p.fees ?? p.tf ?? p.cf ?? p.openFee ?? p.openingFee ??
+                           p.tradesFee ?? null;
+            const fee = feeRaw != null ? (parseFloat(String(feeRaw).replace(',', '.')) || null) : null;
+
+            const lev = p.leverage ?? p.lv ?? p.lev ?? null;
+            const mm  = p.marginMode ?? p.mm ?? null;
+            const mLabel = mm === 1 ? 'ISO' : mm === 2 ? 'CROSS' :
+                           (mm === 'isolated' || mm === 'ISO' ? 'ISO' :
+                           (mm === 'cross' || mm === 'CROSS' ? 'CROSS' :
+                           (typeof mm === 'string' ? mm : '—')));
+
+            const closedTsRaw = p.closedAt ?? p.closeTime ?? p.closedTime ??
+                                p.closeTs ?? p.ct ?? p.endTime ?? p.et ??
+                                p.closeTimestamp ?? p.updatedAt ?? p.ut ??
+                                p.createdAt ?? null;
+            const closedTsNum = closedTsRaw != null ? Number(closedTsRaw) : 0;
+            if (closedTsNum > 0 && closedTsNum < minTsInPage) minTsInPage = closedTsNum;
+            let closedAtStr = '—';
+            if (closedTsNum && !isNaN(closedTsNum) && closedTsNum > 0) {
+              const d = new Date(closedTsNum);
+              if (!isNaN(d)) {
+                const pad = n => String(n).padStart(2,'0');
+                closedAtStr = `${pad(d.getDate())}/${pad(d.getMonth()+1)} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+              }
+            }
+
+            const sizeUsdcRaw = p.notional ?? p.notionalValue ?? p.positionValue ??
+                                p.sizeUsdc ?? p.valueUsdc ?? p.usdValue ?? null;
+            let sizeUsdc = sizeUsdcRaw != null
+              ? (parseFloat(String(sizeUsdcRaw).replace(',', '.')) || null)
+              : null;
+            if (!sizeUsdc || sizeUsdc <= 0) {
+              sizeUsdc = entry > 0 ? absSize * entry : (close > 0 ? absSize * close : null);
+            }
+
+            let pct = null;
+            if (entry > 0 && close > 0) {
+              pct = side === 'LONG'
+                ? ((close - entry) / entry) * 100
+                : ((entry - close) / entry) * 100;
+            } else if (sizeUsdc && sizeUsdc > 0 && pnl !== 0) {
+              const levNum = lev != null ? parseFloat(lev) || 1 : 1;
+              const margin = sizeUsdc / levNum;
+              pct = (pnl / margin) * 100;
+            }
+
+            // Mesma lógica de detecção de liquidação usada em fetchHistoryForAllWallets:
+            // campo autoritativo do endpoint (`take_over_price`, snake_case) —
+            // 0 = não liquidada, valor de preço != 0 = liquidada — com
+            // closeReason/extractLiqPx como fallback inofensivo.
+            const takeOverPriceRaw = p.take_over_price ?? p.takeOverPrice ?? null;
+            const takeOverPrice = takeOverPriceRaw != null
+              ? (parseFloat(String(takeOverPriceRaw).replace(',', '.')) || 0)
+              : null;
+            const closeReason = (p.closeReason ?? p.reason ?? p.exitReason ?? '').toLowerCase();
+            const isLiq       = takeOverPrice != null
+              ? takeOverPrice !== 0
+              : (closeReason.includes('liq') || isCloseAtLiqPx(close, extractLiqPx(p)));
+            const liqPxHist   = (isLiq && takeOverPrice) ? takeOverPrice : extractLiqPx(p);
+
+            // Guarda somente liquidações — este array é só um complemento para
+            // detectar liquidações antigas, não substitui historyRestData.
+            if (!isLiq) return;
+
+            found.push({
+              wallet:     shortAddr(addr),
+              addr,
+              pair:       sym,
+              side,
+              marginMode: mLabel,
+              entry,
+              closePrice: close > 0 ? close : null,
+              size:       absSize,
+              sizeUsdc,
+              leverage:   lev,
+              fee,
+              finalPnl:   isNaN(pnl) ? 0 : pnl,
+              pct,
+              closedAt:   closedAtStr,
+              closedTs:   closedTsNum || 0,
+              liqPx:      liqPxHist,
+              isLiq:      true
+            });
+          });
+
+          hasMore = list.length === LIMIT;
+          page++;
+          if (page > 10) hasMore = false;
+          if (hasMore) {
+            if (minTsInPage >= curEndTime || minTsInPage <= fromMs) {
+              hasMore = false;
+            } else {
+              curEndTime = minTsInPage - 1;
+              await sleep(REST_DELAY_MS);
+            }
+          }
+        } catch (err) {
+          debugLog(`Liq. histórica ${shortAddr(addr)}: erro — ${err.message}`, 'err');
+          break;
+        }
+      }
+      await sleep(REST_DELAY_MS);
+    }
+
+    liquidationHistoryData = found;
+    debugLog(`Liquidações históricas (${LIQ_HISTORY_LOOKBACK_DAYS}d): ${found.length} encontradas`, 'ok');
+    liqHistoryLoading = false;
+
+    // Atualiza o feed de Movimentações Recentes imediatamente (o filtro
+    // "Liquidação" já passa a refletir liquidações antigas sem esperar o
+    // próximo ciclo do renderAll()).
+    renderMovimentacoes();
   }
 
   /* ── ENRIQUECE FEE E DETECTA PARCIAIS HISTÓRICAS ─────────────
@@ -6739,9 +7062,14 @@
         // Mapa de motivos de fechamento → label da UI.
         const reasonMap = { tp: 'TP Hit', sl: 'SL Hit', liquidation: 'Liquidated', manual: 'Manual' };
         const rawReason = (t.closeReason || t.reason || '').toLowerCase();
-        const reason    = reasonMap[rawReason] || 'Manual';
+        const closePriceWs0 = parseFloat(t.p || t.price || t.closePrice || 0) || pos.mark || pos.entry;
+        // Se a API não informar closeReason explicitamente, cai para Manual —
+        // mas antes verificamos se o preço de fechamento bate com o preço de
+        // liquidação monitorado (liqPx, diferente do SL) para classificar
+        // corretamente como Liquidação mesmo sem o campo closeReason.
+        const reason = reasonMap[rawReason] || (isCloseAtLiqPx(closePriceWs0, pos.liqPx) ? 'Liquidated' : 'Manual');
         pos.pnl = finalPnl;
-        const closePriceWs = parseFloat(t.p || t.price || t.closePrice || 0) || pos.mark || pos.entry;
+        const closePriceWs = closePriceWs0;
         let pctWs = null;
         if (pos.entry > 0 && closePriceWs > 0) {
           pctWs = pos.side === 'LONG'
@@ -6758,7 +7086,7 @@
           () => {
             closed.unshift({ ...pos, reason, finalPnl, closePrice: closePriceWs, pct: pctWs, fee: feeWs, sizeUsdc: sizeUsdcWs });
             if (closed.length > MAX_CLOSED) closed.pop();
-            addToHistory(pos, t);
+            addToHistory(pos, t, reason === 'Liquidated');
             addEvent('close', `${sym} ${pos.side} fechado (${reason}) — ${sa}`, pos);
             renderMovimentacoes();
           }
@@ -6795,6 +7123,11 @@
               : ((pos.entry - closeMarkPrice) / pos.entry) * 100;
           }
           const sizeUsdcAcc = pos.entry > 0 ? pos.size * pos.entry : (pos.mark > 0 ? pos.size * pos.mark : null);
+          // O canal account_updates não traz closeReason — classificamos como
+          // Liquidação comparando o preço de fechamento com o preço de
+          // liquidação monitorado da posição (liqPx, diferente do SL).
+          const isLiqAcc = isCloseAtLiqPx(closeMarkPrice, pos.liqPx);
+          const reasonAcc = isLiqAcc ? 'Liquidated' : 'Closed';
           // ── Verificação de unicidade por hash + pequeno delay de comparação ──
           // Este é o canal mais propenso a "flapping" (a posição some e volta a
           // aparecer em atualizações consecutivas) — a assinatura estável evita
@@ -6802,10 +7135,12 @@
           scheduleUniqueMovEvent(
             ['close', addr.toLowerCase(), sym, pos.side, (pos.entry || 0).toFixed(4), (pos.size || 0).toFixed(4)],
             () => {
-              closed.unshift({ ...pos, reason: 'Closed', finalPnl: pos.pnl, closePrice: closeMarkPrice, pct: pctAcc, fee: null, sizeUsdc: sizeUsdcAcc });
+              closed.unshift({ ...pos, reason: reasonAcc, finalPnl: pos.pnl, closePrice: closeMarkPrice, pct: pctAcc, fee: null, sizeUsdc: sizeUsdcAcc });
               if (closed.length > MAX_CLOSED) closed.pop();
-              addToHistory(pos, null);
-              addEvent('close', `${sym} ${pos.side} fechado — ${sa}`, pos);
+              addToHistory(pos, null, isLiqAcc);
+              addEvent('close', isLiqAcc
+                ? `⚡ LIQUIDAÇÃO ${sym} ${pos.side} — ${sa}`
+                : `${sym} ${pos.side} fechado — ${sa}`, pos);
               renderMovimentacoes();
             }
           );
@@ -6874,6 +7209,16 @@
         if (!isNaN(entry)) positions[idx].entry = entry;
         if (leverage != null)        positions[idx].leverage   = leverage;
         if (marginModeRawU != null)  positions[idx].marginMode = modeLabel;
+        const liqPxU = extractLiqPx(p);
+        if (liqPxU != null) {
+          positions[idx].liqPx = liqPxU; // valor oficial da exchange — sempre prevalece
+          positions[idx].liqPxEstimated = false;
+        } else if (positions[idx].liqPx == null || positions[idx].liqPxEstimated) {
+          // Sem valor explícito nesta atualização: recalcula a estimativa
+          // client-side com os dados mais recentes (entry/leverage podem ter mudado)
+          const estU = estimateLiqPx(positions[idx].entry, positions[idx].leverage, positions[idx].side);
+          if (estU != null) { positions[idx].liqPx = estU; positions[idx].liqPxEstimated = true; }
+        }
         const mkU = positions[idx].mark || positions[idx].entry;
         positions[idx].sizeUsdc = positions[idx].entry > 0
           ? positions[idx].size * positions[idx].entry
@@ -6894,12 +7239,15 @@
         const absSizeU = Math.abs(size);
         const entryU = isNaN(entry) ? 0 : entry;
         const markU = markPrices[sym] || entryU;
+        const liqResU2 = resolveLiqPx(p, entryU, leverage, side);
         const pos = {
           id: String(p.id || crypto.randomUUID?.() || Math.random().toString(36).slice(2, 10)),
           wallet: sa, addr, pair: sym, side,
           entry: entryU,
           size: absSizeU,
           tp: null, sl: null,
+          liqPx: liqResU2.value,
+          liqPxEstimated: liqResU2.estimated,
           mark: markU,
           pnl: 0, openedAt: openedAtU,
           openedAtTs: openTsU ? Number(openTsU) : null,
@@ -6981,7 +7329,7 @@
     if (pos) {
       pos.pnl = isNaN(pnl) ? pos.pnl : pnl;
       pos.mark = liqPx || pos.mark;
-      addToHistory(pos, { p: liqPx, price: liqPx });
+      addToHistory(pos, { p: liqPx, price: liqPx }, true);
     }
 
     debugLog(`Liquidação ${sa} ${sym || '?'} liqPx=${liqPx} pnl=${pnl.toFixed(2)}`, 'err');
@@ -7803,6 +8151,7 @@
       // Deduplicação: evita duplicar o que já está em `closed` (sessão atual)
       const key = `${h.addr}|${h.pair}|${h.closedAt || ''}`;
       if (sessionKeys.has(key)) return;
+      sessionKeys.add(key); // registra a chave para também deduplicar contra liquidationHistoryData abaixo
       const isLiq = h.isLiq || /liquida/i.test(h.closeReason || '');
       const pos = {
         addr:       h.addr,
@@ -7825,6 +8174,39 @@
         reason:     isLiq ? 'Liquidação' : 'Closed'
       };
       items.push({ kind: isLiq ? 'liq' : 'close', pos, sortTs: h.closedTs || 0 });
+    });
+
+    // ── Liquidações históricas de longo prazo (liquidationHistoryData) ──────────
+    // Complementa o feed com liquidações antigas de wallets que aconteceram
+    // fora do período padrão de historyRestData (ex.: 3 dias), buscadas numa
+    // janela ampla (LIQ_HISTORY_LOOKBACK_DAYS) por fetchLiquidationHistoryForAllWallets().
+    // Deduplica contra `closed` e `historyRestData` via sessionKeys.
+    liquidationHistoryData.forEach(h => {
+      if (walletEnabled[(h.addr || '').toLowerCase()] === false) return;
+      const key = `${h.addr}|${h.pair}|${h.closedAt || ''}`;
+      if (sessionKeys.has(key)) return;
+      sessionKeys.add(key);
+      const pos = {
+        addr:       h.addr,
+        wallet:     h.wallet,
+        pair:       h.pair,
+        side:       h.side,
+        entry:      h.entry,
+        mark:       h.closePrice || h.entry,
+        closePrice: h.closePrice,
+        size:       h.size,
+        sizeUsdc:   h.sizeUsdc,
+        leverage:   h.leverage,
+        marginMode: h.marginMode,
+        finalPnl:   h.finalPnl,
+        pnl:        h.finalPnl,
+        pct:        h.pct,
+        fee:        h.fee,
+        closedAt:   h.closedAt,
+        closedAtTs: h.closedTs || 0,
+        reason:     'Liquidação'
+      };
+      items.push({ kind: 'liq', pos, sortTs: h.closedTs || 0 });
     });
 
     // Feed de reduções, aumentos e saídas parciais (tempo real — WS + REST polling)
@@ -8568,7 +8950,7 @@
     });
 
     if (!visible.length) {
-      document.getElementById('ops-body').innerHTML = '<tr class="empty-row"><td colspan="13">Nenhuma operação aberta</td></tr>';
+      document.getElementById('ops-body').innerHTML = '<tr class="empty-row"><td colspan="14">Nenhuma operação aberta</td></tr>';
       renderPgControls('ops-pg-controls','ops-pg-info', 1, 0, 10, 'goOpsPage');
       return;
     }
@@ -8605,6 +8987,7 @@
         <td title="${pos.size != null ? fmt(pos.size, 4) + ' contratos' : ''}">${sizeUsdcFmt}</td>
         <td class="tp-val">${pos.tp != null ? fmt(pos.tp) : '—'}</td>
         <td class="sl-val">${pos.sl != null ? fmt(pos.sl) : '—'}</td>
+        <td class="sl-val" style="color:var(--red)" title="${pos.liqPxEstimated ? 'Estimativa client-side (margem isolada, MMR aprox. 0.5%) — SoDEX ainda não retornou o valor oficial' : 'Preço de liquidação monitorado (SoDEX) — diferente do SL'}">${pos.liqPx != null ? (pos.liqPxEstimated ? '≈' : '') + fmt(pos.liqPx) : '—'}</td>
         <td><span class="badge b-open">OPEN</span></td>
         <td style="color:var(--muted);font-size:10px">${pos.openedAt || '—'}</td>
       </tr>`;
@@ -8856,7 +9239,7 @@
     if (countEl && !historyLoading) countEl.textContent = filtered.length + ' registros';
 
     if (!filtered.length) {
-      document.getElementById('history-body').innerHTML = '<tr class="empty-row"><td colspan="14">Nenhuma posição no histórico — selecione um período e aguarde o carregamento</td></tr>';
+      document.getElementById('history-body').innerHTML = '<tr class="empty-row"><td colspan="15">Nenhuma posição no histórico — selecione um período e aguarde o carregamento</td></tr>';
       renderPgControls('hist-pg-controls','hist-pg-info', 1, 0, 10, 'goHistPage');
       return;
     }
@@ -8880,6 +9263,9 @@
       const resCls  = isLiq ? 'result-liq' : pnlVal >= 0 ? 'result-profit' : 'result-loss';
       const resLbl  = isLiq ? '⚡ Liq' : pnlVal >= 0 ? '✅ Lucro' : '❌ Prejuízo';
       const closeFmt = (h.closePrice != null && h.closePrice > 0) ? fmt(h.closePrice) : '—';
+      // Preço de liquidação histórico (monitorado pela SoDEX, ≠ SL) — vem de extractLiqPx()
+      // aplicado ao registro do histórico REST (ver liqPxHist em fetchHistoryForAllWallets).
+      const liqFmt = (h.liqPx != null && h.liqPx > 0) ? fmt(h.liqPx) : '—';
       const sizeUsdcFmt = (h.sizeUsdc != null && h.sizeUsdc > 0)
         ? (() => { const v = h.sizeUsdc >= 0.01 ? h.sizeUsdc.toFixed(2) : h.sizeUsdc.toFixed(6); const pts = v.split('.'); pts[0] = pts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ','); return pts.join('.'); })()
         : (h.size > 0 ? h.size.toFixed(4) + ' u' : '—');
@@ -8895,6 +9281,7 @@
         <td><span class="badge ${mc}">${mLabel}</span></td>
         <td>${fmt(h.entry)}</td>
         <td class="mark-val">${closeFmt}</td>
+        <td class="sl-val" style="color:var(--red)" title="Preço de liquidação monitorado (SoDEX) — diferente do SL">${liqFmt}</td>
         <td>${sizeUsdcFmt}</td>
         <td style="color:var(--amber)">${h.leverage != null ? h.leverage + 'x' : '—'}</td>
         <td style="color:var(--muted)">${feeFmt}</td>
