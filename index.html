@@ -9564,12 +9564,25 @@
       const absV  = Math.abs(d.pnl);
       const valStr = sign + (absV >= 1000 ? (d.pnl / 1000).toFixed(1) + 'K' : d.pnl.toFixed(2));
       ctx.font = 'bold 10px JetBrains Mono, monospace';
-      ctx.fillStyle = dimmed
+      const valColor = dimmed
         ? (d.pnl >= 0 ? 'rgba(0,224,122,0.3)' : 'rgba(255,61,77,0.3)')
         : (d.pnl >= 0 ? '#00e07a' : '#ff3d4d');
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText(valStr, zeroX + (isPos ? barLen + 5 : -(barLen + 5 + ctx.measureText(valStr).width)), y + BAR_H / 2);
+      const valW = ctx.measureText(valStr).width;
+      let valX = zeroX + (isPos ? barLen + 5 : -(barLen + 5 + valW));
+      // Nunca deixa o valor (+/-) ser desenhado sobre a área reservada ao endereço
+      // da wallet: se a barra for tão longa que o texto "estouraria" para a
+      // esquerda do PAD_LEFT, o valor passa a ser desenhado por cima da própria
+      // barra (em branco, para manter legibilidade) em vez de à esquerda dela.
+      const labelBoundary = PAD_LEFT + 4;
+      if (!isPos && valX < labelBoundary) {
+        valX = Math.max(labelBoundary, zeroX - Math.max(barLen, 2) + 4);
+        ctx.fillStyle = '#fff';
+      } else {
+        ctx.fillStyle = valColor;
+      }
+      ctx.fillText(valStr, valX, y + BAR_H / 2);
 
       // Selection ring
       if (isSelected) {
