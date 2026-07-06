@@ -6378,6 +6378,14 @@
               }
             }
 
+            // ── Timestamp de abertura (para cálculo de duração) ───────────
+            // SoDEX pode usar: openTime, openedAt, createdAt, openTs, ot,
+            // openTimestamp, startTime. Prioriza campos explícitos de abertura
+            // antes de qualquer fallback genérico.
+            const openedTsRaw = p.openTime ?? p.openedAt ?? p.openTs ?? p.ot ??
+                                p.openTimestamp ?? p.startTime ?? p.createdAt ?? null;
+            const openedTsNum = openedTsRaw != null ? Number(openedTsRaw) : 0;
+
             // ── Size em USDC (valor nocional) ─────────────────────────────
             // Prioridade: campo direto da API → entry × size → close × size
             const sizeUsdcRaw = p.notional ?? p.notionalValue ?? p.positionValue ??
@@ -6437,6 +6445,7 @@
               pct,
               closedAt:   closedAtStr,
               closedTs:   closedTsNum || 0,
+              openedTs:   openedTsNum || 0,
               liqPx:      liqPxHist,
               isLiq,
               isProfit
