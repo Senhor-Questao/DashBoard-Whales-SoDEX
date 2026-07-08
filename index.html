@@ -221,6 +221,11 @@
     position: sticky;
     top: 0;
     z-index: 120;
+    /* Evita que o "scroll anchoring" do navegador compense a mudança de altura
+       do header (padding) reajustando o scrollTop, o que gerava um loop de
+       feedback (header muda -> layout desloca -> browser corrige scroll ->
+       cruza o threshold de novo -> header muda...) causando o tremor contínuo. */
+    overflow-anchor: none;
     transition: padding 0.25s var(--ease), box-shadow 0.25s var(--ease), border-radius 0.25s var(--ease), background 0.25s var(--ease);
   }
   .header::before {
@@ -4606,12 +4611,19 @@
 (function() {
   var header = document.querySelector('.header');
   if (!header) return;
-  var threshold = 12; // px rolados para ativar o modo compacto
+  var thresholdOn = 24;  // px rolados para ATIVAR o modo compacto
+  var thresholdOff = 8;  // px rolados para DESATIVAR o modo compacto (histerese)
   var ticking = false;
+  var isCompact = false;
 
   function applyHeaderState() {
     var scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
-    header.classList.toggle('header-compact', scrollY > threshold);
+    if (!isCompact && scrollY > thresholdOn) {
+      isCompact = true;
+    } else if (isCompact && scrollY <= thresholdOff) {
+      isCompact = false;
+    }
+    header.classList.toggle('header-compact', isCompact);
     ticking = false;
   }
 
