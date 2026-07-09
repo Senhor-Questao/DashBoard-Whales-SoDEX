@@ -1,7 +1,3 @@
-# DashBoard-Whales-SoDEX
-
-**✅ Here is the full English translation of the tutorial, with all Markdown formatting preserved and technical terms carefully maintained:**
-
 ---
 
 # 🐋 SoDEX Whale Monitor — Tutorial
