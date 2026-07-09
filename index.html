@@ -14156,17 +14156,82 @@
     ["FECHADO","CLOSED"],
     ["Duração","Duration"],
     ["Alavancagem","Leverage"],
-    ["Tamanho","Size"]
+    ["Tamanho","Size"],
+
+    // ── Recent Movements feed — action verbs missing (were causing partial/
+    //    mixed-language output, e.g. "opened LONG em BTC") ──
+    ["fechado","closed"],
+    ["aberto","opened"],
+    ["executado","executed"],
+    ["reduzida","reduced"],
+    ["atualizado","updated"],
+    ["AUMENTADA","INCREASED"],
+    ["saída parcial","partial exit"],
+
+    // ── Recent closed positions — empty-state message had no entry at all,
+    //    so only the word "posição" inside it was being swapped ──
+    ["Nenhuma posição fechada com os filtros selecionados","No closed positions match the selected filters"],
+
+    // ── Composite Score / Entry Cluster zone labels ──
+    ["Zona:","Zone:"],
+    ["Zona da Baleia","Whale Zone"],
+
+    // ── Panel/sidebar titles that were only partially translating because a
+    //    shorter word inside them (e.g. "Entry"/"Entrada", "positions"/
+    //    "posições") already had its own dictionary entry and got swapped on
+    //    its own, leaving the rest of the title in the other language ──
+    ["Posições Abertas","Open positions"],
+    ["Eventos ao Vivo","Live events"],
+    ["Detecção de Cluster de Entrada","Entry Cluster Detection"],
+    ["Cluster de Entrada","Entry Cluster"],
+    ["Monitor de Saída Inteligente","Smart Exit Monitor"],
+    ["Saída Inteligente","Smart Exit"],
+
+    // ── Sidebar label text that differs slightly (case/wording) from the
+    //    phrasing used elsewhere, so the existing entries didn't match ──
+    ["Wallets Monitoradas","Monitored wallets"],
+    ["Evolução Patrimônio","Portfolio Evolution"],
+
+    // ── Whale Score card — shown when a wallet has no history yet ──
+    ["Sem histórico suficiente","Not enough history"],
+
+    // ── Recent Movements — "increased position" price narrative ──
+    ["adicionou","added"],
+    ["ao preço de","at price"],
+    ["no preço de","at price"]
   ];
 
   // Sort longest-first so multi-word phrases are replaced before their substrings.
   var SORTED = DICT.slice().sort(function(a,b){ return b[0].length - a[0].length; });
+
+  // ── Short connector words (e.g. "em", "no", "para") ────────────────────
+  // These are too short/generic to translate as a normal substring — they'd
+  // wrongly match inside unrelated words (e.g. "em" inside "sistema", "no"
+  // inside "modo"). They only translate when they are the ENTIRE (trimmed)
+  // text of a node, which is how they appear in the Recent Movements feed
+  // (e.g. "...aumentou a posição no <SHORT> em <SPCX-USD>").
+  var EXACT_DICT = [
+    ["em","in"],
+    ["no","on"],
+    ["para","to"],
+    ["saiu de","from"],
+    ["histórico","history"]
+  ];
 
   var currentLang = 'pt';
   var busy = false;
 
   function translateString(str, toEnglish){
     if(!str) return str;
+    var trimmed = str.trim();
+    for(var e=0;e<EXACT_DICT.length;e++){
+      var ePt = EXACT_DICT[e][0], eEn = EXACT_DICT[e][1];
+      var eFrom = toEnglish ? ePt : eEn;
+      var eTo   = toEnglish ? eEn : ePt;
+      if(eFrom && eTo && eFrom !== eTo && trimmed === eFrom){
+        return str.replace(eFrom, eTo);
+      }
+    }
     var out = str;
     for(var i=0;i<SORTED.length;i++){
       var pt = SORTED[i][0], en = SORTED[i][1];
@@ -14191,7 +14256,9 @@
     if(tag === 'SCRIPT' || tag === 'STYLE') return;
 
     // Attributes that carry visible/assistive text
-    ['title','placeholder','aria-label'].forEach(function(attr){
+    // (data-tooltip is included because the collapsed sidebar renders it via
+    // CSS `content: attr(data-tooltip)`, so it's user-visible text too)
+    ['title','placeholder','aria-label','data-tooltip'].forEach(function(attr){
       var v = root.getAttribute && root.getAttribute(attr);
       if(v){
         var nv = translateString(v, toEnglish);
@@ -14216,10 +14283,10 @@
       if(t2 !== node.textContent) node.textContent = t2;
     }
 
-    // Titles/placeholders on descendants too
-    var els = root.querySelectorAll ? root.querySelectorAll('[title],[placeholder],[aria-label]') : [];
+    // Titles/placeholders/tooltips on descendants too
+    var els = root.querySelectorAll ? root.querySelectorAll('[title],[placeholder],[aria-label],[data-tooltip]') : [];
     els.forEach(function(el){
-      ['title','placeholder','aria-label'].forEach(function(attr){
+      ['title','placeholder','aria-label','data-tooltip'].forEach(function(attr){
         var v = el.getAttribute(attr);
         if(v){
           var nv = translateString(v, toEnglish);
