@@ -50,6 +50,16 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    /* Desativa o "scroll anchoring" do navegador em todo o documento.
+       Antes, o overflow-anchor:none estava só no .header, mas o navegador
+       podia escolher outro elemento (abaixo do header) como âncora de
+       rolagem. Quando o header mudava de altura (modo compacto), o browser
+       ajustava o scrollTop sozinho para manter essa âncora no lugar — o que
+       fazia o scrollY cruzar o threshold de novo, alternando o modo
+       compacto sem parar (tremor). Só parava ao chegar em scrollY=0, onde
+       não há mais ajuste possível. Desativando globalmente, o scrollY passa
+       a refletir só a rolagem real do usuário. */
+    overflow-anchor: none;
   }
 
   /* Layered depth: soft brand glow top-left + cool fade, over subtle grain */
@@ -94,6 +104,43 @@
       scroll-behavior: auto !important;
     }
   }
+
+  /* ── LANGUAGE SWITCHER ── */
+  .lang-switch {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 3px;
+    margin-left: 10px;
+    flex-shrink: 0;
+  }
+  .lang-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 22px;
+    border-radius: 7px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    background: transparent;
+    transition: transform 0.16s var(--ease), background 0.16s var(--ease), border-color 0.16s var(--ease), box-shadow 0.16s var(--ease);
+    line-height: 0;
+  }
+  .lang-btn svg { width: 20px; height: 14px; display: block; border-radius: 2px; }
+  .lang-btn:hover {
+    transform: translateY(-1px) scale(1.08);
+    background: var(--bg3);
+  }
+  .lang-btn.active {
+    background: var(--green-dim);
+    border-color: var(--green);
+    box-shadow: 0 0 0 1px var(--green-glow), 0 2px 8px -2px var(--green-glow);
+  }
+  .lang-btn.active:hover { transform: translateY(-1px) scale(1.05); }
 
   /* ── SIDEBAR ── */
   .sidebar {
@@ -3452,6 +3499,14 @@
       SoDEX<span style="color:var(--green);font-weight:800">Whale</span>Monitor
       <span class="ver-badge" style="font-family:var(--mono);font-size:9px;color:var(--muted);font-weight:400;background:var(--bg);border:1px solid var(--border2);padding:2px 7px;border-radius:10px;letter-spacing:1px;text-transform:uppercase">v59</span>
       <span class="monitor-badge" id="monitor-badge" style="display:none"><span class="dot-pulse"></span>Monitorando · 5s</span>
+      <div class="lang-switch" role="group" aria-label="Language selector">
+        <button type="button" class="lang-btn" id="lang-btn-en" title="English" onclick="setDashboardLanguage('en')">
+          <svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#B22234"/><g fill="#fff"><rect y="3" width="60" height="3"/><rect y="9" width="60" height="3"/><rect y="15" width="60" height="3"/><rect y="21" width="60" height="3"/><rect y="27" width="60" height="3"/><rect y="33" width="60" height="3"/></g><rect width="26" height="21" fill="#3C3B6E"/></svg>
+        </button>
+        <button type="button" class="lang-btn active" id="lang-btn-pt" title="Português (Brasil)" onclick="setDashboardLanguage('pt')">
+          <svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#009739"/><polygon points="30,5 56,20 30,35 4,20" fill="#FEDD00"/><circle cx="30" cy="20" r="9" fill="#012169"/></svg>
+        </button>
+      </div>
     </div>
     <div class="header-stats">
       <div class="hstat"><div class="hstat-label">Open</div><div class="hstat-val" id="s-open">—</div></div>
@@ -13789,5 +13844,445 @@
   else start();
 })();
 </script>
+
+<script>
+(function(){
+  'use strict';
+
+  // PT (source) -> EN dictionary. Longest phrases first are handled automatically at build time.
+  var DICT = [
+    ["Selecione a Carteira:","Select Wallet:"],
+    ["Selecionar wallet específica","Select specific wallet"],
+    ["Filtrar todos os painéis por esta wallet","Filter all panels by this wallet"],
+    ["Clique para filtrar todos os painéis por esta wallet","Click to filter all panels by this wallet"],
+    ["Buscar top wallets por PnL","Search top wallets by PnL"],
+    ["até 10 endereços EVM · pressione Aplicar para iniciar rastreamento","up to 10 EVM addresses · press Apply to start tracking"],
+    ["Wallets monitoradas","Monitored wallets"],
+    ["Limpar seleção de ativos","Clear asset selection"],
+    ["Limpar tudo","Clear all"],
+    ["Aplicar","Apply"],
+    ["Minimizar painel","Minimize panel"],
+    ["Minimizar","Minimize"],
+    ["Escuta WS:","WS listen:"],
+    ["Tempo em segundos que o monitor escuta o WS de trades para coletar endereços EVM (mais tempo = mais wallets descobertas)","Time in seconds the monitor listens to the trades WS to collect EVM addresses (more time = more wallets discovered)"],
+    ["Top N:","Top N:"],
+    ["Quantas wallets top preencher nos campos (máx 10)","How many top wallets to fill in the fields (max 10)"],
+    ["Min trades:","Min trades:"],
+    ["Mínimo de trades no histórico para considerar a wallet","Minimum trades in history to consider the wallet"],
+    ["Modo: Erro","Mode: Error"],
+    ["Modo:","Mode:"],
+    ["Falha ao conectar com a SoDEX","Failed to connect to SoDEX"],
+    ["Mark Prices WS","Mark Prices WS"],
+    ["Account Streams WS","Account Streams WS"],
+    ["REST Snapshot","REST Snapshot"],
+    ["Limite IP:","IP Limit:"],
+    ["wallets máx","wallets max"],
+    ["conn","conn"],
+    ["msg/min","msg/min"],
+    ["peso REST/min","REST weight/min"],
+    ["ciclos","cycles"],
+    ["Descobrindo top 10 wallets via Market Trades Stream…","Discovering top 10 wallets via Market Trades Stream…"],
+    ["traders únicos","unique traders"],
+    ["REST bloqueado — problema de CORS","REST blocked — CORS issue"],
+    ["Ao abrir o arquivo direto no navegador (","When opening the file directly in the browser ("],
+    ["), chamadas REST são bloqueadas pela política de segurança do browser. O WebSocket funciona normalmente, mas o","), REST calls are blocked by the browser's security policy. The WebSocket works normally, but the"],
+    ["snapshot inicial de posições não carrega","initial position snapshot does not load"],
+    ["Solução rápida:","Quick fix:"],
+    ["sirva o arquivo via servidor local:","serve the file via a local server:"],
+    ["Depois abra","Then open"],
+    ["O dashboard continua funcionando em modo","The dashboard continues to work in"],
+    ["posições aparecerão quando as carteiras abrirem ou modificarem operações em tempo real.","positions will appear when wallets open or modify trades in real time."],
+    ["Open positions","Open positions"],
+    ["Aguardando dados...","Waiting for data..."],
+    ["Live events","Live events"],
+    ["Aguardando eventos...","Waiting for events..."],
+    ["Operações Abertas","Open Trades"],
+    ["Posições Fechadas","Closed Positions"],
+    ["Composite Score","Composite Score"],
+    ["Exibir/ocultar posições Long fechadas","Show/hide closed Long positions"],
+    ["Exibir/ocultar posições Short fechadas","Show/hide closed Short positions"],
+    ["Exibir/ocultar posições Long abertas","Show/hide open Long positions"],
+    ["Exibir/ocultar posições Short abertas","Show/hide open Short positions"],
+    ["Mostrar somente posições Long abertas","Show only open Long positions"],
+    ["Mostrar somente posições Short abertas","Show only open Short positions"],
+    ["Ordenar por data de abertura","Sort by opening date"],
+    ["Filtrar por ação","Filter by action"],
+    ["Filtrar por direção dominante","Filter by dominant direction"],
+    ["Filtrar por direção","Filter by direction"],
+    ["Peso mínimo da posição","Minimum position weight"],
+    ["Grau de variação das posições","Position variation degree"],
+    ["Posição no Ranking PnL realizado","Position in Realized PnL Ranking"],
+    ["Nº mínimo de baleias no cluster","Min. number of whales in cluster"],
+    ["Consensus mínimo","Minimum Consensus"],
+    ["Conviction mínimo","Minimum Conviction"],
+    ["Heatmap mínimo","Minimum Heatmap"],
+    ["Momentum mínimo","Minimum Momentum"],
+    ["Win Rate mínimo","Minimum Win Rate"],
+    ["Score mínimo","Minimum Score"],
+    ["Mínimo de baleias","Minimum whales"],
+    ["Direção Dominante","Dominant Direction"],
+    ["Evolução do Patrimônio","Portfolio Evolution"],
+    ["Movimentações Recentes","Recent Movements"],
+    ["Histórico de Posições","Position History"],
+    ["Histórico","History"],
+    ["Prob. Histórica","Historical Prob."],
+    ["Próxima página","Next page"],
+    ["Página anterior","Previous page"],
+    ["Copiar endereço","Copy address"],
+    ["Fechar","Close"],
+    ["Liquidação","Liquidation"],
+    ["Preço de liquidação monitorado (SoDEX) — diferente do SL","Monitored liquidation price (SoDEX) — different from SL"],
+    ["Posições & Eventos","Positions & Events"],
+    ["Iniciando...","Starting..."],
+    ["Última Atualização: Xs atrás","Last Update: Xs ago"],
+    ["Última atualização: ","Last update: "],
+    ["m atrás","m ago"],
+    ["s atrás","s ago"],
+    ["Aguardando dados de consensus e conviction...","Waiting for consensus and conviction data..."],
+    ["Aguardando dados de wallets...","Waiting for wallet data..."],
+    ["Aguardando histórico de posições...","Waiting for position history..."],
+    ["Aguardando histórico de wallets...","Waiting for wallet history..."],
+    ["Aguardando mensagens...","Waiting for messages..."],
+    ["Aguardando movimentações...","Waiting for movements..."],
+    ["Aguardando posições abertas...","Waiting for open positions..."],
+    ["Aguardando posições...","Waiting for positions..."],
+    ["Aguardando rankeamento...","Waiting for ranking..."],
+    ["Nenhuma posição aberta","No open positions"],
+    ["Nenhuma posição fechada ainda","No closed positions yet"],
+    ["Nenhuma posição no histórico ainda","No positions in history yet"],
+    ["Nenhuma movimentação para este filtro.","No movements for this filter."],
+    ["Nenhum par com os filtros selecionados...","No pair matches the selected filters..."],
+    ["Nenhum par com os filtros selecionados","No pair matches the selected filters"],
+    ["Nenhum cluster com os filtros selecionados","No cluster matches the selected filters"],
+    ["Nenhum ativo com os filtros selecionados","No asset matches the selected filters"],
+    ["Sem posições abertas nas wallets selecionadas","No open positions in the selected wallets"],
+    ["Sem histórico suficiente para ranquear...","Not enough history to rank..."],
+    ["Histórico insuficiente (mínimo 3 sinais por par)...","Insufficient history (minimum 3 signals per pair)..."],
+    ["Nenhuma wallet ativa","No active wallet"],
+    ["Nenhuma wallet selecionada — clique em um nome para exibir","No wallet selected — click a name to display"],
+    ["Sem dados históricos","No historical data"],
+    ["Sem histórico para esta wallet — use ","No history for this wallet — use "],
+    ["Sem traders — edite LIVE_WALLETS no código","No traders — edit LIVE_WALLETS in the code"],
+    ["Sem trades — adicione endereços em LIVE_WALLETS","No trades — add addresses in LIVE_WALLETS"],
+    ["Nenhum trader coletado. Adicione endereços em LIVE_WALLETS.","No trader collected. Add addresses in LIVE_WALLETS."],
+    ["Dados insuficientes para o período selecionado","Insufficient data for the selected period"],
+    ["Auto-fetch histórico completo iniciado após Aplicar","Full history auto-fetch started after Apply"],
+    ["Buscando funding fees...","Fetching funding fees..."],
+    ["Buscando posições fechadas...","Fetching closed positions..."],
+    ["Buscando top wallets no leaderboard da SoDEX…","Fetching top wallets on the SoDEX leaderboard…"],
+    ["Buscando…","Searching…"],
+    ["Concluído!","Done!"],
+    ["Conectando WebSocket…","Connecting WebSocket…"],
+    ["Construindo curva de patrimônio...","Building portfolio curve..."],
+    ["Erro no WebSocket de descoberta — verifique conexão","Discovery WebSocket error — check connection"],
+    ["Erro no WebSocket principal — reconectando…","Main WebSocket error — reconnecting…"],
+    ["Estável","Stable"],
+    ["Fase 0: leaderboard não retornou endereços. ","Phase 0: leaderboard did not return addresses. "],
+    ["Forte dominância LONG","Strong LONG dominance"],
+    ["Forte dominância SHORT","Strong SHORT dominance"],
+    ["Iniciando busca...","Starting search..."],
+    ["Leve inclinação LONG","Slight LONG lean"],
+    ["Leve inclinação SHORT","Slight SHORT lean"],
+    ["Leve predominância LONG","Slight LONG predominance"],
+    ["Leve predominância SHORT","Slight SHORT predominance"],
+    ["Modo: Live","Mode: Live"],
+    ["Médio","Medium"],
+    ["Ping enviado → aguardando pong…","Ping sent → waiting for pong…"],
+    ["Pong não recebido — reconectando…","Pong not received — reconnecting…"],
+    ["Patrimônio Total (perp + spot)","Total Equity (perp + spot)"],
+    ["Proxy CORS ativo — REST funcionando via corsproxy.io","CORS proxy active — REST working via corsproxy.io"],
+    ["Saída","Exit"],
+    ["Sem histórico para esta wallet","No history for this wallet"],
+    ["WS ativo — carregando snapshots REST…","WS active — loading REST snapshots…"],
+    ["WS discovery: conectado","WS discovery: connected"],
+    ["Wallets atualizadas — reiniciando monitoramento…","Wallets updated — restarting monitoring…"],
+    ["abertura","opening"],
+    ["reduziu posição em","reduced position by"],
+    ["aumentou a posição no","increased position on"],
+    ["fez saída parcial de","made a partial exit of"],
+    ["adicionou $X ao preço de $Y","added $X at price $Y"],
+    ["Abertura ","Opening "],
+    ["Ativo:","Asset:"],
+    ["Ação:","Action:"],
+    ["Ação","Action"],
+    ["Baleias ≥:","Whales ≥:"],
+    ["Baleias:","Whales:"],
+    ["Close","Close"],
+    ["Cluster","Cluster"],
+    ["Consensus ≥:","Consensus ≥:"],
+    ["Consensus","Consensus"],
+    ["Conviction ≥:","Conviction ≥:"],
+    ["Conviction","Conviction"],
+    ["Data Abertura","Open Date"],
+    ["Data Fechamento","Close Date"],
+    ["Detalhes das wallets monitoradas","Details of monitored wallets"],
+    ["Dir","Dir"],
+    ["Direção:","Direction:"],
+    ["Entrada","Entry"],
+    ["Fechada","Closed"],
+    ["Fee","Fee"],
+    ["Gates","Gates"],
+    ["Heatmap ≥:","Heatmap ≥:"],
+    ["Heatmap","Heatmap"],
+    ["Horário","Time"],
+    ["Incremento:","Increment:"],
+    ["LIQ","LIQ"],
+    ["Lev","Lev"],
+    ["Linhas:","Rows:"],
+    ["Live data","Live data"],
+    ["Long aberto","Long open"],
+    ["Long","Long"],
+    ["Mark","Mark"],
+    ["Market","Market"],
+    ["Mode","Mode"],
+    ["Momentum ≥:","Momentum ≥:"],
+    ["Momentum","Momentum"],
+    ["Motivo","Reason"],
+    ["Operações abertas","Open trades"],
+    ["Par:","Pair:"],
+    ["Par","Pair"],
+    ["Período:","Period:"],
+    ["Peso ≥100k","Weight ≥100k"],
+    ["Peso ≥10k","Weight ≥10k"],
+    ["Peso ≥1M","Weight ≥1M"],
+    ["Peso ≥500k","Weight ≥500k"],
+    ["Peso ≥50k","Weight ≥50k"],
+    ["PnL (USDC) ","PnL (USDC) "],
+    ["PnL Final","Final PnL"],
+    ["PnL Total Atual","Current Total PnL"],
+    ["PnL por Wallet","PnL by Wallet"],
+    ["PnL:","PnL:"],
+    ["PnL Total","Total PnL"],
+    ["PnL","PnL"],
+    ["Posições fechadas recentes","Recent closed positions"],
+    ["Qualquer peso","Any weight"],
+    ["Ranking PnL realizado","Realized PnL Ranking"],
+    ["Resultado:","Result:"],
+    ["Resultado","Result"],
+    ["SL","SL"],
+    ["Saída Parcial","Partial Exit"],
+    ["Score ≥:","Score ≥:"],
+    ["Score","Score"],
+    ["Selecione...","Select..."],
+    ["Short aberto","Short open"],
+    ["Short","Short"],
+    ["Side","Side"],
+    ["Size (USDC)","Size (USDC)"],
+    ["Size ","Size "],
+    ["Size","Size"],
+    ["Status","Status"],
+    ["TP","TP"],
+    ["Todas","All"],
+    ["Todos ativos","All assets"],
+    ["Todos os ativos","All assets"],
+    ["Todos os graus","All degrees"],
+    ["Todos","All"],
+    ["Top 1","Top 1"],
+    ["Top 10 Wallets — ranking por PnL","Top 10 Wallets — ranking by PnL"],
+    ["Top 2","Top 2"],
+    ["Top 3","Top 3"],
+    ["Top 5","Top 5"],
+    ["Trades","Trades"],
+    ["Tudo","All"],
+    ["Ver todas","View all"],
+    ["Wallet:","Wallet:"],
+    ["Wallet","Wallet"],
+    ["Win Rate ≥:","Win Rate ≥:"],
+    ["Win%","Win%"],
+    ["Exit%","Exit%"],
+    ["Entry","Entry"],
+    ["Longs","Longs"],
+    ["Shorts","Shorts"],
+    ["Open","Open"],
+    ["Wallets","Wallets"],
+    ["o campo side é retornado sempre como BOTH","the side field is always returned as BOTH"],
+    ["quase iguais mas não idênticas","almost equal but not identical"],
+    ["Monitorando","Monitoring"],
+
+    // ── Additional terms found untranslated in the Whale Monitor panels ──
+    ["Predominância de Direção","Direction Predominance"],
+    ["Baseado em posições abertas das wallets selecionadas","Based on open positions of selected wallets"],
+    ["Mercado neutro — sem predominância clara","Neutral market — no clear predominance"],
+    ["das posições","of positions"],
+    ["posições","positions"],
+    ["posição","position"],
+    ["Portfólio Total","Total Portfolio"],
+    ["Agregata PnL","Aggregate PnL"],
+    ["Soma de todas as wallets ativas","Sum of all active wallets"],
+    ["Clique para exibir","Click to show"],
+    ["Clique para ocultar","Click to hide"],
+    ["DESDE","SINCE"],
+    ["WS conectado","WS connected"],
+    ["Snapshots carregados:","Snapshots loaded:"],
+    ["wallets carregadas de LIVE_WALLETS","wallets loaded from LIVE_WALLETS"],
+    ["carregadas do painel de input","loaded from the input panel"],
+    ["wallets preenchidas","wallets filled"],
+    ["PnL combinado:","Combined PnL:"],
+    ["Leaderboard não retornou dados. ","Leaderboard did not return data. "],
+    ["Verifique conectividade com mainnet-data.sodex.dev ou adicione endereços manualmente.","Check connectivity with mainnet-data.sodex.dev or add addresses manually."],
+    ["Estimativa client-side (margem isolada, MMR aprox. 0.5%) — SoDEX ainda não retornou o valor oficial","Client-side estimate (isolated margin, approx. 0.5% MMR) — SoDEX has not returned the official value yet"],
+    ["Anterior:","Previous:"],
+    ["Peso Long:","Weight Long:"],
+    ["Pico:","Peak:"],
+    ["baleias","whales"],
+    ["baleia","whale"],
+    ["pares","pairs"],
+    ["ativos","assets"],
+    ["ativo","asset"],
+    ["Alto","High"],
+    ["Baixo","Low"],
+    ["Aumento","Increase"],
+    ["Redução","Reduction"],
+    ["LIQUIDAÇÃO","LIQUIDATION"],
+    ["abriu em","opened at"],
+    ["fechou em","closed at"],
+    ["abriu o","opened"],
+    ["fechou o","closed"],
+    ["preço atual","current price"],
+    ["retorno","return"],
+    ["alavancado em","leveraged at"],
+    ["no valor de","worth"],
+    ["Aberta há","Open for"],
+    ["Buscar histórico completo","Fetch full history"],
+    ["Busca todo o histórico de trades e funding desde o início da wallet","Fetches the entire trade and funding history since the wallet's start"],
+    ["para carregar dados","to load data"],
+
+    // ── Risk Score badges, chart tooltip popup, and panel headers ──
+    ["Risk Score do Mercado","Market Risk Score"],
+    ["Probabilidade Histórica","Historical Probability"],
+    ["Forte","Strong"],
+    ["Fraco","Weak"],
+    ["ABERTO","OPEN"],
+    ["FECHADO","CLOSED"],
+    ["Duração","Duration"],
+    ["Alavancagem","Leverage"],
+    ["Tamanho","Size"]
+  ];
+
+  // Sort longest-first so multi-word phrases are replaced before their substrings.
+  var SORTED = DICT.slice().sort(function(a,b){ return b[0].length - a[0].length; });
+
+  var currentLang = 'pt';
+  var busy = false;
+
+  function translateString(str, toEnglish){
+    if(!str) return str;
+    var out = str;
+    for(var i=0;i<SORTED.length;i++){
+      var pt = SORTED[i][0], en = SORTED[i][1];
+      var from = toEnglish ? pt : en;
+      var to = toEnglish ? en : pt;
+      if(from && to && from !== to && out.indexOf(from) !== -1){
+        out = out.split(from).join(to);
+      }
+    }
+    return out;
+  }
+
+  function walkAndTranslate(root, toEnglish){
+    if(!root) return;
+    if(root.nodeType === 3){
+      var t = translateString(root.textContent, toEnglish);
+      if(t !== root.textContent) root.textContent = t;
+      return;
+    }
+    if(root.nodeType !== 1) return;
+    var tag = root.tagName;
+    if(tag === 'SCRIPT' || tag === 'STYLE') return;
+
+    // Attributes that carry visible/assistive text
+    ['title','placeholder','aria-label'].forEach(function(attr){
+      var v = root.getAttribute && root.getAttribute(attr);
+      if(v){
+        var nv = translateString(v, toEnglish);
+        if(nv !== v) root.setAttribute(attr, nv);
+      }
+    });
+
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: function(node){
+        var p = node.parentElement;
+        if(!p) return NodeFilter.FILTER_REJECT;
+        if(p.tagName === 'SCRIPT' || p.tagName === 'STYLE') return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var nodes = [];
+    var n;
+    while((n = walker.nextNode())) nodes.push(n);
+    for(var i=0;i<nodes.length;i++){
+      var node = nodes[i];
+      var t2 = translateString(node.textContent, toEnglish);
+      if(t2 !== node.textContent) node.textContent = t2;
+    }
+
+    // Titles/placeholders on descendants too
+    var els = root.querySelectorAll ? root.querySelectorAll('[title],[placeholder],[aria-label]') : [];
+    els.forEach(function(el){
+      ['title','placeholder','aria-label'].forEach(function(attr){
+        var v = el.getAttribute(attr);
+        if(v){
+          var nv = translateString(v, toEnglish);
+          if(nv !== v) el.setAttribute(attr, nv);
+        }
+      });
+    });
+  }
+
+  function updateButtons(){
+    var enBtn = document.getElementById('lang-btn-en');
+    var ptBtn = document.getElementById('lang-btn-pt');
+    if(enBtn) enBtn.classList.toggle('active', currentLang === 'en');
+    if(ptBtn) ptBtn.classList.toggle('active', currentLang === 'pt');
+  }
+
+  window.setDashboardLanguage = function(lang){
+    if(lang === currentLang) return;
+    busy = true;
+    try {
+      walkAndTranslate(document.body, lang === 'en');
+      document.documentElement.lang = (lang === 'en') ? 'en' : 'pt-BR';
+      currentLang = lang;
+      updateButtons();
+    } finally {
+      busy = false;
+    }
+  };
+
+  // Keep newly-rendered / re-rendered content in English while EN is selected,
+  // since the underlying app always renders its strings in Portuguese.
+  var observer = new MutationObserver(function(mutations){
+    if(busy || currentLang !== 'en') return;
+    busy = true;
+    try {
+      for(var i=0;i<mutations.length;i++){
+        var m = mutations[i];
+        if(m.type === 'characterData'){
+          var p = m.target.parentElement;
+          if(p) walkAndTranslate(p, true);
+        } else if(m.type === 'childList'){
+          m.addedNodes.forEach(function(node){
+            if(node.nodeType === 1){
+              walkAndTranslate(node, true);
+            } else if(node.nodeType === 3){
+              walkAndTranslate(node, true);
+            }
+          });
+        }
+      }
+    } finally {
+      busy = false;
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', function(){
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+  });
+  if(document.readyState === 'complete' || document.readyState === 'interactive'){
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+  }
+})();
+</script>
+
 </body>
 </html>
