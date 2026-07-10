@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SoDEX Whale Monitor v59</title>
-<link rel="icon" type="image/png" href="/favicon.png">
+<!-- lembre de incrementar v= a cada troca de ícone (mantenha o arquivo sempre como favicon.png no GitHub) -->
+<link rel="icon" type="image/png" href="/favicon.png?v=2">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Syne:wght@400;500;600;700;800&display=swap');
 
@@ -2629,6 +2630,8 @@
   .smt-table th { padding: 6px 10px; text-align: left; font-size: 9px; font-weight: 600; letter-spacing: 0.7px; text-transform: uppercase; color: var(--muted2); white-space: nowrap; }
   .smt-table th.r { text-align: right; }
   .smt-table th.c { text-align: center; }
+  .smt-table td.r { text-align: right; }
+  .smt-table td.c { text-align: center; }
   .smt-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; white-space: nowrap; }
   .smt-table tr:last-child td { border-bottom: none; }
   .smt-table tr { transition: background 0.1s; }
@@ -2667,6 +2670,38 @@
   .smt-gate-dot.warn{ background: var(--amber); }
   .smt-empty { color: var(--muted2); font-size: 11px; padding: 20px 14px; }
   .smt-json-output { display: none; }
+  /* ── CTS — seletor independente de wallets do painel "Sinais de Copy Trade" ── */
+  .cts-wallet-select {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+  }
+  .cts-wallet-empty-hint { font-size: 10px; color: var(--muted2); font-style: italic; }
+  .cts-wallet-chip {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 9.5px; font-family: var(--mono); letter-spacing: 0.3px;
+    color: var(--muted); border: 1px solid var(--border2); border-radius: 999px;
+    background: var(--bg3); padding: 5px 10px 5px 8px; cursor: pointer;
+    user-select: none; transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.12s;
+  }
+  .cts-wallet-chip:hover { background: var(--bg4); border-color: var(--border3); color: var(--text); transform: translateY(-1px); }
+  .cts-wallet-chip.cts-active {
+    background: rgba(0,224,122,0.10); border-color: rgba(0,224,122,0.45); color: var(--text);
+  }
+  .cts-wallet-chip .cts-chk {
+    width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--border3);
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    background: var(--bg4); font-size: 8px; line-height: 1; color: transparent;
+  }
+  .cts-wallet-chip.cts-active .cts-chk { background: var(--green); border-color: var(--green); color: #06110b; }
+  .cts-wallet-chip .cts-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .cts-wallet-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+  .cts-wallet-actions button {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.3px; text-transform: uppercase;
+    color: var(--muted); background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px;
+    padding: 4px 8px; cursor: pointer; transition: background 0.15s, color 0.15s;
+  }
+  .cts-wallet-actions button:hover { background: var(--bg4); color: var(--text); }
   .smt-filter-bar {
     display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
     padding: 6px 14px; border-bottom: 1px solid var(--border); background: var(--bg3);
@@ -3452,6 +3487,10 @@
       <span class="sidebar-item-icon">📋</span>
       <span class="sidebar-item-label">Signal Master Table</span>
     </a>
+    <a class="sidebar-item" data-target="cts-panel" data-tooltip="Sinais de Copy Trade" onclick="sidebarNav(this)">
+      <span class="sidebar-item-icon">🤖</span>
+      <span class="sidebar-item-label">Sinais de Copy Trade</span>
+    </a>
     <a class="sidebar-item" data-target="cs-panel" data-tooltip="Composite Score" onclick="sidebarNav(this)">
       <span class="sidebar-item-icon">🎯</span>
       <span class="sidebar-item-label">Composite Score</span>
@@ -4078,6 +4117,45 @@
     <pre class="smt-json-output" id="whale-signal-json"></pre>
   </div>
 
+  <!-- COPY TRADE SIGNALS — feed de execução para bot externo. Painel
+       INDEPENDENTE: possui seu próprio seletor de wallets (multi-seleção,
+       ver #cts-wallet-select / _ctsSelectedWallets), sem depender do
+       filtro ou da legenda do gráfico "Evolução Patrimônio". -->
+  <div class="smt-panel" id="cts-panel">
+    <div class="smt-head">
+      <span>🤖 Sinais de Copy Trade</span>
+      <span class="panel-count" id="cts-count">0 sinais</span>
+      <button class="btn-panel-minimize" onclick="togglePanelMinimize('cts-panel',this)" title="Minimizar"></button>
+    </div>
+    <div class="cts-wallet-select" id="cts-wallet-select">
+      <span class="cts-wallet-empty-hint">Nenhuma wallet monitorada ainda...</span>
+    </div>
+    <div style="padding:6px 14px;font-size:10px;color:var(--muted);border-bottom:1px solid var(--border)" id="cts-subtitle">
+      Selecione uma ou mais wallets acima para gerar sinais aqui.
+    </div>
+    <div class="smt-wrap">
+      <table class="smt-table" id="cts-table">
+        <thead>
+          <tr>
+            <th>Wallet</th>
+            <th>Moeda</th>
+            <th>Data</th>
+            <th>Direção</th>
+            <th class="r">Entrada</th>
+            <th class="r">Stop Loss</th>
+            <th class="r">Take Profit</th>
+            <th class="r">Desempenho</th>
+            <th class="c">Status</th>
+          </tr>
+        </thead>
+        <tbody id="cts-body">
+          <tr><td colspan="9" class="smt-empty">Selecione uma ou mais wallets acima</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <pre class="smt-json-output" id="copytrade-signal-json"></pre>
+  </div>
+
   <!-- COMPOSITE SCORE -->
   <div class="cs-panel" id="cs-panel">
     <div class="cs-head">
@@ -4630,7 +4708,7 @@
     // Scroll to target
     var target = document.getElementById(targetId);
     if (target) {
-      var offset = 72;
+      var offset = 100;
       var top = target.getBoundingClientRect().top + window.pageYOffset - offset;
       window.scrollTo({ top: top, behavior: 'smooth' });
     }
@@ -13214,6 +13292,289 @@
     }
   }
 
+  /* ── COPY TRADE SIGNALS ───────────────────────────────────────────────────
+     Painel dedicado a expor, de forma estável e legível por um bot externo,
+     os sinais de entrada/saída das wallets ATIVAS no gráfico "Evolução
+     Patrimônio" (mesmo conjunto que aparece com cor no gráfico: respeita o
+     filtro #patrimony-wallet-filter — Todas/Top N/wallet individual — e as
+     wallets ocultas manualmente via clique na legenda, _patrimonyHiddenWallets).
+     Suporta múltiplas wallets simultaneamente.
+
+     É uma projeção derivada e somente-leitura do array `positions` (já
+     mantido pelos handlers de WS/REST existentes) — não introduz nenhum
+     evento novo nem duplica lógica de detecção, então não há risco de
+     desalinhar com o estado real de posições.
+
+     signal.entrySignal fica CONGELADO no instante em que o par passa a
+     existir para uma wallet ativa (abertura real detectada, ou posição já
+     aberta no momento em que a wallet entra no conjunto ativo) — é essa
+     referência, e não o avgEntryPrice ao vivo, que alimenta "desempenho
+     desde o sinal", mesmo que a whale reforce a posição depois e o preço
+     médio mude. TP/SL exibidos são os valores REAIS de ordens da whale
+     (mesmo campo `pos.tp`/`pos.sl` já parseado em hydrateWalletState/
+     handleOrderUpdate) — quando a whale não tem stop configurado, aparece
+     "—" em vez de um valor sintético.
+
+     Todo o corpo roda dentro de try/catch: um erro aqui nunca deve
+     interromper as demais renderizações do ciclo renderAll(). ── */
+  // Seleção de wallets do painel "Sinais de Copy Trade" — INDEPENDENTE do
+  // gráfico "Evolução Patrimônio" (não usa trackedWallets-filter nem
+  // _patrimonyHiddenWallets). Guarda endereços em minúsculo.
+  let _ctsSelectedWallets = new Set();
+
+  function ctsToggleWallet(addr) {
+    if (!addr) return;
+    const key = addr.toLowerCase();
+    if (_ctsSelectedWallets.has(key)) _ctsSelectedWallets.delete(key);
+    else _ctsSelectedWallets.add(key);
+    renderCtsWalletSelect();
+    renderCopyTradeSignals();
+  }
+
+  function ctsSelectAllWallets() {
+    (typeof trackedWallets !== 'undefined' ? trackedWallets : []).forEach(a => _ctsSelectedWallets.add(a.toLowerCase()));
+    renderCtsWalletSelect();
+    renderCopyTradeSignals();
+  }
+
+  function ctsClearWallets() {
+    _ctsSelectedWallets.clear();
+    renderCtsWalletSelect();
+    renderCopyTradeSignals();
+  }
+
+  // Desenha a área de seleção de wallets do painel CTS (checkboxes/chips).
+  // Roda a cada ciclo de renderAll() para acompanhar novas wallets
+  // monitoradas, preservando a seleção já feita pelo usuário.
+  function renderCtsWalletSelect() {
+    try {
+      const el = document.getElementById('cts-wallet-select');
+      if (!el) return;
+      const wallets = (typeof trackedWallets !== 'undefined' ? trackedWallets : []);
+      if (!wallets.length) {
+        el.innerHTML = '<span class="cts-wallet-empty-hint">Nenhuma wallet monitorada ainda...</span>';
+        return;
+      }
+      const chips = wallets.map(addr => {
+        const lc = addr.toLowerCase();
+        const active = _ctsSelectedWallets.has(lc);
+        const label = shortAddr(addr);
+        const wc = walletColor(addr);
+        return `<div class="cts-wallet-chip${active ? ' cts-active' : ''}" data-addr="${addr}" onclick="ctsToggleWallet('${addr}')" title="${addr}">
+          <span class="cts-chk">${active ? '✓' : ''}</span>
+          <span class="cts-dot" style="background:${wc}"></span>
+          <span>${label}</span>
+        </div>`;
+      }).join('');
+      const actions = `<div class="cts-wallet-actions">
+          <button type="button" onclick="ctsSelectAllWallets()" title="Selecionar todas as wallets monitoradas">Todas</button>
+          <button type="button" onclick="ctsClearWallets()" title="Limpar seleção">Limpar</button>
+        </div>`;
+      el.innerHTML = chips + actions;
+    } catch (e) {
+      if (typeof debugLog === 'function') debugLog('renderCtsWalletSelect: ' + (e && e.message || e), 'err');
+    }
+  }
+
+  const _ctsRegistry = {}; // key "addrLowerCase|pair" → signal (histórico da sessão)
+
+  // Wallets ativas do painel CTS: vêm exclusivamente da seleção própria do
+  // painel (_ctsSelectedWallets, controlada pelos chips em #cts-wallet-select),
+  // sem qualquer relação com o filtro ou a legenda do gráfico "Evolução
+  // Patrimônio". Isso é o que torna o painel "Sinais de Copy Trade" um campo
+  // independente, conforme solicitado.
+  function _getCtsSelectedWallets() {
+    try {
+      if (typeof trackedWallets === 'undefined' || !trackedWallets.length) return [];
+      return trackedWallets.filter(a => _ctsSelectedWallets.has(a.toLowerCase()));
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // Mantida apenas por compatibilidade histórica (não é mais usada pelo
+  // painel CTS, que agora tem seleção própria — ver _getCtsSelectedWallets).
+  function _getPatrimonySelectedWallets() {
+    try {
+      if (typeof trackedWallets === 'undefined' || !trackedWallets.length) return [];
+      const walFilter = (document.getElementById('patrimony-wallet-filter') || {}).value || 'all';
+      const isTopN = walFilter !== 'all' && /^\d+$/.test(walFilter);
+      const isIndividual = walFilter && walFilter !== 'all' && !isTopN;
+      const isAll = walFilter === 'all';
+
+      let wallets;
+      if (isIndividual) {
+        wallets = trackedWallets.filter(a =>
+          a.toLowerCase() === walFilter.toLowerCase() &&
+          walletEnabled[a.toLowerCase()] !== false
+        );
+      } else {
+        wallets = trackedWallets.filter(addr =>
+          walletEnabled[addr.toLowerCase()] !== false &&
+          patrimonyHistory[addr] && patrimonyHistory[addr].length >= 1
+        );
+        if (isTopN) {
+          const n = parseInt(walFilter, 10);
+          wallets = [...wallets].sort((a, b) => {
+            const pa = patrimonyHistory[a]; const pb = patrimonyHistory[b];
+            const va = pa ? (pa[pa.length - 1].value ?? pa[pa.length - 1].pnl ?? 0) : 0;
+            const vb = pb ? (pb[pb.length - 1].value ?? pb[pb.length - 1].pnl ?? 0) : 0;
+            return vb - va;
+          }).slice(0, n);
+        }
+        if (isAll) {
+          wallets = wallets.filter(a => !_patrimonyHiddenWallets.has(a.toLowerCase()));
+        }
+      }
+      return wallets;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function renderCopyTradeSignals() {
+    try {
+      const tbody = document.getElementById('cts-body');
+      const cnt   = document.getElementById('cts-count');
+      const jsonEl= document.getElementById('copytrade-signal-json');
+      const subEl = document.getElementById('cts-subtitle');
+      if (!tbody) return;
+
+      renderCtsWalletSelect();
+
+      const activeWallets = _getCtsSelectedWallets();
+      const activeLc = new Set(activeWallets.map(a => a.toLowerCase()));
+
+      if (!activeWallets.length) {
+        tbody.innerHTML = '<tr><td colspan="9" class="smt-empty">Selecione uma ou mais wallets acima</td></tr>';
+        if (cnt) cnt.textContent = '0 sinais';
+        if (subEl) subEl.textContent = 'Selecione uma ou mais wallets acima para gerar sinais aqui.';
+        if (jsonEl) jsonEl.textContent = JSON.stringify({ ts: new Date().toISOString(), wallets: [], signals: [] });
+        return;
+      }
+
+      const openNow  = positions.filter(p => activeLc.has((p.addr || '').toLowerCase()));
+      const openKeys = new Set(openNow.map(p => (p.addr || '').toLowerCase() + '|' + p.pair));
+
+      // Cria/atualiza sinais para posições atualmente abertas nas wallets ativas
+      openNow.forEach(p => {
+        const addrLc = (p.addr || '').toLowerCase();
+        const key = addrLc + '|' + p.pair;
+        let sig = _ctsRegistry[key];
+        if (!sig || sig.status === 'closed' || sig.side !== p.side) {
+          // Nova entrada nesta wallet+par: abertura real, reversão de lado,
+          // ou primeira vez que esta wallet entra no conjunto ativo com o par já aberto.
+          sig = {
+            id: key + '|' + (p.openedAtTs || Date.now()),
+            addr: p.addr,
+            wallet: p.wallet,
+            symbol: p.pair,
+            side: p.side,
+            entrySignal: p.entry,
+            openedAtTs: p.openedAtTs || Date.now(),
+            openedAt: p.openedAt || '—',
+            status: 'open',
+            lastPerfPct: 0,
+            closedAtTs: null,
+            closedAt: null
+          };
+          _ctsRegistry[key] = sig;
+        }
+        // TP/SL reais e desempenho são atualizados ao vivo enquanto aberto
+        sig.tp = (p.tp != null) ? p.tp : null;
+        sig.sl = (p.sl != null) ? p.sl : null;
+        const markLive = markPrices[p.pair] || p.mark || p.entry;
+        if (sig.entrySignal > 0 && markLive > 0) {
+          sig.lastPerfPct = sig.side === 'LONG'
+            ? ((markLive - sig.entrySignal) / sig.entrySignal) * 100
+            : ((sig.entrySignal - markLive) / sig.entrySignal) * 100;
+        }
+      });
+
+      // Marca como FECHADO qualquer sinal aberto de uma wallet ATIVA sem
+      // posição correspondente. Wallets que saíram do conjunto ativo (filtro
+      // trocado ou ocultadas na legenda) são ignoradas aqui de propósito —
+      // não fecham o sinal só por terem ficado fora da visão atual.
+      Object.keys(_ctsRegistry).forEach(key => {
+        const sig = _ctsRegistry[key];
+        if (!sig.addr) return;
+        const addrLc = sig.addr.toLowerCase();
+        if (!activeLc.has(addrLc)) return;
+        if (sig.status === 'open' && !openKeys.has(key)) {
+          sig.status = 'closed';
+          sig.closedAtTs = Date.now();
+          const d = new Date(sig.closedAtTs);
+          const pad = n => String(n).padStart(2, '0');
+          sig.closedAt = `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+          // lastPerfPct permanece congelado com o último valor calculado antes do fechamento
+        }
+      });
+
+      const list = Object.values(_ctsRegistry)
+        .filter(s => s.addr && activeLc.has(s.addr.toLowerCase()))
+        .sort((a, b) => (b.openedAtTs || 0) - (a.openedAtTs || 0))
+        .slice(0, 200);
+
+      const walletWord = activeWallets.length === 1 ? 'wallet' : 'wallets';
+      if (subEl) subEl.textContent = `Seguindo ${activeWallets.length} ${walletWord} selecionada${activeWallets.length === 1 ? '' : 's'} — atualizado a cada ${Math.round(RENDER_MS / 1000)}s`;
+
+      if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="9" class="smt-empty">Aguardando posições das wallets selecionadas...</td></tr>';
+        if (cnt) cnt.textContent = '0 sinais';
+        if (jsonEl) jsonEl.textContent = JSON.stringify({ ts: new Date().toISOString(), wallets: activeWallets, signals: [] });
+        return;
+      }
+
+      tbody.innerHTML = list.map(s => {
+        const dirCls    = s.side === 'LONG' ? 'b-long' : 'b-short';
+        const perfCls   = s.lastPerfPct >= 0 ? 'pnl-pos' : 'pnl-neg';
+        const perfStr   = (s.lastPerfPct >= 0 ? '+' : '') + s.lastPerfPct.toFixed(2) + '%';
+        const statusBadge = s.status === 'open'
+          ? '<span class="badge b-open">ABERTO</span>'
+          : '<span class="badge">FECHADO</span>';
+        const dateStr = s.status === 'open' ? s.openedAt : (s.closedAt || s.openedAt);
+        const wc = walletColor(s.addr);
+        return `<tr data-signal-id="${s.id}" data-wallet="${s.addr}" data-symbol="${s.symbol}" data-direction="${s.side}" data-entry="${s.entrySignal}" data-sl="${s.sl != null ? s.sl : ''}" data-tp="${s.tp != null ? s.tp : ''}" data-perf-pct="${s.lastPerfPct.toFixed(4)}" data-status="${s.status}" data-opened-ts="${s.openedAtTs || ''}" data-closed-ts="${s.closedAtTs || ''}">
+          <td class="wallet-addr" title="${s.addr || ''}"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${wc};margin-right:4px;vertical-align:middle;flex-shrink:0"></span>${s.wallet}</td>
+          <td class="pair-sym">${s.symbol}</td>
+          <td style="color:var(--muted);font-size:10px">${dateStr || '—'}</td>
+          <td><span class="badge ${dirCls}">${s.side}</span></td>
+          <td class="r">${fmt(s.entrySignal)}</td>
+          <td class="r sl-val">${s.sl != null ? fmt(s.sl) : '—'}</td>
+          <td class="r tp-val">${s.tp != null ? fmt(s.tp) : '—'}</td>
+          <td class="r ${perfCls}">${perfStr}</td>
+          <td class="c">${statusBadge}</td>
+        </tr>`;
+      }).join('');
+
+      if (cnt) cnt.textContent = list.length + ' sinal' + (list.length !== 1 ? 'is' : '');
+
+      if (jsonEl) {
+        jsonEl.textContent = JSON.stringify({
+          ts: new Date().toISOString(),
+          wallets: activeWallets,
+          signals: list.map(s => ({
+            id: s.id,
+            wallet: s.addr,
+            symbol: s.symbol,
+            direction: s.side,
+            opened_at: s.openedAtTs,
+            entry_price: s.entrySignal,
+            stop_loss: s.sl,
+            take_profit: s.tp,
+            performance_pct: Number(s.lastPerfPct.toFixed(4)),
+            status: s.status,
+            closed_at: s.closedAtTs
+          }))
+        }, null, 2);
+      }
+    } catch (e) {
+      // Nunca deixa um erro aqui interromper o restante do ciclo renderAll().
+      if (typeof debugLog === 'function') debugLog('renderCopyTradeSignals: ' + (e && e.message || e), 'err');
+    }
+  }
+
+
   function renderCompositeScore() {
     const body = document.getElementById('cs-body');
     const cnt  = document.getElementById('cs-count');
@@ -13380,6 +13741,7 @@
     renderOpsTable();
     renderClosedTable();
     renderHistoryTable();
+    renderCopyTradeSignals();
   }
 
   // Loop de render visual — redesenha a tela a cada RENDER_MS.
@@ -13745,7 +14107,8 @@
     boom:       '<path d="m12 2 2 5 5-2-2 5 5 2-5 2 2 5-5-2-2 5-2-5-5 2 2-5-5-2 5-2-2-5 5 2z"/>',
     scale:      '<path d="M12 3v18M6 21h12M5 7h14M5 7l-2 6h4zM19 7l-2 6h4z"/><path d="M3 13a2 2 0 0 0 4 0M17 13a2 2 0 0 0 4 0"/>',
     map:        '<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/>',
-    arrowRight: '<path d="M5 12h14M13 6l6 6-6 6"/>'
+    arrowRight: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+    robot:      '<path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2M20 14h2M9 13v2M15 13v2"/>'
   };
   // Emoji → icon key
   var MAP = {
@@ -13755,7 +14118,7 @@
     '📉':'trendDown','📂':'folder','✅':'check','🗂':'files','🗂️':'files','🔍':'search',
     '⚡':'bolt','🌡':'thermometer','🌡️':'thermometer','🔬':'microscope','❌':'block','🚫':'block',
     '⏳':'hourglass','💥':'boom','⚖':'scale','⚖️':'scale','📋':'clipboard','📁':'folder',
-    '➡':'arrowRight','➡️':'arrowRight'
+    '➡':'arrowRight','➡️':'arrowRight','🤖':'robot'
   };
   // Colored circle emoji → status dot color
   var DOT = { '🟢':'var(--green)', '🔴':'var(--red)', '🟡':'var(--amber)', '🟠':'var(--amber)', '🔵':'var(--blue)' };
