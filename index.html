@@ -3209,6 +3209,10 @@
   .panel-collapsed .patrimony-body,
   .panel-collapsed .patrimony-split-body,
   .panel-collapsed .patrimony-filter-bar,
+  .panel-collapsed .patrimony-legend,
+  .panel-collapsed #patrimony-progress-wrap,
+  .panel-collapsed .cts-wallet-select,
+  .panel-collapsed #cts-subtitle,
   .panel-collapsed .panel-filter-bar { display: none !important; }
   /* Remove border-bottom from panel-head when panel is collapsed (no body below) */
   .panel-collapsed > .panel-head { border-bottom: none; }
@@ -13360,10 +13364,13 @@
         const active = _ctsSelectedWallets.has(lc);
         const label = shortAddr(addr);
         const wc = walletColor(addr);
+        // Índice da wallet: mesmo número (#N) usado no painel "PnL por Wallet"
+        const wIdx = trackedWallets.findIndex(a => a && a.toLowerCase() === lc);
+        const wNumLabel = (wIdx >= 0 ? '#' + (wIdx + 1) + ' ' : '') + label;
         return `<div class="cts-wallet-chip${active ? ' cts-active' : ''}" data-addr="${addr}" onclick="ctsToggleWallet('${addr}')" title="${addr}">
           <span class="cts-chk">${active ? '✓' : ''}</span>
           <span class="cts-dot" style="background:${wc}"></span>
-          <span>${label}</span>
+          <span>${wNumLabel}</span>
         </div>`;
       }).join('');
       const actions = `<div class="cts-wallet-actions">
