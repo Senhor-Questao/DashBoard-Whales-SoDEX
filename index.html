@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SoDEX Whale Monitor v59</title>
 <!-- lembre de incrementar v= a cada troca de ícone (mantenha o arquivo sempre como favicon.png no GitHub) -->
-<link rel="icon" type="image/png" href="/favicon.png?v=4">
+<link rel="icon" type="image/png" href="/favicon.png?v=3">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Syne:wght@400;500;600;700;800&display=swap');
 
@@ -1166,6 +1166,67 @@
   }
 
   /* end macOS minimize buttons */
+
+  /* ── PANEL HEAD ACTIONS (agrupa botão de dúvida + minimizar, lado a lado) ── */
+  .panel-head-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  /* ── PANEL HELP ICON (tooltip explicativo por campo/painel) ── */
+  .panel-help {
+    background: rgba(79,151,255,0.16);
+    border: none;
+    border-radius: 50%;
+    color: var(--blue);
+    cursor: help;
+    font-family: var(--sans);
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1;
+    width: 16px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    transition: background 0.15s, color 0.15s, transform 0.1s;
+  }
+  .panel-help:hover { background: var(--blue); color: #fff; transform: scale(1.12); }
+
+  /* Real (non-pseudo-element) tooltip, positioned with JS as position:fixed
+     and appended to <body>. This guarantees it always escapes any ancestor
+     panel's `overflow:hidden`/`overflow:auto` clipping and always renders
+     above everything else — solid matte background, no blur. */
+  .ph-tooltip {
+    position: fixed;
+    max-width: 230px;
+    width: max-content;
+    background: rgb(15, 20, 30);
+    border: 1px solid var(--border3);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    line-height: 1.5;
+    padding: 8px 10px;
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(0,0,0,0.45);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 0.15s var(--ease), transform 0.15s var(--ease);
+    z-index: 99999;
+    white-space: normal;
+    text-align: left;
+  }
+  .ph-tooltip.visible { opacity: 1; transform: translateY(0); }
+
   .wallet-input-panel.collapsed .wallet-grid { display: none; }
   .wallet-input-panel.collapsed .wallet-input-actions .btn-auto-fetch,
   .wallet-input-panel.collapsed .wallet-input-actions .btn-clear-all,
@@ -1538,8 +1599,6 @@
     letter-spacing: 0.2px; text-transform: none; font-weight: 400; white-space: nowrap;
   }
   .patrimony-update-info strong { color: var(--muted); font-weight: 600; }
-  .patrimony-head .btn-panel-minimize { width: 22px; height: 22px; }
-  .patrimony-head .btn-panel-minimize::before { font-size: 11px; }
   .patrimony-filter-bar {
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
     padding: 6px 14px; border-bottom: 1px solid var(--border);
@@ -3581,7 +3640,10 @@
         <button class="btn-clear-all" onclick="clearAllWallets()">Limpar tudo</button>
         <button class="btn-apply" id="btn-apply" onclick="applyWallets()">▶ Aplicar</button>
         <span class="wallet-input-hint" id="wallet-count-hint">0 / 10 wallets</span>
-        <button class="btn-minimize-panel" id="btn-minimize-wallets" onclick="toggleWalletPanel()" title="Minimizar painel"></button>
+        <span class="panel-head-actions">
+          <span class="panel-help" data-help="Cole aqui até 10 endereços de wallets EVM que deseja monitorar. Clique em Aplicar para iniciar o rastreamento em tempo real via WebSocket.">?</span>
+          <button class="btn-minimize-panel" id="btn-minimize-wallets" onclick="toggleWalletPanel()" title="Minimizar painel"></button>
+        </span>
       </div>
     </div>
     <!-- Auto-fetch config -->
@@ -3640,14 +3702,20 @@
     <div class="panel" id="open-positions-panel">
       <div class="panel-head">
         <span>Open positions <span class="panel-count" id="open-count">0</span></span>
-        <button class="btn-panel-minimize" onclick="togglePanelMinimize('open-positions-panel',this)" title="Minimizar"></button>
+        <span class="panel-head-actions">
+          <span class="panel-help" data-help="Lista as posições abertas neste momento pelas wallets monitoradas, atualizadas em tempo real.">?</span>
+          <button class="btn-panel-minimize" onclick="togglePanelMinimize('open-positions-panel',this)" title="Minimizar"></button>
+        </span>
       </div>
       <div class="panel-body" id="open-list"><div style="color:var(--muted);font-size:11px">Aguardando dados...</div></div>
     </div>
     <div class="panel" id="live-events-panel">
       <div class="panel-head">
         <span>Live events <span class="panel-count" id="event-count">0</span></span>
-        <button class="btn-panel-minimize" onclick="togglePanelMinimize('live-events-panel',this)" title="Minimizar"></button>
+        <span class="panel-head-actions">
+          <span class="panel-help" data-help="Feed ao vivo dos eventos das wallets monitoradas: aberturas, aumentos, reduções, fechamentos e liquidações.">?</span>
+          <button class="btn-panel-minimize" onclick="togglePanelMinimize('live-events-panel',this)" title="Minimizar"></button>
+        </span>
       </div>
       <div class="panel-body" id="event-list"><div style="color:var(--muted);font-size:11px">Aguardando eventos...</div></div>
     </div>
@@ -3664,7 +3732,10 @@
     <div class="panel" id="ranking-pnl-panel">
       <div class="panel-head">
         <span>Ranking PnL realizado</span>
-        <button class="btn-panel-minimize" onclick="togglePanelMinimize('ranking-pnl-panel',this)" title="Minimizar"></button>
+        <span class="panel-head-actions">
+          <span class="panel-help" data-help="Ranking das wallets monitoradas ordenado pelo PnL realizado (lucro/prejuízo já materializado em operações fechadas).">?</span>
+          <button class="btn-panel-minimize" onclick="togglePanelMinimize('ranking-pnl-panel',this)" title="Minimizar"></button>
+        </span>
       </div>
       <div class="ranking-panel-inner">
         <div class="ranking-col-head">
@@ -3687,7 +3758,10 @@
     <div class="panel" id="wallet-detail-panel">
       <div class="panel-head">
         <span>Detalhes das wallets monitoradas</span>
-        <button class="btn-panel-minimize" onclick="togglePanelMinimize('wallet-detail-panel',this)" title="Minimizar"></button>
+        <span class="panel-head-actions">
+          <span class="panel-help" data-help="Exibe informações detalhadas de cada wallet monitorada individualmente: saldo, posições e estatísticas.">?</span>
+          <button class="btn-panel-minimize" onclick="togglePanelMinimize('wallet-detail-panel',this)" title="Minimizar"></button>
+        </span>
       </div>
       <div class="panel-body" id="wallet-detail" style="max-height:220px"><div style="color:var(--muted);font-size:11px">—</div></div>
     </div>
@@ -3707,7 +3781,10 @@
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1">
         <div class="pnl-chart-legend" id="pnl-chart-legend"></div>
       </div>
-      <button class="btn-panel-minimize" onclick="togglePanelMinimize('pnl-chart-panel',this)" title="Minimizar"></button>
+      <span class="panel-head-actions">
+        <span class="panel-help" data-help="Gráfico com a evolução do PnL de cada wallet ao longo do tempo. Use o filtro Wallet para focar em uma wallet específica.">?</span>
+        <button class="btn-panel-minimize" onclick="togglePanelMinimize('pnl-chart-panel',this)" title="Minimizar"></button>
+      </span>
     </div>
     <div class="pnl-filter-bar">
       <label>Wallet:</label>
@@ -3739,7 +3816,10 @@
         <span class="patrimony-live-pill"><span class="dot"></span>Live data</span>
       </div>
       <span class="patrimony-update-info" id="patrimony-update-info">Última Atualização: <strong id="patrimony-update-secs">—</strong></span>
-      <button class="btn-panel-minimize" onclick="togglePanelMinimize('patrimony-panel',this)" title="Minimizar"></button>
+      <span class="panel-head-actions">
+        <span class="panel-help" data-help="Acompanha a evolução do patrimônio total (e por wallet) ao longo do tempo, junto com as posições abertas e movimentações recentes.">?</span>
+        <button class="btn-panel-minimize" onclick="togglePanelMinimize('patrimony-panel',this)" title="Minimizar"></button>
+      </span>
     </div>
     <!-- Overview cards: Portfólio Total + por wallet (clique para exibir/ocultar no gráfico) -->
     <div class="patrimony-legend" id="patrimony-legend"></div>
@@ -3892,7 +3972,10 @@
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
         <span style="font-size:9px;color:var(--muted);letter-spacing:0.5px;text-transform:none;font-weight:400">Baseado em posições abertas das wallets selecionadas</span>
       </div>
-      <button class="btn-panel-minimize" onclick="togglePanelMinimize('dir-dom-panel',this)" title="Minimizar"></button>
+      <span class="panel-head-actions">
+        <span class="panel-help" data-help="Mostra se as wallets monitoradas estão predominantemente posicionadas em Long ou Short, com base nas posições abertas.">?</span>
+        <button class="btn-panel-minimize" onclick="togglePanelMinimize('dir-dom-panel',this)" title="Minimizar"></button>
+      </span>
     </div>
     <!-- Wallet selection banner (igual ao do Whale Heatmap) -->
     <div id="dir-dom-wallet-selection-banner" style="display:none;align-items:center;gap:8px;padding:6px 14px;background:rgba(61,142,255,0.07);border-bottom:1px solid rgba(61,142,255,0.18);font-size:10px;font-family:var(--mono);flex-wrap:wrap"></div>
@@ -3906,7 +3989,10 @@
     <div class="whale-score-head">
       <span>🏆 Whale Score</span>
       <span class="panel-count" id="whale-score-count">0 wallets</span>
-      <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-score-panel',this)" title="Minimizar"></button>
+      <span class="panel-head-actions">
+        <span class="panel-help" data-help="Pontuação que resume a performance histórica de cada wallet (winrate, PnL, consistência) para identificar as melhores baleias.">?</span>
+        <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-score-panel',this)" title="Minimizar"></button>
+      </span>
     </div>
     <div id="whale-score-wallet-selection-banner" style="display:none;align-items:center;gap:8px;padding:6px 14px;background:rgba(61,142,255,0.07);border-bottom:1px solid rgba(61,142,255,0.18);font-size:10px;font-family:var(--mono);flex-wrap:wrap"></div>
     <div id="whale-score-body">
@@ -3935,7 +4021,10 @@
         </select>
         <span class="panel-count" id="whale-consensus-count">0 pares</span>
       </div>
-      <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-consensus-panel',this)" title="Minimizar"></button>
+      <span class="panel-head-actions">
+        <span class="panel-help" data-help="Identifica pares em que várias baleias monitoradas estão posicionadas na mesma direção ao mesmo tempo (consenso de mercado).">?</span>
+        <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-consensus-panel',this)" title="Minimizar"></button>
+      </span>
     </div>
     <div id="whale-consensus-wallet-selection-banner" style="display:none;align-items:center;gap:8px;padding:6px 14px;background:rgba(61,142,255,0.07);border-bottom:1px solid rgba(61,142,255,0.18);font-size:10px;font-family:var(--mono);flex-wrap:wrap"></div>
     <div class="whale-consensus-body" id="whale-consensus-body">
@@ -3973,7 +4062,10 @@
         </select>
         <span class="panel-count" id="whale-conviction-count">0 pares</span>
       </div>
-      <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-conviction-panel',this)" title="Minimizar"></button>
+      <span class="panel-head-actions">
+        <span class="panel-help" data-help="Mede o quão convictas as baleias estão em uma posição, combinando número de baleias, peso da posição e consenso.">?</span>
+        <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-conviction-panel',this)" title="Minimizar"></button>
+      </span>
     </div>
     <div id="whale-conviction-wallet-selection-banner" style="display:none;align-items:center;gap:8px;padding:6px 14px;background:rgba(61,142,255,0.07);border-bottom:1px solid rgba(61,142,255,0.18);font-size:10px;font-family:var(--mono);flex-wrap:wrap"></div>
     <div class="whale-conviction-body" id="whale-conviction-body">
@@ -4004,7 +4096,10 @@
         </select>
         <span class="panel-count" id="whale-momentum-count">0 pares</span>
       </div>
-      <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-momentum-panel',this)" title="Minimizar"></button>
+      <span class="panel-head-actions">
+        <span class="panel-help" data-help="Detecta se as baleias estão aumentando ou reduzindo suas posições, indicando aceleração ou desaceleração de convicção.">?</span>
+        <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-momentum-panel',this)" title="Minimizar"></button>
+      </span>
     </div>
     <div id="whale-momentum-wallet-selection-banner" style="display:none;align-items:center;gap:8px;padding:6px 14px;background:rgba(61,142,255,0.07);border-bottom:1px solid rgba(61,142,255,0.18);font-size:10px;font-family:var(--mono);flex-wrap:wrap"></div>
     <div class="whale-momentum-body" id="whale-momentum-body">
@@ -4017,7 +4112,10 @@
     <div class="whale-heatmap-head">
       <span>🔥 Whale Heatmap</span>
       <span class="panel-count" id="whale-heatmap-count">0 ativos</span>
-      <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-heatmap-panel',this)" title="Minimizar"></button>
+      <span class="panel-head-actions">
+        <span class="panel-help" data-help="Mapa de calor com a concentração das posições das baleias por ativo e direção.">?</span>
+        <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-heatmap-panel',this)" title="Minimizar"></button>
+      </span>
     </div>
     <!-- Wallet selection banner (igual ao do PnL por Wallet) -->
     <div id="heatmap-wallet-selection-banner" style="display:none;align-items:center;gap:8px;padding:6px 14px;background:rgba(61,142,255,0.07);border-bottom:1px solid rgba(61,142,255,0.18);font-size:10px;font-family:var(--mono);flex-wrap:wrap"></div>
@@ -4051,7 +4149,10 @@
     <div class="whale-leaderboard-head">
       <span>👑 Whale Leaderboard</span>
       <span class="panel-count" id="whale-leaderboard-count">0 wallets</span>
-      <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-leaderboard-panel',this)" title="Minimizar"></button>
+      <span class="panel-head-actions">
+        <span class="panel-help" data-help="Ranking geral das wallets monitoradas por performance histórica, com base no Whale Score.">?</span>
+        <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-leaderboard-panel',this)" title="Minimizar"></button>
+      </span>
     </div>
     <div class="whale-leaderboard-body" id="whale-leaderboard-body">
       <div class="lb-empty">Aguardando histórico de wallets...</div>
@@ -4063,7 +4164,10 @@
     <div class="smt-head">
       <span>📋 Signal Master Table</span>
       <span class="panel-count" id="smt-count">0 pares</span>
-      <button class="btn-panel-minimize" onclick="togglePanelMinimize('smt-panel',this)" title="Minimizar"></button>
+      <span class="panel-head-actions">
+        <span class="panel-help" data-help="Tabela consolidada com todos os sinais calculados (consensus, conviction, momentum, heatmap) e uma recomendação de ação (GO/WAIT/BLOCK) por par.">?</span>
+        <button class="btn-panel-minimize" onclick="togglePanelMinimize('smt-panel',this)" title="Minimizar"></button>
+      </span>
     </div>
     <div id="smt-wallet-selection-banner" style="display:none;align-items:center;gap:8px;padding:6px 14px;background:rgba(61,142,255,0.07);border-bottom:1px solid rgba(61,142,255,0.18);font-size:10px;font-family:var(--mono);flex-wrap:wrap"></div>
     <div class="smt-filter-bar">
@@ -4136,7 +4240,10 @@
     <div class="smt-head">
       <span>🤖 Sinais de Copy Trade</span>
       <span class="panel-count" id="cts-count">0 sinais</span>
-      <button class="btn-panel-minimize" onclick="togglePanelMinimize('cts-panel',this)" title="Minimizar"></button>
+      <span class="panel-head-actions">
+        <span class="panel-help" data-help="Gera sinais de entrada/saída prontos para copy trade com base nas wallets selecionadas abaixo. Selecione uma ou mais wallets para começar.">?</span>
+        <button class="btn-panel-minimize" onclick="togglePanelMinimize('cts-panel',this)" title="Minimizar"></button>
+      </span>
     </div>
     <div class="cts-wallet-select" id="cts-wallet-select">
       <span class="cts-wallet-empty-hint">Nenhuma wallet monitorada ainda...</span>
@@ -4172,7 +4279,10 @@
     <div class="cs-head">
       <span>🎯 Composite Score</span>
       <span class="panel-count" id="cs-count">0 pares</span>
-      <button class="btn-panel-minimize" onclick="togglePanelMinimize('cs-panel',this)" title="Minimizar"></button>
+      <span class="panel-head-actions">
+        <span class="panel-help" data-help="Combina todos os indicadores (consensus, conviction, momentum, heatmap) em um score único por par, com filtros para refinar o resultado.">?</span>
+        <button class="btn-panel-minimize" onclick="togglePanelMinimize('cs-panel',this)" title="Minimizar"></button>
+      </span>
     </div>
     <div id="cs-wallet-selection-banner" style="display:none;align-items:center;gap:8px;padding:6px 14px;background:rgba(61,142,255,0.07);border-bottom:1px solid rgba(61,142,255,0.18);font-size:10px;font-family:var(--mono);flex-wrap:wrap"></div>
     <div class="cs-filter-bar">
@@ -4227,7 +4337,10 @@
     <div class="entry-cluster-head">
       <span>🧲 Entry Cluster Detection</span>
       <span class="panel-count" id="entry-cluster-count">0 clusters</span>
-      <button class="btn-panel-minimize" onclick="togglePanelMinimize('entry-cluster-panel',this)" title="Minimizar"></button>
+      <span class="panel-head-actions">
+        <span class="panel-help" data-help="Detecta clusters de entradas simultâneas de múltiplas baleias no mesmo ativo e direção, um sinal de movimento coordenado.">?</span>
+        <button class="btn-panel-minimize" onclick="togglePanelMinimize('entry-cluster-panel',this)" title="Minimizar"></button>
+      </span>
     </div>
     <div id="entry-cluster-wallet-selection-banner" style="display:none;align-items:center;gap:8px;padding:6px 14px;background:rgba(61,142,255,0.07);border-bottom:1px solid rgba(61,142,255,0.18);font-size:10px;font-family:var(--mono);flex-wrap:wrap"></div>
     <div class="panel-filter-bar">
@@ -4259,7 +4372,10 @@
     <div class="smart-exit-head">
       <span>🚪 Smart Exit Monitor</span>
       <span class="panel-count" id="smart-exit-count">0 ativos</span>
-      <button class="btn-panel-minimize" onclick="togglePanelMinimize('smart-exit-panel',this)" title="Minimizar"></button>
+      <span class="panel-head-actions">
+        <span class="panel-help" data-help="Monitora reduções ou saídas de posições das baleias, ajudando a identificar possíveis pontos de saída do mercado.">?</span>
+        <button class="btn-panel-minimize" onclick="togglePanelMinimize('smart-exit-panel',this)" title="Minimizar"></button>
+      </span>
     </div>
     <div id="smart-exit-wallet-selection-banner" style="display:none;align-items:center;gap:8px;padding:6px 14px;background:rgba(61,142,255,0.07);border-bottom:1px solid rgba(61,142,255,0.18);font-size:10px;font-family:var(--mono);flex-wrap:wrap"></div>
     <div class="panel-filter-bar">
@@ -4294,7 +4410,10 @@
     <div class="risk-score-head">
       <span>⚠️ Risk Score do Mercado</span>
       <span class="panel-count" id="risk-score-count">0 pares</span>
-      <button class="btn-panel-minimize" onclick="togglePanelMinimize('risk-score-panel',this)" title="Minimizar"></button>
+      <span class="panel-head-actions">
+        <span class="panel-help" data-help="Calcula um score de risco por par com base no consensus e conviction das baleias, para avaliar a exposição do mercado.">?</span>
+        <button class="btn-panel-minimize" onclick="togglePanelMinimize('risk-score-panel',this)" title="Minimizar"></button>
+      </span>
     </div>
     <div id="risk-score-wallet-selection-banner" style="display:none;align-items:center;gap:8px;padding:6px 14px;background:rgba(61,142,255,0.07);border-bottom:1px solid rgba(61,142,255,0.18);font-size:10px;font-family:var(--mono);flex-wrap:wrap"></div>
     <div class="panel-filter-bar">
@@ -4335,7 +4454,10 @@
     <div class="hist-prob-head">
       <span>⏳ Probabilidade Histórica</span>
       <span class="panel-count" id="hist-prob-count">0 pares</span>
-      <button class="btn-panel-minimize" onclick="togglePanelMinimize('hist-prob-panel',this)" title="Minimizar"></button>
+      <span class="panel-head-actions">
+        <span class="panel-help" data-help="Mostra a probabilidade histórica de sucesso de operações similares, com base no histórico de posições já fechadas.">?</span>
+        <button class="btn-panel-minimize" onclick="togglePanelMinimize('hist-prob-panel',this)" title="Minimizar"></button>
+      </span>
     </div>
     <div class="hist-prob-body" id="hist-prob-body">
       <div class="prob-empty">Aguardando histórico de posições...</div>
@@ -4351,6 +4473,7 @@
       <div class="sec-header-right">
         <button class="btn-sec-nav" id="ops-nav-prev" onclick="opsNavPage(-1)" title="Página anterior">&#8592;</button>
         <button class="btn-sec-nav" id="ops-nav-next" onclick="opsNavPage(1)" title="Próxima página">&#8594;</button>
+        <span class="panel-help" data-help="Tabela completa e paginada de todas as posições abertas das wallets monitoradas, com filtros por ativo e direção.">?</span>
         <button class="btn-sec-collapse" id="btn-collapse-ops" onclick="toggleSection('section-ops','btn-collapse-ops')" title="Minimizar"></button>
       </div>
     </div>
@@ -4430,6 +4553,7 @@
       <div class="sec-header-right">
         <button class="btn-sec-nav" id="closed-nav-prev" onclick="closedNavPage(-1)" title="Página anterior">&#8592;</button>
         <button class="btn-sec-nav" id="closed-nav-next" onclick="closedNavPage(1)" title="Próxima página">&#8594;</button>
+        <span class="panel-help" data-help="Tabela paginada das posições fechadas mais recentemente pelas wallets monitoradas.">?</span>
         <button class="btn-sec-collapse" id="btn-collapse-closed" onclick="toggleSection('section-closed','btn-collapse-closed')" title="Minimizar"></button>
       </div>
     </div>
@@ -4526,6 +4650,7 @@
         <div class="sec-header-right">
           <button class="btn-sec-nav" id="hist-nav-prev" onclick="histNavPage(-1)" title="Página anterior">&#8592;</button>
           <button class="btn-sec-nav" id="hist-nav-next" onclick="histNavPage(1)" title="Próxima página">&#8594;</button>
+          <span class="panel-help" data-help="Histórico completo de posições fechadas dentro do período selecionado, usado para calcular estatísticas e a probabilidade histórica.">?</span>
           <button class="btn-sec-collapse" id="btn-collapse-hist" onclick="toggleSection('section-hist','btn-collapse-hist')" title="Minimizar"></button>
         </div>
       </div>
@@ -14697,7 +14822,35 @@
     ["Filtro Risk Score:","Risk Score filter:"],
     ["Filtro Operações:","Operations filter:"],
     ["Filtro Fechadas:","Closed filter:"],
-    ["Filtro Histórico:","History filter:"]
+    ["Filtro Histórico:","History filter:"],
+
+    // ── "?" help tooltip buttons (panel-help, data-help attribute) next to
+    //    each of the 24 fields/panels — full sentences, translated as whole
+    //    phrases so they match/replace in one shot ──
+    ["Cole aqui até 10 endereços de wallets EVM que deseja monitorar. Clique em Aplicar para iniciar o rastreamento em tempo real via WebSocket.","Paste up to 10 EVM wallet addresses you want to monitor here. Click Apply to start real-time tracking via WebSocket."],
+    ["Lista as posições abertas neste momento pelas wallets monitoradas, atualizadas em tempo real.","Lists the positions currently open by the monitored wallets, updated in real time."],
+    ["Feed ao vivo dos eventos das wallets monitoradas: aberturas, aumentos, reduções, fechamentos e liquidações.","Live feed of events from monitored wallets: openings, increases, reductions, closures and liquidations."],
+    ["Ranking das wallets monitoradas ordenado pelo PnL realizado (lucro/prejuízo já materializado em operações fechadas).","Ranking of monitored wallets sorted by realized PnL (profit/loss already materialized in closed operations)."],
+    ["Exibe informações detalhadas de cada wallet monitorada individualmente: saldo, posições e estatísticas.","Shows detailed information for each individually monitored wallet: balance, positions and statistics."],
+    ["Gráfico com a evolução do PnL de cada wallet ao longo do tempo. Use o filtro Wallet para focar em uma wallet específica.","Chart showing each wallet's PnL evolution over time. Use the Wallet filter to focus on a specific wallet."],
+    ["Acompanha a evolução do patrimônio total (e por wallet) ao longo do tempo, junto com as posições abertas e movimentações recentes.","Tracks the evolution of total equity (and per wallet) over time, along with open positions and recent movements."],
+    ["Mostra se as wallets monitoradas estão predominantemente posicionadas em Long ou Short, com base nas posições abertas.","Shows whether the monitored wallets are predominantly positioned Long or Short, based on open positions."],
+    ["Pontuação que resume a performance histórica de cada wallet (winrate, PnL, consistência) para identificar as melhores baleias.","Score summarizing each wallet's historical performance (winrate, PnL, consistency) to identify the best whales."],
+    ["Identifica pares em que várias baleias monitoradas estão posicionadas na mesma direção ao mesmo tempo (consenso de mercado).","Identifies pairs where several monitored whales are positioned in the same direction at the same time (market consensus)."],
+    ["Mede o quão convictas as baleias estão em uma posição, combinando número de baleias, peso da posição e consenso.","Measures how convicted the whales are in a position, combining number of whales, position weight and consensus."],
+    ["Detecta se as baleias estão aumentando ou reduzindo suas posições, indicando aceleração ou desaceleração de convicção.","Detects whether whales are increasing or reducing their positions, indicating acceleration or deceleration of conviction."],
+    ["Mapa de calor com a concentração das posições das baleias por ativo e direção.","Heatmap showing the concentration of whale positions by asset and direction."],
+    ["Ranking geral das wallets monitoradas por performance histórica, com base no Whale Score.","Overall ranking of monitored wallets by historical performance, based on the Whale Score."],
+    ["Tabela consolidada com todos os sinais calculados (consensus, conviction, momentum, heatmap) e uma recomendação de ação (GO/WAIT/BLOCK) por par.","Consolidated table with all calculated signals (consensus, conviction, momentum, heatmap) and an action recommendation (GO/WAIT/BLOCK) per pair."],
+    ["Gera sinais de entrada/saída prontos para copy trade com base nas wallets selecionadas abaixo. Selecione uma ou mais wallets para começar.","Generates entry/exit signals ready for copy trading based on the wallets selected below. Select one or more wallets to begin."],
+    ["Combina todos os indicadores (consensus, conviction, momentum, heatmap) em um score único por par, com filtros para refinar o resultado.","Combines all indicators (consensus, conviction, momentum, heatmap) into a single score per pair, with filters to refine the result."],
+    ["Detecta clusters de entradas simultâneas de múltiplas baleias no mesmo ativo e direção, um sinal de movimento coordenado.","Detects clusters of simultaneous entries from multiple whales in the same asset and direction, a sign of coordinated movement."],
+    ["Monitora reduções ou saídas de posições das baleias, ajudando a identificar possíveis pontos de saída do mercado.","Monitors reductions or exits of whale positions, helping identify possible market exit points."],
+    ["Calcula um score de risco por par com base no consensus e conviction das baleias, para avaliar a exposição do mercado.","Calculates a risk score per pair based on whale consensus and conviction, to assess market exposure."],
+    ["Mostra a probabilidade histórica de sucesso de operações similares, com base no histórico de posições já fechadas.","Shows the historical probability of success for similar operations, based on the history of already closed positions."],
+    ["Tabela completa e paginada de todas as posições abertas das wallets monitoradas, com filtros por ativo e direção.","Full, paginated table of all open positions from monitored wallets, with filters by asset and direction."],
+    ["Tabela paginada das posições fechadas mais recentemente pelas wallets monitoradas.","Paginated table of positions most recently closed by monitored wallets."],
+    ["Histórico completo de posições fechadas dentro do período selecionado, usado para calcular estatísticas e a probabilidade histórica.","Complete history of closed positions within the selected period, used to calculate statistics and the historical probability."]
   ];
 
   // Sort longest-first so multi-word phrases are replaced before their substrings.
@@ -14772,7 +14925,7 @@
     // Attributes that carry visible/assistive text
     // (data-tooltip is included because the collapsed sidebar renders it via
     // CSS `content: attr(data-tooltip)`, so it's user-visible text too)
-    ['title','placeholder','aria-label','data-tooltip'].forEach(function(attr){
+    ['title','placeholder','aria-label','data-tooltip','data-help'].forEach(function(attr){
       var v = root.getAttribute && root.getAttribute(attr);
       if(v){
         var nv = translateString(v, toEnglish);
@@ -14798,9 +14951,9 @@
     }
 
     // Titles/placeholders/tooltips on descendants too
-    var els = root.querySelectorAll ? root.querySelectorAll('[title],[placeholder],[aria-label],[data-tooltip]') : [];
+    var els = root.querySelectorAll ? root.querySelectorAll('[title],[placeholder],[aria-label],[data-tooltip],[data-help]') : [];
     els.forEach(function(el){
-      ['title','placeholder','aria-label','data-tooltip'].forEach(function(attr){
+      ['title','placeholder','aria-label','data-tooltip','data-help'].forEach(function(attr){
         var v = el.getAttribute(attr);
         if(v){
           var nv = translateString(v, toEnglish);
@@ -14863,6 +15016,75 @@
     observer.observe(document.body, { childList: true, subtree: true, characterData: true });
   }
 })();
+</script>
+
+<script>
+  // ── PANEL HELP TOOLTIP (fixed, opaque, no blur, always on top) ─────────
+  // Rendered as a single real element appended to <body> with
+  // position:fixed, so it can never be clipped by a panel's own
+  // overflow:hidden/overflow:auto, and its z-index always wins.
+  (function(){
+    var tip = document.createElement('div');
+    tip.className = 'ph-tooltip';
+    document.body.appendChild(tip);
+
+    var GAP = 8;
+
+    function place(btn){
+      var r = btn.getBoundingClientRect();
+      tip.style.left = '0px';
+      tip.style.top = '0px';
+      var tr = tip.getBoundingClientRect();
+      var left = r.right - tr.width;
+      var top = r.bottom + GAP;
+
+      // Clamp horizontally within viewport.
+      if(left < 8) left = 8;
+      if(left + tr.width > window.innerWidth - 8) left = window.innerWidth - tr.width - 8;
+
+      // If there isn't room below, flip above the button.
+      if(top + tr.height > window.innerHeight - 8){
+        top = r.top - tr.height - GAP;
+      }
+      if(top < 8) top = 8;
+
+      tip.style.left = left + 'px';
+      tip.style.top = top + 'px';
+    }
+
+    function show(btn){
+      var text = btn.getAttribute('data-help');
+      if(!text) return;
+      tip.textContent = text;
+      tip.classList.add('visible');
+      place(btn);
+    }
+
+    function hide(){
+      tip.classList.remove('visible');
+    }
+
+    // Event delegation: works for every current .panel-help button and any
+    // added later without needing to re-bind listeners.
+    document.addEventListener('mouseover', function(e){
+      var btn = e.target.closest && e.target.closest('.panel-help[data-help]');
+      if(btn) show(btn);
+    });
+    document.addEventListener('mouseout', function(e){
+      var btn = e.target.closest && e.target.closest('.panel-help[data-help]');
+      if(btn) hide();
+    });
+    document.addEventListener('focusin', function(e){
+      var btn = e.target.closest && e.target.closest('.panel-help[data-help]');
+      if(btn) show(btn);
+    });
+    document.addEventListener('focusout', function(e){
+      var btn = e.target.closest && e.target.closest('.panel-help[data-help]');
+      if(btn) hide();
+    });
+    window.addEventListener('scroll', hide, true);
+    window.addEventListener('resize', hide);
+  })();
 </script>
 
 </body>
