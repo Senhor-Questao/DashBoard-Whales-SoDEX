@@ -714,7 +714,7 @@
   .rank-trades { font-size: 9px; color: #8890a8; }
 
   /* ── COL WIDTHS ── */
-  .c-wallet   { width: 68px; }
+  .c-wallet   { width: 120px; }
   .c-pair     { width: 90px; }
   .c-side     { width: 48px; }
   .c-mode     { width: 52px; }
@@ -2051,7 +2051,7 @@
   .dir-dom-wallet-list { display: flex; flex-direction: column; gap: 5px; }
   .dir-dom-wallet-row  {
     display: grid;
-    grid-template-columns: 80px 1fr 42px;
+    grid-template-columns: 128px 1fr 42px;
     align-items: center;
     gap: 7px;
     font-size: 10px;
@@ -13501,6 +13501,7 @@
           <span class="cts-chk">${active ? '✓' : ''}</span>
           <span class="cts-dot" style="background:${wc}"></span>
           <span>${wNumLabel}</span>
+          <button class="w-copy" title="Copiar endereço" onclick="event.stopPropagation();copyWalletAddr(this,'${addr}')">⧉</button>
         </div>`;
       }).join('');
       const actions = `<div class="cts-wallet-actions">
@@ -13672,7 +13673,7 @@
         const dateStr = s.status === 'open' ? s.openedAt : (s.closedAt || s.openedAt);
         const wc = walletColor(s.addr);
         return `<tr data-signal-id="${s.id}" data-wallet="${s.addr}" data-symbol="${s.symbol}" data-direction="${s.side}" data-entry="${s.entrySignal}" data-sl="${s.sl != null ? s.sl : ''}" data-tp="${s.tp != null ? s.tp : ''}" data-perf-pct="${s.lastPerfPct.toFixed(4)}" data-status="${s.status}" data-opened-ts="${s.openedAtTs || ''}" data-closed-ts="${s.closedAtTs || ''}">
-          <td class="wallet-addr" title="${s.addr || ''}"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${wc};margin-right:4px;vertical-align:middle;flex-shrink:0"></span>${s.wallet}</td>
+          <td class="wallet-addr" title="${s.addr || ''}"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${wc};margin-right:4px;vertical-align:middle;flex-shrink:0"></span>${s.wallet}<button class="w-copy" title="Copiar endereço" style="margin-left:4px" onclick="event.stopPropagation();copyWalletAddr(this,'${s.addr}')">⧉</button></td>
           <td class="pair-sym">${s.symbol}</td>
           <td style="color:var(--muted);font-size:10px">${dateStr || '—'}</td>
           <td><span class="badge ${dirCls}">${s.side}</span></td>
