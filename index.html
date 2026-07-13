@@ -15117,7 +15117,16 @@
         const statusBadge = s.status === 'open'
           ? '<span class="badge b-open">ABERTO</span>'
           : '<span class="badge">FECHADO</span>';
-        const dateStr = s.status === 'open' ? s.openedAt : (s.closedAt || s.openedAt);
+        const _ctsFmtDate = (ts, fallback) => {
+          if (!ts) return fallback || '—';
+          const d = new Date(ts);
+          if (isNaN(d)) return fallback || '—';
+          const pad = n => String(n).padStart(2, '0');
+          return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        };
+        const dateStr = s.status === 'open'
+          ? _ctsFmtDate(s.openedAtTs, s.openedAt)
+          : _ctsFmtDate(s.closedAtTs || s.openedAtTs, s.closedAt || s.openedAt);
         const wc = walletColor(s.addr);
         return `<tr data-signal-id="${s.id}" data-wallet="${s.addr}" data-symbol="${s.symbol}" data-direction="${s.side}" data-entry="${s.entrySignal}" data-sl="${s.sl != null ? s.sl : ''}" data-tp="${s.tp != null ? s.tp : ''}" data-perf-pct="${s.lastPerfPct.toFixed(4)}" data-status="${s.status}" data-opened-ts="${s.openedAtTs || ''}" data-closed-ts="${s.closedAtTs || ''}">
           <td class="wallet-addr" title="${s.addr || ''}"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${wc};margin-right:4px;vertical-align:middle;flex-shrink:0"></span>${s.wallet}<button class="w-copy" title="Copiar endereço" style="margin-left:4px" onclick="event.stopPropagation();copyWalletAddr(this,'${s.addr}')">⧉</button></td>
