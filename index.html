@@ -2106,129 +2106,244 @@
   }
   .whale-score-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
     padding: 12px;
+  }
+  @media (max-width: 1900px) {
+    .whale-score-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+  @media (max-width: 1600px) {
+    .whale-score-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 1400px) {
+    .whale-score-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 900px) {
+    .whale-score-grid { grid-template-columns: 1fr; }
   }
   .score-card {
     background: var(--bg3);
     border: 1px solid var(--border2);
-    border-radius: var(--radius-sm);
-    padding: 10px 12px;
+    border-radius: var(--radius);
+    padding: 11px 12px;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 9px;
     position: relative;
     overflow: hidden;
   }
-  .score-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-  }
-  .score-card.tier-elite::before  { background: linear-gradient(90deg, #ffd700, #ffb830); }
-  .score-card.tier-good::before   { background: linear-gradient(90deg, var(--green), #00b860); }
-  .score-card.tier-mid::before    { background: linear-gradient(90deg, var(--blue), #1a6fd8); }
-  .score-card.tier-low::before    { background: linear-gradient(90deg, var(--amber), #c87800); }
-  .score-card-addr {
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 0.3px;
+  .score-card.tier-elite  { border-color: rgba(255,215,0,0.35); }
+  .score-card.tier-good   { border-color: rgba(46,229,145,0.28); }
+  .score-card.tier-mid    { border-color: rgba(79,151,255,0.28); }
+  .score-card.tier-low    { border-color: rgba(247,177,61,0.28); }
+
+  /* top row: rank + address + Whale Score badge */
+  .score-card-top {
     display: flex;
     align-items: center;
-    gap: 5px;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
   }
+  .score-card-top-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .score-card-rank {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--muted2);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 2px 7px;
+    font-family: var(--sans);
+  }
+  .score-card-rank.gold   { color: #ffd700; border-color: rgba(255,215,0,0.4); }
+  .score-card-rank.silver { color: #c0c0c0; border-color: rgba(192,192,192,0.4); }
+  .score-card-rank.bronze { color: #cd7f32; border-color: rgba(205,127,50,0.4); }
   .score-card-dot {
-    width: 6px; height: 6px;
+    width: 7px; height: 7px;
     border-radius: 50%;
     flex-shrink: 0;
   }
-  .score-card-rank {
-    font-size: 9px;
-    font-weight: 600;
-    color: var(--muted2);
-    min-width: 14px;
+  .score-card-addrtext {
+    font-size: 11.5px;
+    color: var(--text);
+    letter-spacing: 0.2px;
+    font-weight: 500;
   }
-  .score-card-rank.gold   { color: #ffd700; }
-  .score-card-rank.silver { color: #c0c0c0; }
-  .score-card-rank.bronze { color: #cd7f32; }
-  .score-card-addr .w-copy {
-    margin-left: auto;
-    flex-shrink: 0;
-  }
-  .score-card-metrics {
+  .score-card-top-left .w-copy { flex-shrink: 0; }
+  .score-card-whalebadge {
     display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    padding: 4px 9px;
   }
-  .score-metric {
+  .score-card-whalebadge i { font-style: normal; opacity: 0.6; }
+
+  /* stats row: win rate / profit factor / trades | w/l */
+  .score-card-stats {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .score-stat-divider {
+    width: 1px;
+    align-self: stretch;
+    background: var(--border2);
+  }
+  .score-stat {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 3px;
   }
-  .score-metric-label {
-    font-size: 8px;
-    color: var(--muted2);
+  .score-stat-label {
+    font-size: 9px;
+    color: var(--muted);
     text-transform: uppercase;
     letter-spacing: 0.6px;
-  }
-  .score-metric-val {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text);
-  }
-  .score-final {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 3px;
-    margin-top: 3px;
   }
-  .score-final-num {
+  .score-stat-label i { font-style: normal; opacity: 0.55; }
+  .score-stat-val {
     font-family: var(--sans);
-    font-size: 22px;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.1;
+  }
+  .score-stat-sub {
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  /* mid row: equity curve / consistency / drawdown */
+  .score-card-mid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr;
+    gap: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .score-mid-col:not(:last-child) {
+    border-right: 1px solid var(--border);
+    padding-right: 10px;
+  }
+  .score-mid-label {
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-bottom: 8px;
+  }
+  .score-mid-label i { font-style: normal; opacity: 0.55; }
+  .equity-svg { width: 100%; height: 42px; display: block; }
+  .consist-bars { display: flex; align-items: flex-end; gap: 5px; height: 30px; }
+  .consist-bar {
+    width: 8px;
+    height: 100%;
+    border-radius: 4px;
+    background: var(--border2);
+  }
+  .consist-bar.filled { background: var(--green); }
+  .consist-sub { font-size: 11px; color: var(--muted); margin-top: 6px; font-weight: 600; }
+  .dd-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--sans);
+    font-size: 18px;
+    font-weight: 800;
+  }
+  .dd-sub { font-size: 11px; color: var(--muted); margin-top: 6px; font-weight: 600; }
+
+  /* bottom: big score + gradient scale */
+  .score-card-bottom {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .score-final-big {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .score-final-num-big {
+    font-family: var(--sans);
+    font-size: 24px;
     font-weight: 800;
     line-height: 1;
   }
-  .score-final-denom {
-    font-size: 10px;
-    color: var(--muted);
-    line-height: 1;
-  }
-  .score-final-label {
+  .score-final-num-big .denom { font-size: 12px; color: var(--muted); font-weight: 600; margin-left: 2px; }
+  .tier-pill-big {
     font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 0.8px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-align: center;
     text-transform: uppercase;
-    margin-left: 4px;
-    padding: 1px 5px;
-    border-radius: 3px;
+    border: 1px solid;
+    border-radius: 6px;
+    padding: 3px 8px;
   }
-  .tier-elite .score-final-num  { color: #ffd700; }
-  .tier-good  .score-final-num  { color: var(--green); }
-  .tier-mid   .score-final-num  { color: var(--blue); }
-  .tier-low   .score-final-num  { color: var(--amber); }
-  .tier-elite .score-final-label { background: rgba(255,215,0,0.12); color: #ffd700; border: 1px solid rgba(255,215,0,0.3); }
-  .tier-good  .score-final-label { background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,224,122,0.2); }
-  .tier-mid   .score-final-label { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(61,142,255,0.2); }
-  .tier-low   .score-final-label { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,166,35,0.2); }
+  .score-scale { flex: 1; min-width: 140px; }
+  .score-bar-wrap-big {
+    height: 10px;
+    background: var(--bg);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .score-bar-fill-big {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.4s ease;
+  }
+  .score-scale-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 9px;
+    color: var(--muted2);
+    text-align: center;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    line-height: 1.5;
+  }
+  .score-scale-labels span.active { font-weight: 700; }
+
   .score-empty {
     color: var(--muted2);
     font-size: 11px;
     text-align: center;
     padding: 28px;
   }
-  .score-bar-wrap {
-    height: 3px;
-    background: var(--bg);
-    border-radius: 2px;
-    overflow: hidden;
-    margin-top: 2px;
+  .score-card-empty-msg {
+    font-size: 11px;
+    color: var(--muted2);
+    padding: 6px 0 2px;
   }
-  .score-bar-fill {
-    height: 100%;
-    border-radius: 2px;
-    transition: width 0.4s ease;
+
+  @media (max-width: 640px) {
+    .score-card-mid { grid-template-columns: 1fr; }
+    .score-mid-col:not(:last-child) { border-right: none; padding-right: 0; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
   }
 
   /* ── WHALE CONSENSUS ── */
@@ -2254,9 +2369,21 @@
   }
   .whale-consensus-body {
     padding: 12px;
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 10px;
+  }
+  @media (max-width: 1900px) {
+    .whale-consensus-body { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+  @media (max-width: 1600px) {
+    .whale-consensus-body { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 1400px) {
+    .whale-consensus-body { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 900px) {
+    .whale-consensus-body { grid-template-columns: 1fr; }
   }
   .consensus-card {
     background: var(--bg3);
@@ -2353,76 +2480,276 @@
     background: var(--bg3);
   }
   .whale-conviction-body {
-    padding: 12px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+    padding: 14px;
+  }
+  .whale-conviction-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+  }
+  @media (max-width: 1900px) {
+    .whale-conviction-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+  @media (max-width: 1600px) {
+    .whale-conviction-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 1200px) {
+    .whale-conviction-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 700px) {
+    .whale-conviction-grid { grid-template-columns: 1fr; }
   }
   .conviction-empty {
     color: var(--muted2);
     font-size: 11px;
     padding: 20px;
   }
+
+  /* ── Conviction Score card (estilo "gauge") ── */
   .conviction-card {
-    background: var(--bg3);
+    background: var(--bg2);
     border: 1px solid var(--border2);
-    border-radius: var(--radius-sm);
-    padding: 12px 16px;
-    min-width: 180px;
+    border-radius: var(--radius);
+    padding: 16px 16px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 14px;
     position: relative;
     overflow: hidden;
+    cursor: default;
+    min-width: 0;
   }
-  .conviction-pair {
-    font-size: 14px;
-    font-weight: 700;
-    color: #fff;
-    letter-spacing: 0.3px;
-  }
-  .conviction-row {
+  .conviction-card-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: 10px;
+    flex-wrap: wrap;
   }
-  .conviction-label {
-    font-size: 9px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
+  .conviction-card-top-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
   }
-  .conviction-bar-wrap {
-    height: 5px;
-    background: var(--bg);
-    border-radius: 3px;
-    overflow: hidden;
-    flex: 1;
+  .conviction-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+    border: 1.5px solid currentColor;
+    background: rgba(46,229,145,0.08);
   }
-  .conviction-bar-fill {
-    height: 100%;
-    border-radius: 3px;
-    transition: width 0.4s ease;
-  }
-  .conviction-score-num {
+  .conviction-pair-title { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .conviction-pair-name-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .conviction-pair-name {
     font-family: var(--sans);
-    font-size: 20px;
+    font-size: 17px;
     font-weight: 800;
-    line-height: 1;
+    color: #fff;
+    letter-spacing: 0.2px;
   }
-  .conviction-score-num.high { color: var(--green); }
-  .conviction-score-num.mid  { color: var(--amber); }
-  .conviction-score-num.low  { color: var(--red); }
-  .conviction-meta {
-    font-size: 9px;
+  .conviction-weight-pill {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--blue);
+    background: var(--blue-dim);
+    border: 1px solid rgba(79,151,255,0.35);
+    border-radius: 20px;
+    padding: 2px 9px;
+  }
+  .conviction-pair-sub {
+    font-size: 10px;
     color: var(--muted);
     letter-spacing: 0.2px;
   }
-  .conviction-consensus-label {
-    font-size: 10px;
-    font-weight: 600;
+  .conviction-card-top-right { display: flex; align-items: center; gap: 8px; }
+  .conviction-consensus-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--sans);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    padding: 6px 11px;
+    border-radius: 20px;
+    border: 1px solid currentColor;
+    white-space: nowrap;
   }
+  .conviction-consensus-pill .fdot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+  .conviction-info-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid var(--border3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 11px;
+    flex-shrink: 0;
+    cursor: help;
+  }
+
+  .conviction-gauge-row {
+    display: flex;
+    gap: 14px;
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+  .conviction-gauge-left {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-right: 14px;
+    border-right: 1px solid var(--border2);
+    min-width: 90px;
+  }
+  .conviction-gauge-label {
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-family: var(--sans);
+    font-weight: 700;
+  }
+  .conviction-gauge-num {
+    font-family: var(--sans);
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .conviction-tier-pill {
+    align-self: flex-start;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: var(--sans);
+    border: 1px solid currentColor;
+    border-radius: 20px;
+    padding: 4px 9px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+
+  .conviction-gauge-right {
+    flex: 1;
+    min-width: 130px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 4px;
+  }
+  .conviction-gauge-ticks {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+  }
+  .conviction-gauge-ticks span.active-tick { color: var(--green); font-weight: 700; }
+  .conviction-gauge-track {
+    position: relative;
+    height: 13px;
+    background: var(--bg);
+    border-radius: 8px;
+    overflow: visible;
+  }
+  .conviction-gauge-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    border-radius: 8px;
+    transition: width 0.4s ease;
+    background-image: repeating-linear-gradient(135deg, rgba(255,255,255,0.10) 0px, rgba(255,255,255,0.10) 2px, transparent 2px, transparent 6px);
+  }
+  .conviction-gauge-pointer {
+    position: absolute;
+    top: 100%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #fff;
+    margin-top: 3px;
+  }
+  .conviction-gauge-legend {
+    display: flex;
+    justify-content: space-between;
+    font-size: 8px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-family: var(--sans);
+    font-weight: 700;
+    margin-top: 4px;
+    gap: 2px;
+  }
+  .conviction-gauge-legend span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .conviction-gauge-legend span.active { color: var(--green); }
+
+  .conviction-stats-box {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .conviction-stat-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
+    padding: 10px 6px;
+    border-bottom: 1px solid var(--border2);
+    border-right: 1px solid var(--border2);
+  }
+  .conviction-stat-col:nth-child(2n) { border-right: none; }
+  .conviction-stat-col:nth-child(n+3) { border-bottom: none; }
+  .conviction-stat-icon-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+  .conviction-stat-icon { font-size: 15px; line-height: 1; color: var(--green); }
+  .conviction-stat-val {
+    font-family: var(--sans);
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+  }
+  .conviction-stat-label { font-size: 10px; color: var(--text); font-weight: 600; }
+  .conviction-stat-sub { font-size: 9px; color: var(--green); }
+
+  .conviction-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding-top: 12px;
+    border-top: 1px solid var(--border2);
+    font-size: 9px;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+  .conviction-footer .fdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .conviction-footer .fsep { color: var(--border3); }
+  .conviction-footer .fright { margin-left: auto; display: flex; align-items: center; gap: 5px; }
 
   /* ── WHALE MOMENTUM PANEL ── */
   .whale-momentum-panel {
@@ -2447,9 +2774,24 @@
   }
   .whale-momentum-body {
     padding: 12px;
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 10px;
+  }
+  @media (max-width: 1900px) {
+    .whale-momentum-body { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+  @media (max-width: 1600px) {
+    .whale-momentum-body { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 1200px) {
+    .whale-momentum-body { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 700px) {
+    .whale-momentum-body { grid-template-columns: 1fr; }
+  }
+  .whale-momentum-body .momentum-empty {
+    grid-column: 1 / -1;
   }
   .momentum-empty {
     color: var(--muted2);
@@ -2457,40 +2799,85 @@
     padding: 20px;
   }
   .momentum-card {
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-sm);
-    padding: 12px 16px;
-    min-width: 200px;
+    background: #12182a;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 18px 20px 16px;
+    width: 100%;
+    min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 7px;
+    gap: 14px;
     position: relative;
     overflow: hidden;
   }
-  .momentum-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-  }
-  .momentum-card.up::before   { background: linear-gradient(90deg, var(--green), #00b860); }
-  .momentum-card.down::before { background: linear-gradient(90deg, var(--red), #c00020); }
-  .momentum-card.flat::before { background: linear-gradient(90deg, var(--muted), var(--muted2)); }
+  .momentum-card::before { content: none; }
+
+  /* Header: arrow + pair + side */
   .momentum-pair {
-    font-size: 13px;
-    font-weight: 700;
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
     color: #fff;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
   }
   .momentum-arrow {
-    font-size: 16px;
+    font-size: 15px;
+    color: var(--muted2);
+    font-weight: 400;
+  }
+  .momentum-side {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+  }
+  .momentum-side.long  { color: var(--green); }
+  .momentum-side.short { color: var(--red); }
+
+  /* Scale bar: Desacelerando ↔ Estável ↔ Acelerando */
+  .momentum-scale { position: relative; padding-top: 14px; }
+  .momentum-scale-track {
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, rgba(255,61,77,0.55), rgba(255,61,77,0.15) 30%, var(--border3) 48%, var(--border3) 52%, rgba(0,224,122,0.15) 70%, rgba(0,224,122,0.55));
+  }
+  .momentum-scale-pointer {
+    position: absolute;
+    top: -4px;
+    transform: translateX(-50%);
+    font-size: 12px;
+    line-height: 1;
+    transition: left 0.2s var(--ease);
+  }
+  .momentum-scale-pointer.up   { color: var(--green); }
+  .momentum-scale-pointer.down { color: var(--red); }
+  .momentum-scale-pointer.flat { color: var(--muted); }
+  .momentum-scale-labels {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+  }
+  .momentum-scale-labels .msl-down { color: rgba(255,61,77,0.75); }
+  .momentum-scale-labels .msl-mid  { color: var(--muted); }
+  .momentum-scale-labels .msl-up   { color: rgba(0,224,122,0.8); }
+
+  /* Big percentage row */
+  .momentum-pct-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
   }
   .momentum-pct {
-    font-family: var(--sans);
-    font-size: 22px;
+    font-family: var(--mono);
+    font-size: 26px;
     font-weight: 800;
     line-height: 1;
   }
@@ -2498,28 +2885,46 @@
   .momentum-pct.down { color: var(--red); }
   .momentum-pct.flat { color: var(--muted); }
   .momentum-label {
-    font-size: 9px;
+    font-family: var(--mono);
+    font-size: 10.5px;
     text-transform: uppercase;
-    letter-spacing: 0.6px;
-    font-weight: 600;
+    letter-spacing: 0.5px;
+    font-weight: 700;
   }
-  .momentum-label.up   { color: rgba(0,224,122,0.7); }
-  .momentum-label.down { color: rgba(255,61,77,0.7); }
+  .momentum-label.up   { color: rgba(0,224,122,0.75); }
+  .momentum-label.down { color: rgba(255,61,77,0.75); }
   .momentum-label.flat { color: var(--muted2); }
+
+  /* Footer detail rows: Convicção Total / Composição */
   .momentum-detail {
-    font-size: 9px;
-    color: var(--muted);
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 6px;
+    padding-top: 2px;
+    border-top: 1px solid rgba(255,255,255,0.06);
   }
   .momentum-snap {
     display: flex;
     align-items: center;
-    gap: 4px;
-    font-size: 9px;
-    color: var(--muted);
+    gap: 5px;
+    font-family: var(--mono);
+    font-size: 12px;
+    flex-wrap: wrap;
   }
+  .momentum-snap .msn-label { color: var(--muted2); }
+  .momentum-snap .msn-value { color: var(--text); font-weight: 700; }
+  .momentum-snap .msn-long  { color: var(--green); font-weight: 700; }
+  .momentum-snap .msn-short { color: var(--red); font-weight: 700; }
+  .momentum-sparkle {
+    position: absolute;
+    right: 14px;
+    bottom: 14px;
+    font-size: 13px;
+    opacity: 0.55;
+  }
+  .momentum-sparkle.up   { color: var(--green); }
+  .momentum-sparkle.down { color: var(--red); }
+  .momentum-sparkle.flat { color: var(--muted2); }
 
   /* ── WHALE HEATMAP PANEL ── */
   .whale-heatmap-panel {
@@ -2831,6 +3236,7 @@
 
   /* ── ENTRY CLUSTER DETECTION ── */
   @keyframes clusterPulse { 0%,100%{box-shadow:0 0 0 0 transparent} 50%{box-shadow:0 0 8px 2px var(--clr, rgba(0,224,122,0.3))} }
+  @keyframes cc2Pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
   .entry-cluster-panel {
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -2853,62 +3259,105 @@
   }
   .entry-cluster-body {
     padding: 12px;
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 10px;
   }
-  .cluster-card {
+  @media (max-width: 1900px) { .entry-cluster-body { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  @media (max-width: 1600px) { .entry-cluster-body { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 1400px) { .entry-cluster-body { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 900px)  { .entry-cluster-body { grid-template-columns: 1fr; } }
+  .entry-cluster-body .cluster-empty { grid-column: 1 / -1; }
+  .cluster-empty { color: var(--muted2); font-size: 11px; padding: 20px; }
+
+  /* ── cluster-card2: rich card (header/force, stats, direction/distribution/type, whale list, footer) ── */
+  .cluster-card2 {
     background: var(--bg3);
     border: 1px solid var(--border2);
     border-radius: var(--radius-sm);
-    padding: 10px 14px;
-    min-width: 160px;
-    flex: 1;
-    max-width: 220px;
+    padding: 11px 12px;
     position: relative;
     overflow: hidden;
-    transition: border-color 0.15s, transform 0.12s;
+    transition: border-color 0.15s, transform 0.12s, box-shadow 0.15s;
   }
-  .cluster-card:hover { border-color: var(--border3); transform: translateY(-1px); }
-  .cluster-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-  }
-  .cluster-card.long::before  { background: linear-gradient(90deg, var(--green), #00b860); }
-  .cluster-card.short::before { background: linear-gradient(90deg, var(--red), #c00020); }
-  .cluster-pair {
-    font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px;
-    display: flex; align-items: center; gap: 6px;
-  }
-  .cluster-magnet { font-size: 14px; animation: clusterPulse 2s ease-in-out infinite; }
-  .cluster-zone-label {
-    font-size: 8px; text-transform: uppercase; letter-spacing: 0.8px;
-    color: var(--muted); margin-bottom: 2px; font-weight: 600;
-  }
-  .cluster-range {
-    font-family: var(--sans); font-size: 18px; font-weight: 800; line-height: 1;
-    margin-bottom: 2px;
-  }
-  .cluster-range.long  { color: var(--green); }
-  .cluster-range.short { color: var(--red); }
-  .cluster-arrow {
-    font-size: 10px; color: var(--muted); margin: 0 4px;
-  }
-  .cluster-meta {
-    font-size: 9px; color: var(--muted); margin-top: 5px;
-    display: flex; gap: 8px; flex-wrap: wrap;
-  }
-  .cluster-wallet-dots {
-    display: flex; gap: 3px; margin-top: 4px; flex-wrap: wrap;
-  }
-  .cluster-dot {
-    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-    transition: transform 0.1s;
-  }
-  .cluster-dot:hover { transform: scale(1.4); }
-  .cluster-empty { color: var(--muted2); font-size: 11px; padding: 20px; }
+  .cluster-card2:hover { border-color: var(--border3); transform: translateY(-1px); box-shadow: 0 4px 16px -4px rgba(0,0,0,0.35); }
+  .cluster-card2::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+  .cluster-card2.long::before  { background: linear-gradient(90deg, var(--green), #00b860); }
+  .cluster-card2.short::before { background: linear-gradient(90deg, var(--red), #c00020); }
+
+  .cc2-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .cc2-head-left { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
+  .cc2-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; background: var(--bg4); border: 1px solid var(--border2); }
+  .cc2-icon.long  { border-color: rgba(46,229,145,0.35); }
+  .cc2-icon.short { border-color: rgba(255,77,97,0.35); }
+  .cc2-magnet { display: inline-block; animation: clusterPulse 2s ease-in-out infinite; }
+  .cc2-title-wrap { min-width: 0; }
+  .cc2-pair-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .cc2-pair { font-family: var(--sans); font-size: 13px; font-weight: 800; color: #fff; letter-spacing: 0.2px; }
+  .cc2-side-badge { font-size: 8.5px; font-weight: 800; padding: 2px 7px; border-radius: 5px; letter-spacing: 0.4px; }
+  .cc2-side-badge.long  { background: var(--green-dim); color: var(--green); border: 1px solid rgba(46,229,145,0.3); }
+  .cc2-side-badge.short { background: var(--red-dim);   color: var(--red);   border: 1px solid rgba(255,77,97,0.3); }
+  .cc2-subtitle { font-size: 9.5px; color: var(--muted); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+  .cc2-info { opacity: 0.55; cursor: help; }
+  .cc2-strength { flex-shrink: 0; text-align: right; }
+  .cc2-strength-label { font-size: 9px; letter-spacing: 0.6px; text-transform: uppercase; color: var(--muted2); font-weight: 700; display: flex; align-items: center; justify-content: flex-end; gap: 3px; margin-bottom: 3px; white-space: nowrap; }
+  .cc2-strength-value { font-family: var(--sans); font-size: 12.5px; font-weight: 800; letter-spacing: 0.3px; }
+  .cc2-strength-value.high.long   { color: var(--green); }
+  .cc2-strength-value.high.short  { color: var(--red); }
+  .cc2-strength-value.medium      { color: var(--amber); }
+  .cc2-strength-value.low         { color: var(--muted2); }
+
+  .cc2-stats { padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .cc2-price-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted2); font-weight: 700; margin-bottom: 3px; }
+  .cc2-price-value { font-family: var(--sans); font-size: 21px; font-weight: 800; line-height: 1; margin-bottom: 3px; }
+  .cc2-price-value.long  { color: var(--green); }
+  .cc2-price-value.short { color: var(--red); }
+  .cc2-price-sub { font-size: 9.5px; color: var(--muted); }
+  .cc2-price-sub .cc2-pos { color: var(--green); }
+  .cc2-price-sub .cc2-neg { color: var(--red); }
+  .cc2-mini-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+  .cc2-mini-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.3px; color: var(--muted2); display: flex; align-items: center; gap: 3px; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cc2-mini-value { font-family: var(--sans); font-size: 13px; font-weight: 700; color: var(--text); }
+  .cc2-mini-sub { font-size: 9px; color: var(--muted); margin-top: 1px; }
+
+  .cc2-mid { padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 9px; }
+  .cc2-mid-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted2); font-weight: 700; margin-bottom: 4px; }
+  .cc2-direction-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .cc2-direction-value { display: flex; align-items: center; gap: 5px; font-family: var(--sans); font-size: 13px; font-weight: 800; }
+  .cc2-direction-value.long  { color: var(--green); }
+  .cc2-direction-value.short { color: var(--red); }
+  .cc2-direction-sub { font-size: 8.5px; color: var(--muted); text-align: right; }
+  .cc2-dist-bar { height: 7px; border-radius: 4px; overflow: hidden; display: flex; background: var(--bg4); margin-bottom: 5px; }
+  .cc2-dist-seg { height: 100%; }
+  .cc2-dist-legend { display: flex; flex-wrap: wrap; gap: 8px; font-size: 9px; color: var(--muted); font-family: var(--mono); }
+  .cc2-dist-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 4px; vertical-align: middle; }
+  .cc2-type-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 9.5px; font-weight: 800; padding: 4px 9px; border-radius: 6px; letter-spacing: 0.3px; }
+  .cc2-type-badge.long  { background: var(--green-dim); color: var(--green); border: 1px solid rgba(46,229,145,0.35); }
+  .cc2-type-badge.short { background: var(--red-dim);   color: var(--red);   border: 1px solid rgba(255,77,97,0.35); }
+  .cc2-type-sub { font-size: 8.5px; color: var(--muted); margin-top: 5px; }
+
+  .cc2-whales-head { font-size: 9px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted2); font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 4px; }
+  .cc2-whale-row { margin-bottom: 7px; }
+  .cc2-whale-row:last-child { margin-bottom: 0; }
+  .cc2-whale-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 9.5px; margin-bottom: 3px; }
+  .cc2-whale-left { display: flex; align-items: center; gap: 5px; min-width: 0; }
+  .cc2-whale-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .cc2-whale-addr { font-family: var(--mono); color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cc2-whale-side { font-size: 8px; font-weight: 800; flex-shrink: 0; }
+  .cc2-whale-side.long  { color: var(--green); }
+  .cc2-whale-side.short { color: var(--red); }
+  .cc2-whale-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; font-family: var(--mono); }
+  .cc2-whale-vol { color: var(--text); font-weight: 600; }
+  .cc2-whale-pct { color: var(--muted); }
+  .cc2-whale-bar-track { height: 4px; border-radius: 2px; background: var(--bg4); overflow: hidden; }
+  .cc2-whale-bar-fill { height: 100%; border-radius: 2px; }
+  .cc2-whale-more { font-size: 8.5px; color: var(--muted2); text-align: center; padding-top: 3px; }
+
+  .cc2-footer { padding-top: 10px; margin-top: 10px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; font-size: 8.5px; color: var(--muted); font-family: var(--mono); }
+  .cc2-footer-row { display: flex; align-items: center; gap: 5px; }
+  .cc2-footer-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); flex-shrink: 0; animation: cc2Pulse 1.4s ease-in-out infinite; }
+  .cc2-footer .cc2-succ { color: var(--green); font-weight: 700; }
+  .cc2-footer b { color: var(--text); font-weight: 700; }
 
   /* ── SMART EXIT MONITOR ── */
   @keyframes exitWarn { 0%,100%{opacity:1} 50%{opacity:0.5} }
@@ -2934,43 +3383,70 @@
   }
   .smart-exit-body {
     padding: 12px;
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
     gap: 10px;
   }
+  @media (max-width: 1500px) { .smart-exit-body { grid-template-columns: repeat(4, 1fr); } }
+  @media (max-width: 1200px) { .smart-exit-body { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 860px)  { .smart-exit-body { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px)  { .smart-exit-body { grid-template-columns: 1fr; } }
+
+  /* Tier palette: vlow → vhigh mirrors the 5-segment risk gauge */
+  .exit-card { --tier-color: var(--green); }
+  .exit-card.tier-vlow   { --tier-color: var(--green); }
+  .exit-card.tier-low    { --tier-color: #e8d84a; }
+  .exit-card.tier-medium { --tier-color: var(--amber); }
+  .exit-card.tier-high   { --tier-color: var(--red); }
+  .exit-card.tier-vhigh  { --tier-color: #7a1220; }
+
   .exit-card {
     background: var(--bg3);
     border: 1px solid var(--border2);
     border-radius: var(--radius-sm);
-    padding: 10px 14px;
-    min-width: 180px;
-    flex: 1;
-    max-width: 260px;
+    padding: 11px 12px;
     position: relative;
     overflow: hidden;
     transition: border-color 0.15s, transform 0.12s;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
   .exit-card:hover { border-color: var(--border3); transform: translateY(-1px); }
   .exit-card.alert { border-color: rgba(255,61,77,0.4); }
-  .exit-card.alert::before {
+  .exit-card::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 2px;
+    background: var(--tier-color);
+  }
+  .exit-card.alert::before {
     background: linear-gradient(90deg, var(--red), #c00020);
     animation: exitWarn 1.5s ease-in-out infinite;
   }
   .exit-card.safe::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
     background: linear-gradient(90deg, var(--green), #00b860);
   }
+  .exit-card-top {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 6px;
+  }
   .exit-pair-row {
-    display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
   }
   .exit-pair { font-size: 13px; font-weight: 700; color: #fff; }
+  .exit-dir-badge {
+    font-size: 8px; padding: 1px 6px; border-radius: 4px; font-weight: 700; letter-spacing: 0.4px;
+  }
+  .exit-dir-badge.long  { background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,224,122,0.25); }
+  .exit-dir-badge.short { background: var(--red-dim);   color: var(--red);   border: 1px solid rgba(255,61,77,0.25); }
+  .exit-risk-badge {
+    font-size: 8px; padding: 2px 7px; border-radius: 4px; font-weight: 700;
+    letter-spacing: 0.2px; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px;
+    background: color-mix(in srgb, var(--tier-color) 14%, transparent);
+    color: var(--tier-color);
+    border: 1px solid color-mix(in srgb, var(--tier-color) 35%, transparent);
+  }
   .exit-warn-badge {
     font-size: 8px; padding: 1px 6px; border-radius: 3px; font-weight: 700;
     letter-spacing: 0.4px;
@@ -2978,6 +3454,59 @@
   .exit-warn-badge.high { background: var(--red-dim); color: var(--red); border: 1px solid rgba(255,61,77,0.3); animation: exitWarn 1.5s ease-in-out infinite; }
   .exit-warn-badge.medium { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,166,35,0.3); }
   .exit-warn-badge.low { background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,224,122,0.2); }
+  .exit-metric-row {
+    display: flex; align-items: baseline; gap: 8px;
+  }
+  .exit-pct {
+    font-family: var(--sans); font-size: 22px; font-weight: 800; line-height: 1;
+  }
+  .exit-pct.danger { color: var(--red); }
+  .exit-pct.warn   { color: var(--amber); }
+  .exit-pct.safe   { color: var(--green); }
+  .exit-level-pill {
+    font-size: 8px; font-weight: 700; letter-spacing: 0.3px; padding: 2px 7px; border-radius: 20px;
+    background: color-mix(in srgb, var(--tier-color) 16%, transparent);
+    color: var(--tier-color);
+    border: 1px solid color-mix(in srgb, var(--tier-color) 35%, transparent);
+  }
+  .exit-metric-label { font-size: 8.5px; color: var(--muted); letter-spacing: 0.2px; margin-top: -6px; }
+  .exit-progress-track {
+    width: 100%; height: 8px; border-radius: 5px; background: var(--bg);
+    overflow: hidden; border: 1px solid var(--border2);
+  }
+  .exit-progress-fill {
+    height: 100%; border-radius: 5px; background: var(--tier-color);
+    transition: width 0.4s ease;
+  }
+  .exit-gauge-track {
+    position: relative; display: flex; gap: 2px; height: 5px; border-radius: 3px; overflow: visible;
+  }
+  .exit-gauge-seg { flex: 1; height: 100%; border-radius: 2px; opacity: 0.35; }
+  .exit-gauge-seg.vlow  { background: var(--green); }
+  .exit-gauge-seg.low   { background: #e8d84a; }
+  .exit-gauge-seg.med   { background: var(--amber); }
+  .exit-gauge-seg.high  { background: var(--red); }
+  .exit-gauge-seg.vhigh { background: #7a1220; }
+  .exit-card.tier-vlow   .exit-gauge-seg.vlow,
+  .exit-card.tier-low    .exit-gauge-seg.low,
+  .exit-card.tier-medium .exit-gauge-seg.med,
+  .exit-card.tier-high   .exit-gauge-seg.high,
+  .exit-card.tier-vhigh  .exit-gauge-seg.vhigh { opacity: 1; }
+  .exit-gauge-dot {
+    position: absolute; top: 50%; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--tier-color); border: 2px solid var(--bg3);
+    transform: translate(-50%, -50%); box-shadow: 0 0 0 1px var(--tier-color);
+    transition: left 0.4s ease;
+  }
+  .exit-footer-row {
+    display: flex; align-items: center; gap: 10px; padding-top: 6px;
+    border-top: 1px solid var(--border2);
+  }
+  .exit-footer-col { display: flex; flex-direction: column; gap: 1px; flex: 1; }
+  .exit-footer-divider { width: 1px; align-self: stretch; background: var(--border2); }
+  .exit-footer-label { font-size: 8px; color: var(--muted); letter-spacing: 0.3px; }
+  .exit-footer-value { font-family: var(--sans); font-size: 13px; font-weight: 700; color: var(--text); }
+  .exit-footer-value small { font-size: 8.5px; font-weight: 600; color: var(--muted); }
   .exit-bars {
     display: flex; gap: 4px; margin: 6px 0; align-items: flex-end; height: 52px;
   }
@@ -3004,15 +3533,97 @@
   }
   .exit-stats {
     font-size: 9px; color: var(--muted);
-    display: flex; flex-direction: column; gap: 2px; margin-top: 4px;
+    display: flex; flex-direction: column; gap: 2px;
   }
-  .exit-pct {
-    font-family: var(--sans); font-size: 20px; font-weight: 800; line-height: 1;
-  }
-  .exit-pct.danger { color: var(--red); }
-  .exit-pct.warn   { color: var(--amber); }
-  .exit-pct.safe   { color: var(--green); }
   .exit-empty { color: var(--muted2); font-size: 11px; padding: 20px; }
+
+  /* ── Smart Exit card v2 — rich layout: icon header, signal badge, %closed
+     vs 7D trend two-column block, historical gauge scale, 2x2 icon-stat
+     grid and bottom footer line. Sized like the Whale Score cards. ── */
+  .exit-card-head { display: flex; align-items: center; gap: 8px; }
+  .exit-card-icon {
+    width: 26px; height: 26px; flex-shrink: 0; border-radius: 7px;
+    border: 1.5px solid var(--tier-color);
+    background: color-mix(in srgb, var(--tier-color) 10%, var(--bg));
+    display: flex; align-items: center; justify-content: center;
+    color: var(--tier-color);
+    font-size: 13px;
+  }
+  .exit-card-titleblock { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .exit-card-subrow { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .exit-card-subtitle {
+    font-size: 8.5px; color: var(--muted); letter-spacing: 0.1px;
+    display: flex; align-items: center; gap: 3px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+  }
+  .exit-card-subtitle i { font-style: normal; opacity: 0.55; cursor: help; flex-shrink: 0; }
+  .exit-signal-badge {
+    display: flex; align-items: center; gap: 4px; flex-shrink: 0;
+    font-size: 9px; font-weight: 700; letter-spacing: 0.2px;
+    padding: 2px 7px; border-radius: 20px; white-space: nowrap;
+    background: color-mix(in srgb, var(--tier-color) 12%, transparent);
+    color: var(--tier-color);
+    border: 1px solid color-mix(in srgb, var(--tier-color) 32%, transparent);
+  }
+  .exit-signal-badge .ic { font-size: 11px; }
+
+  .exit-card-mid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    padding: 8px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  }
+  .exit-mid-col:first-child { border-right: 1px solid var(--border); padding-right: 10px; }
+  .exit-mid-label {
+    font-size: 8px; color: var(--muted); text-transform: uppercase; font-weight: 600;
+    letter-spacing: 0.3px; margin-bottom: 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .exit-footer-row.nested { border-top: none; padding-top: 6px; margin-top: 2px; }
+
+  .exit-trend-row { display: flex; align-items: baseline; gap: 5px; }
+  .exit-trend-pct { font-family: var(--sans); font-size: 18px; font-weight: 800; line-height: 1; }
+  .exit-trend-pct.down { color: var(--green); }
+  .exit-trend-pct.up   { color: var(--red); }
+  .exit-trend-pct.flat { color: var(--muted); }
+  .exit-trend-svg { width: 100%; height: 30px; display: block; margin: 4px 0 2px; }
+  .exit-trend-cap { font-size: 8.5px; color: var(--muted); line-height: 1.3; }
+  .exit-trend-collecting { font-size: 9px; color: var(--muted2); padding: 12px 0; }
+
+  .exit-gauge-wrap { padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .exit-gauge-title {
+    font-size: 8px; color: var(--muted); text-transform: uppercase; font-weight: 600;
+    letter-spacing: 0.3px; margin-bottom: 7px;
+  }
+  .exit-gauge-scale-labels {
+    display: flex; justify-content: space-between; margin-top: 6px;
+    font-size: 7px; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.1px; text-align: center;
+  }
+  .exit-gauge-scale-labels span { flex: 1; }
+  .exit-gauge-scale-labels span.active { color: var(--tier-color); font-weight: 700; }
+
+  .exit-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px 10px; padding: 9px 0; }
+  .exit-stat-item { display: flex; align-items: flex-start; gap: 6px; min-width: 0; }
+  .exit-stat-icon {
+    width: 20px; height: 20px; flex-shrink: 0; border-radius: 6px;
+    border: 1px solid var(--border2); color: var(--muted);
+    display: flex; align-items: center; justify-content: center; margin-top: 1px;
+    font-size: 11px;
+  }
+  .exit-stat-body { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .exit-stat-label {
+    font-size: 7.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .exit-stat-value { font-family: var(--sans); font-size: 15px; font-weight: 800; color: var(--text); line-height: 1.2; }
+  .exit-stat-sub { font-size: 8px; color: var(--muted); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .exit-card-footerline {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding-top: 8px; border-top: 1px solid var(--border2);
+    font-size: 8px; color: var(--muted); flex-wrap: wrap;
+  }
+  .exit-card-footerline b { color: var(--text); font-weight: 700; }
+  .exit-card-footerline .exit-foot-l,
+  .exit-card-footerline .exit-foot-r { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .exit-card-footerline .ic { font-size: 10px; }
 
   /* ── WHALE LEADERBOARD ── */
   @keyframes crownBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
@@ -3328,6 +3939,7 @@
   /* ── Whale Consensus cards ── */
   .consensus-card {
     --row-color: #00e07a; /* fallback — sobrescrito inline */
+    position: relative;
     transition: border-color 0.15s var(--ease), transform 0.12s var(--ease), box-shadow 0.15s var(--ease), background 0.15s var(--ease);
     cursor: pointer;
   }
@@ -3358,6 +3970,175 @@
   .consensus-wallet-dot:hover { transform: scale(1.45); }
   .consensus-wallet-dot.is-selected { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--dot-color, #00e07a); transform: scale(1.3); }
   .consensus-wallet-dot-label { font-size: 8px; color: var(--muted2); letter-spacing: 0.3px; }
+
+  /* ── Whale Consensus cards v2 (layout detalhado) ── */
+  .consensus-card {
+    min-width: 0;
+    width: 100%;
+    padding: 14px 14px;
+    gap: 0;
+  }
+  .wc2-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    margin-bottom: 13px;
+  }
+  .wc2-title { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .wc2-icon {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    border: 1.5px solid var(--row-color, var(--green));
+    background: color-mix(in srgb, var(--row-color, var(--green)) 10%, var(--bg));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+  }
+  .wc2-pair-name {
+    font-family: var(--sans);
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .wc2-tag {
+    font-family: var(--mono);
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    color: var(--muted);
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 5px;
+    padding: 3px 6px;
+    flex-shrink: 0;
+  }
+  .wc2-bigpct-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .wc2-bigpct { flex-shrink: 0; line-height: 1.05; }
+  .wc2-bigpct-num { font-family: var(--sans); font-size: 17px; font-weight: 800; }
+  .wc2-bigpct-label { font-family: var(--mono); font-size: 7px; font-weight: 700; letter-spacing: 0.4px; margin-top: 2px; }
+  .wc2-bigpct.long  .wc2-bigpct-num, .wc2-bigpct.long  .wc2-bigpct-label { color: var(--green); }
+  .wc2-bigpct.short .wc2-bigpct-num, .wc2-bigpct.short .wc2-bigpct-label { color: var(--red); }
+  .wc2-bigpct.short { text-align: right; }
+  .wc2-track {
+    flex: 1;
+    height: 7px;
+    background: var(--red);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .wc2-fill-long { height: 100%; background: var(--green); border-radius: 4px 0 0 4px; transition: width 0.4s ease; }
+  .wc2-consensus-line {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 7px 9px;
+    margin-bottom: 12px;
+  }
+  .wc2-consensus-line b.long  { color: var(--green); }
+  .wc2-consensus-line b.short { color: var(--red); }
+  .wc2-check { color: var(--green); }
+  .wc2-sep { color: var(--border3); }
+  .wc2-whales-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .wc2-whales-col { flex: 1; min-width: 0; }
+  .wc2-whales-divider { width: 1px; align-self: stretch; background: var(--border2); }
+  .wc2-whales-count {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .wc2-whales-count b { font-size: 13px; }
+  .wc2-whale-badge {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+  .wc2-whale-badge.long  { background: rgba(46,229,145,0.14); }
+  .wc2-whale-badge.short { background: rgba(255,77,97,0.14); }
+  .wc2-whale-avatars { display: flex; flex-wrap: wrap; gap: 5px; }
+  .wc2-whale-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    cursor: pointer;
+    border: 1.5px solid rgba(0,0,0,0.18);
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .wc2-whale-avatar:hover { transform: scale(1.12); }
+  .wc2-whale-avatar.is-selected { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--dot-color, #00e07a); transform: scale(1.08); }
+  .wc2-none { color: var(--muted2); font-size: 12px; }
+  .wc2-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .wc2-footer-col { flex: 1; min-width: 0; }
+  .wc2-footer-label {
+    font-family: var(--mono);
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-bottom: 7px;
+  }
+  .wc2-level-row { display: flex; align-items: center; gap: 5px; }
+  .wc2-level-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border2); flex-shrink: 0; }
+  .wc2-level-dot.on { background: var(--green); }
+  .wc2-level-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--green);
+    border: 1px solid var(--green);
+    border-radius: 6px;
+    padding: 2px 6px;
+    margin-left: 2px;
+  }
+  .wc2-trend-row { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; }
+  .wc2-trend-icon { font-size: 13px; }
+  .wc2-trend-up   { color: var(--green); font-weight: 700; }
+  .wc2-trend-down { color: var(--red); font-weight: 700; }
+  .wc2-trend-note { color: var(--muted); font-size: 9.5px; }
+  .wc2-trend-neutral { color: var(--muted2); font-size: 9.5px; }
 
   /* ── Conviction Score cards ── */
   .conviction-card { transition: border-color 0.15s var(--ease), transform 0.12s var(--ease), box-shadow 0.15s var(--ease); cursor: default; }
@@ -3979,7 +4760,16 @@
   <div class="whale-score-panel" id="whale-score-panel">
     <div class="whale-score-head">
       <span>🏆 Whale Score</span>
-      <span class="panel-count" id="whale-score-count">0 wallets</span>
+      <div class="panel-filter-group" style="flex:1">
+        <select id="whale-score-tier-filter" class="panel-filter-select" onchange="renderWhaleScore()" title="Filtrar por Whale Score">
+          <option value="all">Todos os scores</option>
+          <option value="low">🔴 Ruim (0-39)</option>
+          <option value="mid">🔵 Regular (40-59)</option>
+          <option value="good">🟢 Bom (60-79)</option>
+          <option value="elite">🟡 Elite (80-100)</option>
+        </select>
+        <span class="panel-count" id="whale-score-count">0 wallets</span>
+      </div>
       <span class="panel-head-actions">
         <span class="panel-help" data-help="Pontuação que resume a performance histórica de cada wallet (winrate, PnL, consistência) para identificar as melhores baleias.">?</span>
         <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-score-panel',this)" title="Minimizar"></button>
@@ -4079,11 +4869,9 @@
         </select>
         <select id="mom-grade-filter" class="panel-filter-select" onchange="renderWhaleMomentum()" title="Grau de momentum">
           <option value="all">Todos os graus</option>
+          <option value="down">📉 Desacelerando</option>
           <option value="stable">➡️ Estável</option>
-          <option value="growing">📈 Crescendo</option>
-          <option value="strong">🚀 Forte</option>
-          <option value="reducing">📉 Reduzindo</option>
-          <option value="reducing_strong">💥 Reduzindo Forte</option>
+          <option value="up">📈 Acelerando</option>
         </select>
         <span class="panel-count" id="whale-momentum-count">0 pares</span>
       </div>
@@ -4326,7 +5114,7 @@
   <!-- ENTRY CLUSTER DETECTION -->
   <div class="entry-cluster-panel" id="entry-cluster-panel">
     <div class="entry-cluster-head">
-      <span>🧲 Entry Cluster Detection</span>
+      <span>🧲 Detecção de Cluster de Entrada</span>
       <span class="panel-count" id="entry-cluster-count">0 clusters</span>
       <span class="panel-head-actions">
         <span class="panel-help" data-help="Detecta clusters de entradas simultâneas de múltiplas baleias no mesmo ativo e direção, um sinal de movimento coordenado.">?</span>
@@ -4351,6 +5139,13 @@
       <label>Ativo:</label>
       <select id="cluster-asset-filter" class="panel-filter-select" onchange="renderEntryCluster()" title="Filtrar por ativo">
         <option value="all">Todos</option>
+      </select>
+      <label>Força:</label>
+      <select id="cluster-strength-filter" class="panel-filter-select" onchange="renderEntryCluster()" title="Filtrar por força do cluster">
+        <option value="all">Todas</option>
+        <option value="high">Alta</option>
+        <option value="medium">Média</option>
+        <option value="low">Baixa</option>
       </select>
     </div>
     <div class="entry-cluster-body" id="entry-cluster-body">
@@ -4384,11 +5179,14 @@
         <option value="long">🟢 Long</option>
         <option value="short">🔴 Short</option>
       </select>
-      <label>Incremento:</label>
-      <select id="exit-grade-filter" class="panel-filter-select" onchange="renderSmartExit()" title="Grau de variação das posições">
+      <label>Nível de Risco:</label>
+      <select id="exit-grade-filter" class="panel-filter-select" onchange="renderSmartExit()" title="Nível de risco de saída das posições">
         <option value="all">Todos</option>
+        <option value="vlow">🟢 Muito Baixo</option>
+        <option value="low">🟡 Baixo</option>
+        <option value="medium">🟠 Médio</option>
         <option value="high">🔴 Alto</option>
-        <option value="low">🟢 Baixo</option>
+        <option value="vhigh">⚫ Muito Alto</option>
       </select>
     </div>
     <div class="smart-exit-body" id="smart-exit-body">
@@ -11697,41 +12495,8 @@
      WinRate   = trades vencedores / total trades (0–100)
      PF (Profit Factor) = soma ganhos / soma perdas (normalizado para 0–100)
      Consistência = heurística baseada no número de trades (mais trades = mais confiança)
+     (implementação definitiva está mais abaixo, mesclando dados REST + curva de equity)
   ─────────────────────────────────────────────────────────────────────────── */
-  function calcWhaleScore(addr) {
-    // Coleta histórico de fechadas + history
-    const closedList = closed.filter(p => p.addr === addr);
-    const histList   = history.filter(p => p.addr === addr);
-    // Mescla, evitando duplicatas (fecha + hist podem se sobrepor)
-    const allTrades  = [...closedList];
-    histList.forEach(h => {
-      const dup = allTrades.find(c =>
-        c.pair === h.pair &&
-        Math.abs((c.openedAtTs || 0) - (h.openedAtTs || 0)) < 60000
-      );
-      if (!dup) allTrades.push(h);
-    });
-
-    if (allTrades.length === 0) return null;
-
-    let wins = 0, losses = 0, sumGain = 0, sumLoss = 0;
-    allTrades.forEach(t => {
-      const pnl = t.finalPnl ?? t.pnl ?? 0;
-      if (pnl > 0) { wins++;   sumGain += pnl; }
-      else          { losses++; sumLoss += Math.abs(pnl); }
-    });
-
-    const total   = allTrades.length;
-    const wr      = total > 0 ? (wins / total) * 100 : 0; // 0-100
-    const pf      = sumLoss > 0 ? sumGain / sumLoss : (sumGain > 0 ? 3 : 1); // raw
-    // Normaliza PF: PF=1 → 50, PF=2 → 75, PF=3+ → 100, PF<1 decresce
-    const pfNorm  = Math.min(100, Math.max(0, pf < 1 ? pf * 50 : 50 + (pf - 1) * 25));
-    // Consistência: escala logarítmica de trades (10 trades → ~50, 50 → ~80, 100+ → ~100)
-    const consist = Math.min(100, Math.max(0, Math.log10(Math.max(1, total)) / Math.log10(200) * 100));
-    const score   = Math.round(wr * 0.4 + pfNorm * 0.4 + consist * 0.2);
-
-    return { score, wr: wr.toFixed(1), pf: pf.toFixed(2), trades: total, wins, losses };
-  }
 
   function renderWhaleScore() {
     const body  = document.getElementById('whale-score-body');
@@ -11744,8 +12509,28 @@
       return;
     }
 
-    const cards = trackedWallets.filter(addr => !isWalletFiltered(addr)).map(addr => {
-      const s  = calcWhaleScore(addr);
+    const _visibleAddrs = trackedWallets.filter(addr => !isWalletFiltered(addr));
+    let _scored = _visibleAddrs.map(addr => ({ addr, s: calcWhaleScore(addr) }));
+    // Win rates válidas, ordenadas desc, para calcular o percentil ("Top X%")
+    const _wrSorted = _scored.filter(x => x.s).map(x => parseFloat(x.s.wr)).sort((a, b) => b - a);
+
+    // ── Filtro por Whale Score (Ruim/Regular/Bom/Elite) ─────────────────────
+    const _fTier = (document.getElementById('whale-score-tier-filter') || {}).value || 'all';
+    if (_fTier !== 'all') {
+      _scored = _scored.filter(({ s }) => {
+        if (!s) return false;
+        const _t = s.score >= 80 ? 'elite' : s.score >= 60 ? 'good' : s.score >= 40 ? 'mid' : 'low';
+        return _t === _fTier;
+      });
+    }
+
+    if (!_scored.length) {
+      body.innerHTML = '<div class="score-empty">Nenhuma wallet com este Whale Score</div>';
+      if (count) count.textContent = '0 wallets';
+      return;
+    }
+
+    const cards = _scored.map(({ addr, s }) => {
       const wc = walletColor(addr);
       const shortA = addr.slice(0,6) + '…' + addr.slice(-4);
       const _isSelW = selectedWalletAddr && selectedWalletAddr.toLowerCase() === addr.toLowerCase();
@@ -11760,66 +12545,156 @@
         ? `<span class="score-card-rank${_rankCls}" title="Posição no Ranking PnL realizado">#${_rankPos}</span>`
         : '';
       const copyBtn = `<button class="w-copy" title="Copiar endereço" onclick="event.stopPropagation();copyWalletAddr(this,'${addr}')">⧉</button>`;
+      const whaleBadge = `<div class="score-card-whalebadge" title="Whale Score: combinação de Win Rate, Profit Factor, Consistência e Drawdown">🐋 WHALE SCORE <i>ⓘ</i></div>`;
 
       if (!s) {
         return `<div class="score-card tier-mid${selCls}" ${cardAttrs}>
-          <div class="score-card-addr">
-            ${rankBadge}
-            <span class="score-card-dot" style="background:${wc}"></span>
-            <span>${shortA}</span>
-            ${copyBtn}
+          <div class="score-card-top">
+            <div class="score-card-top-left">
+              ${rankBadge}
+              <span class="score-card-dot" style="background:${wc}"></span>
+              <span class="score-card-addrtext">${shortA}</span>
+              ${copyBtn}
+            </div>
+            ${whaleBadge}
           </div>
-          <div class="score-metric-label" style="color:var(--muted2)">Sem histórico suficiente</div>
-          <div class="score-final">
-            <span class="score-final-num" style="color:var(--muted2)">—</span>
-            <span class="score-final-denom">/100</span>
+          <div class="score-card-empty-msg">Sem histórico suficiente</div>
+          <div class="score-card-bottom">
+            <div class="score-final-big">
+              <div class="score-final-num-big" style="color:var(--muted2)">—<span class="denom">/100</span></div>
+            </div>
           </div>
         </div>`;
       }
 
       const tier = s.score >= 80 ? 'elite' : s.score >= 60 ? 'good' : s.score >= 40 ? 'mid' : 'low';
-      const tierLabel = s.score >= 80 ? 'Elite' : s.score >= 60 ? 'Strong' : s.score >= 40 ? 'Average' : 'Weak';
+      const tierLabel = tier === 'elite' ? 'Elite' : tier === 'good' ? 'Bom' : tier === 'mid' ? 'Regular' : 'Ruim';
       const barColor = tier === 'elite' ? '#ffd700' : tier === 'good' ? 'var(--green)' : tier === 'mid' ? 'var(--blue)' : 'var(--amber)';
 
+      // Win Rate: percentil relativo às demais wallets visíveis
+      const _wrVal = parseFloat(s.wr);
+      const _wrRank = _wrSorted.indexOf(_wrVal) + 1;
+      const wrSub = _wrRank > 0 ? `Top ${Math.max(1, Math.round(_wrRank / _wrSorted.length * 100))}%` : '';
+
+      // Profit Factor: rótulo qualitativo
+      const _pfVal = parseFloat(s.pf);
+      const pfLabel = _pfVal >= 3 ? 'Excelente' : _pfVal >= 2 ? 'Muito bom' : _pfVal >= 1.5 ? 'Bom' : _pfVal >= 1 ? 'Regular' : 'Fraco';
+
+      // Consistência: barras (1-5) + rótulo
+      const consistLabel = s.consist >= 80 ? 'Alta' : s.consist >= 50 ? 'Média' : 'Baixa';
+      const barsFilled = Math.max(1, Math.round(s.consist / 100 * 5));
+      const consistBars = Array.from({ length: 5 }).map((_, i) =>
+        `<span class="consist-bar${i < barsFilled ? ' filled' : ''}" style="${i < barsFilled ? `background:${barColor}` : ''}"></span>`
+      ).join('');
+
+      // Drawdown máximo + rótulo de risco
+      const ddColor = s.maxDD < 10 ? 'var(--green)' : s.maxDD < 20 ? 'var(--amber)' : 'var(--red)';
+      const ddLabel = s.maxDD < 10 ? 'Baixo Risco' : s.maxDD < 20 ? 'Médio Risco' : 'Alto Risco';
+
+      // Curva de equity (SVG sparkline com área preenchida)
+      const _curve = s.curve;
+      const _min = Math.min(..._curve), _max = Math.max(..._curve);
+      const _range = (_max - _min) || 1;
+      const _W = 160, _H = 54;
+      const _stepX = _curve.length > 1 ? _W / (_curve.length - 1) : _W;
+      const _pts = _curve.map((v, i) => {
+        const x = i * _stepX;
+        const y = _H - ((v - _min) / _range) * _H;
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      });
+      const _linePath = 'M' + _pts.join(' L');
+      const _areaPath = `${_linePath} L${_W},${_H} L0,${_H} Z`;
+      const _lastPt = _pts[_pts.length - 1].split(',');
+      const _curveUp = _curve[_curve.length - 1] >= _curve[0];
+      const _curveColor = _curveUp ? 'var(--green)' : 'var(--red)';
+      const _gradId = 'eqGrad' + addr.replace(/[^a-zA-Z0-9]/g, '').slice(0, 10) + _rankIdx;
+      const equitySvg = `<svg viewBox="0 0 ${_W} ${_H}" preserveAspectRatio="none" class="equity-svg">
+          <defs><linearGradient id="${_gradId}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="${_curveColor}" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="${_curveColor}" stop-opacity="0"/>
+          </linearGradient></defs>
+          <path d="${_areaPath}" fill="url(#${_gradId})" stroke="none"/>
+          <path d="${_linePath}" fill="none" stroke="${_curveColor}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+          <circle cx="${_lastPt[0]}" cy="${_lastPt[1]}" r="2.6" fill="${_curveColor}"/>
+        </svg>`;
+
+      const _scalePct = Math.min(100, Math.max(0, s.score));
+
       return `<div class="score-card tier-${tier}${selCls}" ${cardAttrs}>
-        <div class="score-card-addr">
-          ${rankBadge}
-          <span class="score-card-dot" style="background:${wc}"></span>
-          <span>${shortA}</span>
-          ${copyBtn}
+        <div class="score-card-top">
+          <div class="score-card-top-left">
+            ${rankBadge}
+            <span class="score-card-dot" style="background:${wc}"></span>
+            <span class="score-card-addrtext">${shortA}</span>
+            ${copyBtn}
+          </div>
+          ${whaleBadge}
         </div>
-        <div class="score-card-metrics">
-          <div class="score-metric">
-            <span class="score-metric-label">Win Rate</span>
-            <span class="score-metric-val">${s.wr}%</span>
+
+        <div class="score-card-stats">
+          <div class="score-stat">
+            <div class="score-stat-label">Win Rate <i>ⓘ</i></div>
+            <div class="score-stat-val" style="color:var(--green)">${s.wr}%</div>
+            <div class="score-stat-sub" style="color:var(--green)">${wrSub}</div>
           </div>
-          <div class="score-metric">
-            <span class="score-metric-label">Profit Factor</span>
-            <span class="score-metric-val">${s.pf}x</span>
+          <div class="score-stat">
+            <div class="score-stat-label">Profit Factor <i>ⓘ</i></div>
+            <div class="score-stat-val" style="color:var(--green)">${s.pf}x</div>
+            <div class="score-stat-sub" style="color:var(--green)">${pfLabel}</div>
           </div>
-          <div class="score-metric">
-            <span class="score-metric-label">Trades</span>
-            <span class="score-metric-val">${s.trades}</span>
+          <div class="score-stat">
+            <div class="score-stat-label">Trades</div>
+            <div class="score-stat-val">${s.trades}</div>
+            <div class="score-stat-sub">Histórico completo</div>
           </div>
-          <div class="score-metric">
-            <span class="score-metric-label">W/L</span>
-            <span class="score-metric-val" style="color:var(--green)">${s.wins}</span><span class="score-metric-val" style="color:var(--muted2)">/</span><span class="score-metric-val" style="color:var(--red)">${s.losses}</span>
+          <div class="score-stat-divider"></div>
+          <div class="score-stat">
+            <div class="score-stat-label">Win/Loss</div>
+            <div class="score-stat-val"><span style="color:var(--green)">${s.wins}</span><span style="color:var(--muted2)"> / </span><span style="color:var(--red)">${s.losses}</span></div>
+            <div class="score-stat-sub"><span style="color:var(--green)">${s.wr}%</span> Win Rate</div>
           </div>
         </div>
-        <div class="score-bar-wrap">
-          <div class="score-bar-fill" style="width:${s.score}%;background:${barColor}"></div>
+
+        <div class="score-card-mid">
+          <div class="score-mid-col">
+            <div class="score-mid-label">Equity Curve (90D)</div>
+            ${equitySvg}
+          </div>
+          <div class="score-mid-col">
+            <div class="score-mid-label">Consistência <i>ⓘ</i></div>
+            <div class="consist-bars">${consistBars}</div>
+            <div class="consist-sub" style="color:${barColor}">${consistLabel}</div>
+          </div>
+          <div class="score-mid-col">
+            <div class="score-mid-label">Drawdown Máx. <i>ⓘ</i></div>
+            <div class="dd-badge" style="color:${ddColor}">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="${ddColor}" stroke-width="2"><path d="M12 2 4 5v6c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V5l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+              <span>${s.maxDD.toFixed(1)}%</span>
+            </div>
+            <div class="dd-sub" style="color:${ddColor}">${ddLabel}</div>
+          </div>
         </div>
-        <div class="score-final">
-          <span class="score-final-num">${s.score}</span>
-          <span class="score-final-denom">/100</span>
-          <span class="score-final-label">${tierLabel}</span>
+
+        <div class="score-card-bottom">
+          <div class="score-final-big">
+            <div class="score-final-num-big" style="color:${barColor}">${s.score}<span class="denom">/100</span></div>
+            <div class="tier-pill-big" style="color:${barColor};border-color:${barColor}">${tierLabel}</div>
+          </div>
+          <div class="score-scale">
+            <div class="score-bar-wrap-big"><div class="score-bar-fill-big" style="width:${_scalePct}%;background:${barColor}"></div></div>
+            <div class="score-scale-labels">
+              <span class="${tier === 'low' ? 'active' : ''}" style="${tier === 'low' ? `color:${barColor}` : ''}">0-39<br>Ruim</span>
+              <span class="${tier === 'mid' ? 'active' : ''}" style="${tier === 'mid' ? `color:${barColor}` : ''}">40-59<br>Regular</span>
+              <span class="${tier === 'good' ? 'active' : ''}" style="${tier === 'good' ? `color:${barColor}` : ''}">60-79<br>Bom</span>
+              <span class="${tier === 'elite' ? 'active' : ''}" style="${tier === 'elite' ? `color:${barColor}` : ''}">80-100<br>Elite</span>
+            </div>
+          </div>
         </div>
       </div>`;
     }).join('');
 
     body.innerHTML = `<div class="whale-score-grid">${cards}</div>`;
-    const _wsVisible = trackedWallets.filter(addr => !isWalletFiltered(addr)).length;
-    if (count) count.textContent = _wsVisible + ' wallet' + (_wsVisible !== 1 ? 's' : '');
+    if (count) count.textContent = _scored.length + ' wallet' + (_scored.length !== 1 ? 's' : '');
   }
 
   /* ── WHALE CONSENSUS ─────────────────────────────────────────────────────
@@ -11900,6 +12775,41 @@
     pairs.forEach(p => { if (!_consensusOrderKeys.includes(p)) _consensusOrderKeys.push(p); });
     pairs = _consensusOrderKeys.slice();
 
+    // Rótulo textual de força do consenso, com base no % dominante
+    function consensusStrengthLabel(pct) {
+      if (pct >= 90) return 'MUITO ALTA';
+      if (pct >= 75) return 'ALTA';
+      if (pct >= 60) return 'MODERADA';
+      return 'BAIXA';
+    }
+
+    // Nível de consenso (1-5 pontos), descontado quando a amostra de baleias é pequena
+    function consensusLevel(pct, totalWhales) {
+      let lvl = pct >= 90 ? 5 : pct >= 75 ? 4 : pct >= 60 ? 3 : pct >= 50 ? 2 : 1;
+      if (totalWhales < 3) lvl = Math.max(1, lvl - 1);
+      return lvl;
+    }
+
+    // Tendência do consenso (24h): compara o % dominante atual com a amostra mais antiga
+    // disponível dentro da janela de 24h, persistida em localStorage por par.
+    function consensusTrend24h(pair, dominantPct) {
+      const key = 'wcTrend:' + pair;
+      const now = Date.now();
+      const DAY = 24 * 60 * 60 * 1000;
+      let store = null;
+      try { store = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { store = null; }
+      let samples = (store && Array.isArray(store.samples)) ? store.samples : [];
+      let delta = null;
+      if (samples.length) {
+        const base = samples.find(s => now - s.t <= DAY) || samples[0];
+        delta = Math.round(dominantPct - base.pct);
+      }
+      samples = samples.concat([{ t: now, pct: dominantPct }]).filter(s => now - s.t <= DAY);
+      if (!samples.length) samples = [{ t: now, pct: dominantPct }];
+      try { localStorage.setItem(key, JSON.stringify({ samples: samples.slice(-30) })); } catch (e) {}
+      return delta;
+    }
+
     // Função que gera o innerHTML interno de um card (sem o wrapper <div>)
     function cardInner(pair) {
       const d     = byPair[pair];
@@ -11912,24 +12822,24 @@
       const dirPct   = dominant + '%';
 
       const allAddrs = [...new Set([...d.longAddrs, ...d.shortAddrs])];
-      const longDotsHtml = d.longAddrs.map(addr => {
+      const longAvatarsHtml = d.longAddrs.map(addr => {
         const wc = walletColor(addr);
         const isSelected = selectedWalletAddr && selectedWalletAddr.toLowerCase() === addr.toLowerCase();
         const selClass = isSelected ? ' is-selected' : '';
-        return `<span class="consensus-wallet-dot${selClass}" style="background:${wc};--dot-color:${wc}" onclick="event.stopPropagation();selectWalletFromConsensus('${addr}')" title="${addr} (Long)"></span>`;
+        return `<span class="wc2-whale-avatar${selClass}" style="background:${wc};--dot-color:${wc}" onclick="event.stopPropagation();selectWalletFromConsensus('${addr}')" title="${addr} (Long)">🐋</span>`;
       }).join('');
-      const shortDotsHtml = d.shortAddrs.map(addr => {
+      const shortAvatarsHtml = d.shortAddrs.map(addr => {
         const wc = walletColor(addr);
         const isSelected = selectedWalletAddr && selectedWalletAddr.toLowerCase() === addr.toLowerCase();
         const selClass = isSelected ? ' is-selected' : '';
-        return `<span class="consensus-wallet-dot${selClass}" style="background:${wc};--dot-color:${wc}" onclick="event.stopPropagation();selectWalletFromConsensus('${addr}')" title="${addr} (Short)"></span>`;
+        return `<span class="wc2-whale-avatar${selClass}" style="background:${wc};--dot-color:${wc}" onclick="event.stopPropagation();selectWalletFromConsensus('${addr}')" title="${addr} (Short)">🐋</span>`;
       }).join('');
 
       const hasSelectedWallet = !!selectedWalletAddr;
       const selWalletInCard = hasSelectedWallet && allAddrs.some(a => a.toLowerCase() === (selectedWalletAddr||'').toLowerCase());
       const cardOpacity = hasSelectedWallet && !selWalletInCard ? 0.35 : 1;
-      const wc = selWalletInCard ? walletColor(selectedWalletAddr) : null;
-      const cardStyle = `opacity:${cardOpacity};cursor:pointer;${wc ? `--row-color:${wc}` : ''}`;
+      const wc = selWalletInCard ? walletColor(selectedWalletAddr) : (isLongDominant ? 'var(--green)' : 'var(--red)');
+      const cardStyle = `opacity:${cardOpacity};cursor:pointer;--row-color:${wc};`;
       const cardClass = `consensus-card${selWalletInCard ? ' is-selected' : ''}`;
 
       const dominantAddrs = isLongDominant ? d.longAddrs : d.shortAddrs;
@@ -11937,24 +12847,79 @@
       const cycleAddrs = [...new Set([...dominantAddrs, ...nonDominantAddrs])];
       const cycleData = cycleAddrs.join(',');
 
-      const inner = `<div class="consensus-pair">${pair}</div>
-        <div class="consensus-bar-row">
-          <span class="consensus-label long" style="min-width:28px;text-align:right">${longPct}%</span>
-          <div class="consensus-track">
-            <div class="consensus-fill-long" style="width:${longPct}%"></div>
+      const totalWhales = d.long + d.short;
+      const strength   = consensusStrengthLabel(dominant);
+      const level      = consensusLevel(dominant, totalWhales);
+      const levelDotsHtml = Array.from({ length: 5 }, (_, i) =>
+        `<span class="wc2-level-dot${i < level ? ' on' : ''}"></span>`).join('');
+
+      const trendDelta = consensusTrend24h(pair, dominant);
+      let trendHtml;
+      if (trendDelta === null) {
+        trendHtml = `<span class="wc2-trend-neutral">coletando dados…</span>`;
+      } else if (trendDelta > 0) {
+        trendHtml = `<span class="wc2-trend-up">↑ +${trendDelta}%</span><span class="wc2-trend-note">mais forte</span>`;
+      } else if (trendDelta < 0) {
+        trendHtml = `<span class="wc2-trend-down">↓ ${trendDelta}%</span><span class="wc2-trend-note">mais fraco</span>`;
+      } else {
+        trendHtml = `<span class="wc2-trend-neutral">— estável</span>`;
+      }
+
+      const inner = `
+        <div class="wc2-header">
+          <div class="wc2-title">
+            <span class="wc2-icon">🐋</span>
+            <span class="wc2-pair-name">${pair}</span>
           </div>
-          <span class="consensus-label short" style="min-width:28px">${shortPct}%</span>
+          <span class="wc2-tag">PERP</span>
         </div>
-        <div class="consensus-label ${isLongDominant ? 'long' : 'short'}" style="font-size:10px">${dirLabel} ${dirPct}</div>
-        <div class="consensus-details">
-          🟢 ${d.long} baleia${d.long !== 1 ? 's' : ''} Long &nbsp;·&nbsp; 🔴 ${d.short} baleia${d.short !== 1 ? 's' : ''} Short
+        <div class="wc2-bigpct-row">
+          <div class="wc2-bigpct long">
+            <div class="wc2-bigpct-num">${longPct}%</div>
+            <div class="wc2-bigpct-label">LONG</div>
+          </div>
+          <div class="wc2-track">
+            <div class="wc2-fill-long" style="width:${longPct}%"></div>
+          </div>
+          <div class="wc2-bigpct short">
+            <div class="wc2-bigpct-num">${shortPct}%</div>
+            <div class="wc2-bigpct-label">SHORT</div>
+          </div>
         </div>
-        <div class="consensus-wallet-dots">
-          ${d.longAddrs.length ? `<span class="consensus-wallet-dot-label" style="color:rgba(46,229,145,0.6)">L:</span>${longDotsHtml}` : ''}
-          ${d.longAddrs.length && d.shortAddrs.length ? `<span style="color:var(--border2);margin:0 2px">|</span>` : ''}
-          ${d.shortAddrs.length ? `<span class="consensus-wallet-dot-label" style="color:rgba(255,77,97,0.7)">S:</span>${shortDotsHtml}` : ''}
-          ${hasSelectedWallet && selWalletInCard ? `<button onclick="event.stopPropagation();clearWalletSelection()" style="margin-left:auto;font-size:8px;background:rgba(255,61,77,0.12);border:1px solid rgba(255,61,77,0.3);color:var(--red);cursor:pointer;font-family:var(--mono);padding:1px 6px;border-radius:3px">✕</button>` : ''}
-        </div>`;
+        <div class="wc2-consensus-line">
+          <span class="wc2-check">✓</span>
+          <span>Consensus: <b class="${isLongDominant ? 'long' : 'short'}">${isLongDominant ? 'LONG' : 'SHORT'} ${dominant}%</b></span>
+          <span class="wc2-sep">|</span>
+          <span>Força do consenso: <b>${strength}</b></span>
+        </div>
+        <div class="wc2-whales-row">
+          <div class="wc2-whales-col">
+            <div class="wc2-whales-count">
+              <span class="wc2-whale-badge long">🐋</span>
+              <span><b class="long">${d.long}</b> baleia${d.long !== 1 ? 's' : ''} <span class="long">LONG</span></span>
+            </div>
+            <div class="wc2-whale-avatars">${longAvatarsHtml || '<span class="wc2-none">—</span>'}</div>
+          </div>
+          <div class="wc2-whales-divider"></div>
+          <div class="wc2-whales-col">
+            <div class="wc2-whales-count">
+              <span class="wc2-whale-badge short">🐋</span>
+              <span><b class="short">${d.short}</b> baleia${d.short !== 1 ? 's' : ''} <span class="short">SHORT</span></span>
+            </div>
+            <div class="wc2-whale-avatars">${shortAvatarsHtml || '<span class="wc2-none">—</span>'}</div>
+          </div>
+        </div>
+        <div class="wc2-footer">
+          <div class="wc2-footer-col">
+            <div class="wc2-footer-label">NÍVEL DE CONSENSO</div>
+            <div class="wc2-level-row">${levelDotsHtml}<span class="wc2-level-badge">${level}/5</span></div>
+          </div>
+          <div class="wc2-footer-col trend">
+            <div class="wc2-footer-label">TENDÊNCIA DO CONSENSO (24H)</div>
+            <div class="wc2-trend-row"><span class="wc2-trend-icon">📊</span>${trendHtml}</div>
+          </div>
+        </div>
+        ${hasSelectedWallet && selWalletInCard ? `<button onclick="event.stopPropagation();clearWalletSelection()" style="position:absolute;top:14px;right:14px;font-size:8px;background:rgba(255,61,77,0.12);border:1px solid rgba(255,61,77,0.3);color:var(--red);cursor:pointer;font-family:var(--mono);padding:1px 6px;border-radius:3px">✕</button>` : ''}`;
       return { inner, cardClass, cardStyle, cycleData };
     }
 
@@ -12019,21 +12984,37 @@
 
     if (allTrades.length === 0) return null;
 
+    // Ordena cronologicamente para construir a curva de equity e o drawdown
+    const chrono = [...allTrades].sort((a, b) =>
+      (a.closedAtTs || a.closedTs || a.openedAtTs || 0) - (b.closedAtTs || b.closedTs || b.openedAtTs || 0));
+
     let wins = 0, losses = 0, sumGain = 0, sumLoss = 0;
-    allTrades.forEach(t => {
+    let cum = 0, peak = 0, maxDD = 0;
+    const curve = [0];
+    chrono.forEach(t => {
       const pnl = t.finalPnl ?? t.pnl ?? 0;
       if (pnl > 0) { wins++;   sumGain += pnl; }
       else          { losses++; sumLoss += Math.abs(pnl); }
+      cum += pnl;
+      curve.push(cum);
+      if (cum > peak) peak = cum;
+      const dd = peak > 0 ? ((peak - cum) / peak) * 100 : 0;
+      if (dd > maxDD) maxDD = dd;
     });
 
-    const total   = allTrades.length;
+    const total   = chrono.length;
     const wr      = total > 0 ? (wins / total) * 100 : 0;
     const pf      = sumLoss > 0 ? sumGain / sumLoss : (sumGain > 0 ? 3 : 1);
+    // Normaliza PF: PF=1 → 50, PF=2 → 75, PF=3+ → 100, PF<1 decresce
     const pfNorm  = Math.min(100, Math.max(0, pf < 1 ? pf * 50 : 50 + (pf - 1) * 25));
+    // Consistência: escala logarítmica de trades (10 trades → ~50, 50 → ~80, 100+ → ~100)
     const consist = Math.min(100, Math.max(0, Math.log10(Math.max(1, total)) / Math.log10(200) * 100));
     const score   = Math.round(wr * 0.4 + pfNorm * 0.4 + consist * 0.2);
 
-    return { score, wr: wr.toFixed(1), pf: pf.toFixed(2), trades: total, wins, losses, fromRest: restList.length };
+    return {
+      score, wr: wr.toFixed(1), pf: pf.toFixed(2), trades: total, wins, losses,
+      curve, maxDD: Math.min(99.9, maxDD), consist, fromRest: restList.length
+    };
   }
 
   /* ── CONVICTION SCORE ────────────────────────────────────────────────────
@@ -12127,44 +13108,113 @@
       const shortPct = 100 - longPct;
       const isLong   = longPct >= shortPct;
       const convictionPct = isLong ? longPct : shortPct;
-      const cls      = convictionPct >= 75 ? 'high' : convictionPct >= 55 ? 'mid' : 'low';
       const barColor = isLong ? 'var(--green)' : 'var(--red)';
-      const totalCount = d.longCount + d.shortCount;
-      const consensusLabel = isLong
-        ? `<span style="color:var(--green)">🟢 Long Consensus: ${longPct}%</span>`
-        : `<span style="color:var(--red)">🔴 Short Consensus: ${shortPct}%</span>`;
+      const totalCount   = d.longCount + d.shortCount;
+      const domCount     = isLong ? d.longCount  : d.shortCount;
+      const domWeight    = isLong ? d.longWeight : d.shortWeight;
+      const sideLabel    = isLong ? 'Long' : 'Short';
+      const consensusPct = totalCount > 0 ? Math.round((domCount / totalCount) * 100) : 0;
 
-      // Badge de peso total
-      const weightBadge = totalW >= 1e6
-        ? `<span class="conv-weight-badge weight-xl">${fmtK(totalW)}</span>`
-        : totalW >= 100000
-        ? `<span class="conv-weight-badge weight-lg">${fmtK(totalW)}</span>`
-        : totalW >= 10000
-        ? `<span class="conv-weight-badge weight-md">${fmtK(totalW)}</span>`
-        : `<span class="conv-weight-badge weight-sm">${fmtK(totalW)}</span>`;
+      // Rótulo de convicção (usado no pill e na legenda da régua)
+      const tierName = convictionPct >= 75 ? 'Muito Alta' : convictionPct >= 50 ? 'Alta' : convictionPct >= 25 ? 'Média' : 'Baixa';
+      const tierSub  = tierName === 'Muito Alta' ? 'Muito alta convicção'
+                      : tierName === 'Alta'       ? 'Alta convicção'
+                      : tierName === 'Média'      ? 'Média convicção' : 'Baixa convicção';
+
+      // Badge de peso total (pill azul ao lado do par)
+      const weightBadge = `<span class="conviction-weight-pill">${fmtK(totalW)}</span>`;
+
+      const consensusPill = `<div class="conviction-consensus-pill" style="color:${barColor}">
+          <span class="fdot"></span>${sideLabel.toUpperCase()} CONSENSUS
+        </div>`;
+
+      const gaugeLegend = ['Baixa','Média','Alta','Muito Alta'].map(l =>
+        `<span class="${l === tierName ? 'active' : ''}">${l.toUpperCase()}</span>`
+      ).join('');
 
       return `<div class="conviction-card">
-        <div class="conviction-pair-row">
-          <span class="conviction-pair">${pair}</span>
-          ${weightBadge}
-        </div>
-        <div class="conviction-row">
-          ${consensusLabel}
-        </div>
-        <div class="conviction-row" style="gap:6px;align-items:center">
-          <span class="conviction-label">Conviction</span>
-          <div class="conviction-bar-wrap">
-            <div class="conviction-bar-fill" style="width:${convictionPct}%;background:${barColor}"></div>
+        <div class="conviction-card-top">
+          <div class="conviction-card-top-left">
+            <div class="conviction-avatar" style="color:${barColor}">🐋</div>
+            <div class="conviction-pair-title">
+              <div class="conviction-pair-name-row">
+                <span class="conviction-pair-name">${pair}</span>
+                ${weightBadge}
+              </div>
+              <span class="conviction-pair-sub">Conviction Score</span>
+            </div>
           </div>
-          <span class="conviction-score-num ${cls}">${convictionPct}%</span>
+          <div class="conviction-card-top-right">
+            ${consensusPill}
+            <div class="conviction-info-btn" title="Mede o quão convictas as baleias estão nesta posição, combinando número de baleias, peso e consenso.">ⓘ</div>
+          </div>
         </div>
-        <div class="conviction-meta">
-          ${totalCount} baleia${totalCount!==1?'s':''} · Peso Long: ${fmtK(d.longWeight)} · Short: ${fmtK(d.shortWeight)}
+
+        <div class="conviction-gauge-row">
+          <div class="conviction-gauge-left">
+            <span class="conviction-gauge-label">Conviction</span>
+            <div class="conviction-gauge-num" style="color:${barColor}">${convictionPct}<span style="font-size:24px">%</span></div>
+            <div class="conviction-tier-pill" style="color:${barColor}">${tierName} ↗</div>
+          </div>
+          <div class="conviction-gauge-right">
+            <div class="conviction-gauge-ticks">
+              <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
+            </div>
+            <div class="conviction-gauge-track">
+              <div class="conviction-gauge-fill" style="width:${convictionPct}%;background:${barColor}"></div>
+              <div class="conviction-gauge-pointer" style="left:${convictionPct}%;border-top-color:${barColor}"></div>
+            </div>
+            <div class="conviction-gauge-legend">${gaugeLegend}</div>
+          </div>
+        </div>
+
+        <div class="conviction-stats-box">
+          <div class="conviction-stat-col">
+            <div class="conviction-stat-icon-row">
+              <span class="conviction-stat-icon" style="color:${barColor}">👥</span>
+              <span class="conviction-stat-val">${domCount}</span>
+            </div>
+            <div class="conviction-stat-label">Baleias ${sideLabel}</div>
+            <div class="conviction-stat-sub" style="color:${barColor}">${consensusPct}% do lado ${sideLabel}</div>
+          </div>
+          <div class="conviction-stat-col">
+            <div class="conviction-stat-icon-row">
+              <span class="conviction-stat-icon" style="color:${barColor}">⚖️</span>
+              <span class="conviction-stat-val">${fmtK(domWeight)}</span>
+            </div>
+            <div class="conviction-stat-label">Peso ${sideLabel}</div>
+            <div class="conviction-stat-sub" style="color:${barColor}">${Math.round(domWeight/totalW*100)}% do total</div>
+          </div>
+          <div class="conviction-stat-col">
+            <div class="conviction-stat-icon-row">
+              <span class="conviction-stat-icon" style="color:${barColor}">🎯</span>
+              <span class="conviction-stat-val">${consensusPct}%</span>
+            </div>
+            <div class="conviction-stat-label">Consenso</div>
+            <div class="conviction-stat-sub" style="color:${barColor}">${consensusPct===100?'Todos do mesmo lado':'Maioria no mesmo lado'}</div>
+          </div>
+          <div class="conviction-stat-col">
+            <div class="conviction-stat-icon-row">
+              <span class="conviction-stat-icon" style="color:${barColor}">📈</span>
+              <span class="conviction-stat-val">${convictionPct}%</span>
+            </div>
+            <div class="conviction-stat-label">Conviction Score</div>
+            <div class="conviction-stat-sub" style="color:${barColor}">${tierSub}</div>
+          </div>
+        </div>
+
+        <div class="conviction-footer">
+          <span class="fdot" style="background:var(--green)"></span><span>${d.longCount} baleia${d.longCount!==1?'s':''} Long</span>
+          <span class="fsep">│</span>
+          <span>Peso Long: ${fmtK(d.longWeight)}</span>
+          <span class="fsep">│</span>
+          <span class="fdot" style="background:var(--red)"></span><span>${d.shortCount} baleia${d.shortCount!==1?'s':''} Short</span>
+          <span class="fright">Última atualização: agora ⚡</span>
         </div>
       </div>`;
     }).filter(Boolean).join('');
 
-    body.innerHTML = cards || '<div class="conviction-empty">Nenhum par com os filtros selecionados</div>';
+    body.innerHTML = cards ? `<div class="whale-conviction-grid">${cards}</div>` : '<div class="conviction-empty">Nenhum par com os filtros selecionados</div>';
     if (count) count.textContent = pairs.length + ' par' + (pairs.length!==1?'es':'');
   }
 
@@ -12265,7 +13315,12 @@
       if (fAsset !== 'all' && d.pair !== fAsset) return false;
       if (fDir === 'long'  && !d.isLong) return false;
       if (fDir === 'short' &&  d.isLong) return false;
-      if (fGrade !== 'all' && d.grade !== fGrade) return false;
+      if (fGrade !== 'all') {
+        const gradeGroup = (d.grade === 'strong' || d.grade === 'growing') ? 'up'
+          : (d.grade === 'reducing' || d.grade === 'reducing_strong') ? 'down'
+          : 'stable';
+        if (gradeGroup !== fGrade) return false;
+      }
       return true;
     });
 
@@ -12292,34 +13347,60 @@
     const orderIndex = new Map(_momentumOrderKeys.map((k, i) => [k, i]));
     momentumData.sort((a, b) => (orderIndex.get(a.pair) ?? 0) - (orderIndex.get(b.pair) ?? 0));
 
+    // Rótulo de percentual no estilo "MOMENTUM X"
+    const PCT_LABEL_MAP = {
+      strong:          'Momentum Forte',
+      growing:         'Momentum Crescendo',
+      stable:          'Momentum Neutro',
+      reducing:         'Momentum Reduzindo',
+      reducing_strong: 'Momentum Reduz. Forte',
+    };
+
     // Função que gera o innerHTML interno de um card (sem o wrapper <div>)
     function cardInner(d) {
-      const g    = GRADE_MAP[d.grade] || GRADE_MAP.stable;
-      const sign = d.pctChange >= 0 ? '+' : '';
-      const sideLabel = d.isLong
-        ? `<span style="color:var(--green)">LONG</span>`
-        : `<span style="color:var(--red)">SHORT</span>`;
+      const g       = GRADE_MAP[d.grade] || GRADE_MAP.stable;
+      const sign    = d.pctChange >= 0 ? '+' : '';
+      const pctText = PCT_LABEL_MAP[d.grade] || 'Momentum Neutro';
+      const sideCls   = d.isLong ? 'long' : 'short';
+      const sideLabel = d.isLong ? 'LONG' : 'SHORT';
+      const pairName  = /-/.test(d.pair) ? d.pair : (d.pair + '-USD');
+
+      // Posição do ponteiro na barra de escala (clamp -100% .. +100% → 6% .. 94%)
+      const clamped   = Math.max(-100, Math.min(100, d.pctChange));
+      const pointerPos = (50 + clamped * 0.44).toFixed(1);
+
       return {
         inner: `<div class="momentum-pair">
-          <span>${g.arrow}</span>
-          <span>${d.pair}</span>
-          <span style="font-size:10px;font-weight:400;color:var(--muted)">${sideLabel}</span>
+          <span class="momentum-arrow">→</span>
+          <span>${pairName}</span>
+          <span class="momentum-side ${sideCls}">${sideLabel}</span>
         </div>
-        <div class="momentum-pct ${g.cls}">${sign}${d.pctChange.toFixed(1)}%</div>
-        <div class="momentum-label ${g.cls}">${g.label}</div>
+        <div class="momentum-scale">
+          <div class="momentum-scale-track"></div>
+          <div class="momentum-scale-pointer ${g.cls}" style="left:${pointerPos}%">▲</div>
+          <div class="momentum-scale-labels">
+            <span class="msl-down">Desacelerando</span>
+            <span class="msl-mid">Estável</span>
+            <span class="msl-up">Acelerando</span>
+          </div>
+        </div>
+        <div class="momentum-pct-row">
+          <span class="momentum-pct ${g.cls}">${sign}${d.pctChange.toFixed(1)}%</span>
+          <span class="momentum-label ${g.cls}">${pctText}</span>
+        </div>
         <div class="momentum-detail">
           <div class="momentum-snap">
-            <span style="color:var(--muted2)">Anterior:</span>
-            <span style="color:var(--muted)">${fmtK(d.prevTotal)} USDC</span>
-            <span style="color:var(--muted2);margin:0 2px">→</span>
-            <span style="color:var(--text);font-weight:600">${fmtK(d.currTotal)} USDC</span>
+            <span class="msn-label">Convicção Total:</span>
+            <span class="msn-value">${fmtK(d.currTotal)} USDC</span>
           </div>
           <div class="momentum-snap">
-            <span style="color:rgba(0,224,122,0.7)">Long: ${fmtK(d.curr.longUsdc)}</span>
-            <span style="color:var(--muted2);margin:0 3px">·</span>
-            <span style="color:rgba(255,61,77,0.7)">Short: ${fmtK(d.curr.shortUsdc)}</span>
+            <span class="msn-label">Composição:</span>
+            <span class="msn-long">${fmtK(d.curr.longUsdc)} LONG</span>
+            <span class="msn-label">/</span>
+            <span class="msn-short">${fmtK(d.curr.shortUsdc)} SHORT</span>
           </div>
-        </div>`,
+        </div>
+        <span class="momentum-sparkle ${g.cls}">✦</span>`,
         cls: `momentum-card ${g.cls}`
       };
     }
@@ -12533,6 +13614,11 @@
   // ele não pula de lugar — apenas seu conteúdo é atualizado. Novos clusters entram no final.
   let _clusterOrderKeys = [];
 
+  // Marca (timestamp) de quando cada cluster (por chave estável) foi visto pela
+  // primeira vez — usado para calcular "Tempo do Cluster" / "identificado há Xm Ys"
+  // de forma consistente entre re-renders (não reinicia a cada atualização).
+  let _clusterFirstSeen = {};
+
   // Mantém a ordem visual dos cards de Risk Score do Mercado estável entre re-renders:
   // o card de um par não pula de lugar quando o score muda — apenas o conteúdo é atualizado.
   // Novos pares entram no final; pares que somem são removidos da ordem.
@@ -12543,7 +13629,7 @@
     const count = document.getElementById('entry-cluster-count');
     if (!body) return;
     const _clFilters = getClusterFilters();
-    // Collect positions grouped by pair → side → entries
+    // Collect positions grouped by pair → side → entries (+ volume USDC e horário de abertura)
     const byPairSide = {};
     positions.forEach(p => {
       if (_pairEnabled[p.pair] === false) return;
@@ -12553,9 +13639,11 @@
       const entry = parseFloat(p.entry);
       if (!entry || isNaN(entry)) return;
       const key = `${p.pair}|${side}`;
-      if (!byPairSide[key]) byPairSide[key] = { pair: p.pair, side, entries: [], wallets: [] };
+      if (!byPairSide[key]) byPairSide[key] = { pair: p.pair, side, entries: [], wallets: [], sizes: [], opened: [] };
       byPairSide[key].entries.push(entry);
       byPairSide[key].wallets.push(p.addr);
+      byPairSide[key].sizes.push(p.sizeUsdc || (p.size && entry ? p.size * entry : 0) || 0);
+      byPairSide[key].opened.push(p.openedAtTs || null);
     });
 
     const groups = Object.values(byPairSide).filter(g => g.entries.length >= 1);
@@ -12570,20 +13658,32 @@
     groups.forEach(g => {
       const sorted = [...g.entries].sort((a, b) => a - b);
       // Simple greedy clustering: start new cluster when gap > 1% of first entry
+      const pick = (val) => {
+        const idx = g.entries.indexOf(val);
+        return { wallet: g.wallets[idx], size: g.sizes[idx], opened: g.opened[idx] };
+      };
+      let first = pick(sorted[0]);
       let cluster = [sorted[0]];
-      let clusterWallets = [g.wallets[g.entries.indexOf(sorted[0])]];
+      let clusterWallets = [first.wallet];
+      let clusterSizes   = [first.size];
+      let clusterOpened  = [first.opened];
       for (let i = 1; i < sorted.length; i++) {
         const pct = Math.abs(sorted[i] - cluster[0]) / cluster[0];
+        const pk = pick(sorted[i]);
         if (pct <= 0.01) {
           cluster.push(sorted[i]);
-          clusterWallets.push(g.wallets[g.entries.indexOf(sorted[i])]);
+          clusterWallets.push(pk.wallet);
+          clusterSizes.push(pk.size);
+          clusterOpened.push(pk.opened);
         } else {
-          clusters.push({ pair: g.pair, side: g.side, entries: cluster, wallets: clusterWallets });
+          clusters.push({ pair: g.pair, side: g.side, entries: cluster, wallets: clusterWallets, sizes: clusterSizes, opened: clusterOpened });
           cluster = [sorted[i]];
-          clusterWallets = [g.wallets[g.entries.indexOf(sorted[i])]];
+          clusterWallets = [pk.wallet];
+          clusterSizes   = [pk.size];
+          clusterOpened  = [pk.opened];
         }
       }
-      clusters.push({ pair: g.pair, side: g.side, entries: cluster, wallets: clusterWallets });
+      clusters.push({ pair: g.pair, side: g.side, entries: cluster, wallets: clusterWallets, sizes: clusterSizes, opened: clusterOpened });
     });
 
     // Chave estável por cluster: pair + side + zona de preço (faixa min arredondada).
@@ -12604,6 +13704,11 @@
     const orderIndex = new Map(_clusterOrderKeys.map((k, i) => [k, i]));
     clusters.sort((a, b) => (orderIndex.get(a.key) ?? 0) - (orderIndex.get(b.key) ?? 0));
 
+    // Registra o "primeiro visto" de cada cluster (persistente entre renders) e
+    // limpa os clusters que já não existem mais.
+    clusters.forEach(c => { if (!_clusterFirstSeen[c.key]) _clusterFirstSeen[c.key] = Date.now(); });
+    Object.keys(_clusterFirstSeen).forEach(k => { if (!presentKeys.has(k)) delete _clusterFirstSeen[k]; });
+
     // Populate asset dropdown
     const clAssetSel = document.getElementById('cluster-asset-filter');
     if (clAssetSel) {
@@ -12613,13 +13718,22 @@
         allPairs.map(p => `<option value="${p}"${p===curVal?' selected':''}>${p}</option>`).join('');
     }
 
+    // Nível de força do cluster: deriva do nº de baleias únicas envolvidas.
+    function clusterStrength(nWhales) {
+      if (nWhales >= 3) return { level: 'high',   label: 'Alta'  };
+      if (nWhales === 2) return { level: 'medium', label: 'Média' };
+      return { level: 'low', label: 'Baixa' };
+    }
+
     // Apply cluster filters
     const filteredClusters = clusters.filter(c => {
       const isLong = c.side === 'LONG';
+      const uniqueCount = new Set(c.wallets).size;
       if (_clFilters.dir === 'long' && !isLong) return false;
       if (_clFilters.dir === 'short' && isLong) return false;
       if (c.wallets.length < _clFilters.minWhales) return false;
       if (_clFilters.asset !== 'all' && c.pair !== _clFilters.asset) return false;
+      if (_clFilters.strength && _clFilters.strength !== 'all' && clusterStrength(uniqueCount).level !== _clFilters.strength) return false;
       return true;
     });
 
@@ -12636,32 +13750,153 @@
       return n.toFixed(8);
     }
 
+    // Volume compacto no estilo "$24.8M" / "$430.0K" (1 casa decimal)
+    function fmtVol(n) {
+      if (!n || isNaN(n)) return '$0';
+      if (n >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
+      if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
+      return '$' + n.toFixed(0);
+    }
+
+    // Duração no estilo "2m 14s" / "1h 05m" / "45s"
+    function fmtClusterTime(ms) {
+      const s = Math.floor(ms / 1000);
+      const m = Math.floor(s / 60);
+      const h = Math.floor(m / 60);
+      if (h > 0) return h + 'h ' + String(m % 60).padStart(2, '0') + 'm';
+      if (m > 0) return m + 'm ' + String(s % 60).padStart(2, '0') + 's';
+      return s + 's';
+    }
+
     const cards = filteredClusters.map(c => {
-      const isLong  = c.side === 'LONG';
-      const cls     = isLong ? 'long' : 'short';
-      const minE    = Math.min(...c.entries);
-      const maxE    = Math.max(...c.entries);
-      const isSingle = minE === maxE;
-      const uniqueW  = [...new Set(c.wallets)];
-      const dots = uniqueW.map(addr => {
+      const isLong   = c.side === 'LONG';
+      const cls      = isLong ? 'long' : 'short';
+      const minE     = Math.min(...c.entries);
+      const maxE     = Math.max(...c.entries);
+      const refPrice = (minE + maxE) / 2;
+      const mark     = markPrices[c.pair] || refPrice;
+      const idxPct   = refPrice ? ((mark - refPrice) / refPrice) * 100 : 0;
+
+      // Agrega volume por wallet única (uma wallet pode ter mais de uma entrada no cluster)
+      const volByWallet = {};
+      c.wallets.forEach((addr, i) => { volByWallet[addr] = (volByWallet[addr] || 0) + (c.sizes[i] || 0); });
+      const uniqueW = Object.keys(volByWallet).sort((a, b) => volByWallet[b] - volByWallet[a]);
+      const totalVol = uniqueW.reduce((s, a) => s + volByWallet[a], 0);
+
+      const strength = clusterStrength(uniqueW.length);
+      const isCoord  = uniqueW.length >= 2;
+
+      // Probabilidade de sucesso: heurística com base no nº de baleias e volume total envolvido.
+      const probScore = Math.round(Math.max(40, Math.min(95, 48 + uniqueW.length * 7 + Math.min(totalVol / 3e6, 12))));
+
+      // Tempo do cluster: desde que foi identificado pela primeira vez (chave estável)
+      const elapsedMs = Date.now() - (_clusterFirstSeen[c.key] || Date.now());
+      const clusterTimeStr = fmtClusterTime(elapsedMs);
+
+      // Barra + legenda de distribuição das entradas (participação de volume por baleia)
+      const distSegs = uniqueW.map(addr => {
+        const pct = totalVol > 0 ? (volByWallet[addr] / totalVol) * 100 : (100 / uniqueW.length);
+        return { addr, pct, col: walletColor(addr) };
+      });
+      const distBarHtml = distSegs.map(d => `<div class="cc2-dist-seg" style="width:${d.pct.toFixed(1)}%;background:${d.col}"></div>`).join('');
+      const distLegendHtml = distSegs.slice(0, 4).map(d =>
+        `<span><span class="cc2-dist-dot" style="background:${d.col}"></span>${d.pct.toFixed(0)}%</span>`
+      ).join('');
+
+      // Lista de baleias no cluster (até 4 visíveis, ordenadas por volume)
+      const MAX_WHALES_SHOWN = 4;
+      const whaleRows = uniqueW.slice(0, MAX_WHALES_SHOWN).map(addr => {
+        const vol = volByWallet[addr];
+        const pct = totalVol > 0 ? (vol / totalVol) * 100 : (100 / uniqueW.length);
         const col = walletColor(addr);
-        return `<div class="cluster-dot" style="background:${col}" title="${shortAddr(addr)}"></div>`;
+        return `<div class="cc2-whale-row">
+          <div class="cc2-whale-top">
+            <span class="cc2-whale-left">
+              <span class="cc2-whale-dot" style="background:${col}"></span>
+              <span class="cc2-whale-addr" title="${addr}">${shortAddr(addr)}</span>
+              <span class="cc2-whale-side ${cls}">${c.side}</span>
+            </span>
+            <span class="cc2-whale-right">
+              <span class="cc2-whale-vol">${fmtVol(vol)}</span>
+              <span class="cc2-whale-pct">${pct.toFixed(1)}%</span>
+            </span>
+          </div>
+          <div class="cc2-whale-bar-track"><div class="cc2-whale-bar-fill" style="width:${pct.toFixed(1)}%;background:${col}"></div></div>
+        </div>`;
       }).join('');
-      return `<div class="cluster-card ${cls}">
-        <div class="cluster-pair">
-          <span class="cluster-magnet">🧲</span>
-          <span>${c.pair}</span>
-          <span style="font-size:9px;color:${isLong ? 'var(--green)' : 'var(--red)'}">${c.side}</span>
+      const moreWhalesHtml = uniqueW.length > MAX_WHALES_SHOWN
+        ? `<div class="cc2-whale-more">+${uniqueW.length - MAX_WHALES_SHOWN} baleia${uniqueW.length - MAX_WHALES_SHOWN !== 1 ? 's' : ''} no cluster</div>`
+        : '';
+
+      return `<div class="cluster-card2 ${cls}" data-key="${c.key}">
+        <div class="cc2-head">
+          <div class="cc2-head-left">
+            <div class="cc2-icon ${cls}"><span class="cc2-magnet">🧲</span></div>
+            <div class="cc2-title-wrap">
+              <div class="cc2-pair-row">
+                <span class="cc2-pair">${c.pair}</span>
+                <span class="cc2-side-badge ${cls}">${c.side}</span>
+              </div>
+              <div class="cc2-subtitle">Cluster de Entrada Detectado <span class="cc2-info" title="Detecta clusters de entradas simultâneas de múltiplas baleias no mesmo ativo e direção.">ⓘ</span></div>
+            </div>
+          </div>
+          <div class="cc2-strength">
+            <div class="cc2-strength-label">🎯 Força do Cluster</div>
+            <div class="cc2-strength-value ${strength.level} ${cls}">${strength.label}</div>
+          </div>
         </div>
-        <div class="cluster-zone-label">Whale Zone</div>
-        <div class="cluster-range ${cls}">
-          ${fmtP(minE)}${isSingle ? '' : `<span class="cluster-arrow">→</span>${fmtP(maxE)}`}
+
+        <div class="cc2-stats">
+          <div class="cc2-price-label">Preço Atual</div>
+          <div class="cc2-price-value ${cls}">${fmtP(mark)}</div>
+          <div class="cc2-price-sub">Índice <span class="${idxPct >= 0 ? 'cc2-pos' : 'cc2-neg'}">${idxPct >= 0 ? '+' : ''}${idxPct.toFixed(2)}%</span></div>
+          <div class="cc2-mini-stats">
+            <div class="cc2-mini-stat">
+              <div class="cc2-mini-label">👥 Baleias</div>
+              <div class="cc2-mini-value">${uniqueW.length}</div>
+              <div class="cc2-mini-sub">Participantes</div>
+            </div>
+            <div class="cc2-mini-stat">
+              <div class="cc2-mini-label">🕐 Tempo do Cluster</div>
+              <div class="cc2-mini-value">${clusterTimeStr}</div>
+              <div class="cc2-mini-sub">Janela de entrada</div>
+            </div>
+            <div class="cc2-mini-stat">
+              <div class="cc2-mini-label">📈 Volume Total</div>
+              <div class="cc2-mini-value">${fmtVol(totalVol)}</div>
+              <div class="cc2-mini-sub">Posições abertas</div>
+            </div>
+          </div>
         </div>
-        <div class="cluster-meta">
-          <span>${uniqueW.length} baleia${uniqueW.length !== 1 ? 's' : ''}</span>
-          ${c.entries.length > uniqueW.length ? `<span>· ${c.entries.length} entradas</span>` : ''}
+
+        <div class="cc2-mid">
+          <div class="cc2-direction-row">
+            <div>
+              <div class="cc2-mid-label">Direção</div>
+              <div class="cc2-direction-value ${cls}">${isLong ? '🐂' : '🐻'} ${c.side} ${isLong ? '↑' : '↓'}</div>
+            </div>
+            <div class="cc2-direction-sub">${isCoord ? 'Convicção coordenada' : 'Convicção individual'}</div>
+          </div>
+          <div>
+            <div class="cc2-mid-label">Distribuição das Entradas</div>
+            <div class="cc2-dist-bar">${distBarHtml}</div>
+            <div class="cc2-dist-legend">${distLegendHtml}</div>
+          </div>
+          <div>
+            <div class="cc2-mid-label">Tipo de Cluster</div>
+            <span class="cc2-type-badge ${cls}">👥 ${isCoord ? 'Coordenado' : 'Individual'}</span>
+            <div class="cc2-type-sub">${isCoord ? 'Alta probabilidade de movimento' : 'Sinal isolado, menor confiança'}</div>
+          </div>
         </div>
-        <div class="cluster-wallet-dots">${dots}</div>
+
+        <div class="cc2-whales-head">Baleias no Cluster <span class="cc2-info" title="Baleias monitoradas que fazem parte deste cluster de entrada, ordenadas por volume.">ⓘ</span></div>
+        ${whaleRows}
+        ${moreWhalesHtml}
+
+        <div class="cc2-footer">
+          <div class="cc2-footer-row"><span class="cc2-footer-dot"></span>Cluster identificado há <b>${clusterTimeStr}</b></div>
+          <div class="cc2-footer-row">📈 Probabilidade de sucesso: <span class="cc2-succ">${probScore}%</span></div>
+        </div>
       </div>`;
     }).join('');
 
@@ -12676,6 +13911,109 @@
   // Track peak whale count per pair+side across the session
   let _exitPeakCount = {}; // key: "pair|side" → max wallets seen
   let _exitKeyWallets = {}; // key: "pair|side" → Set de wallets já vistas (para filtro de wallet)
+
+  /* 5-tier exit-risk classification shared by the cards and the risk-level filter.
+     pct = % of the peak whale positions on a pair+side that have already closed. */
+  const EXIT_TIERS = [
+    { key: 'vlow',   max: 10,  label: 'Muito Baixo', icon: '✓' },
+    { key: 'low',    max: 30,  label: 'Baixo',        icon: '✓' },
+    { key: 'medium', max: 50,  label: 'Médio',        icon: '⚠' },
+    { key: 'high',   max: 75,  label: 'Alto',         icon: '⚠' },
+    { key: 'vhigh',  max: 101, label: 'Muito Alto',   icon: '⚠' }
+  ];
+  function exitRiskTier(pct) {
+    for (const t of EXIT_TIERS) if (pct < t.max) return t.key;
+    return 'vhigh';
+  }
+  function exitTierInfo(key) {
+    return EXIT_TIERS.find(t => t.key === key) || EXIT_TIERS[0];
+  }
+  function exitGaugePosition(key) {
+    const idx = EXIT_TIERS.findIndex(t => t.key === key);
+    const n = EXIT_TIERS.length;
+    return ((idx + 0.5) / n) * 100;
+  }
+
+  /* ── Exit history/trend tracker (7D window) — persisted per pair+side key
+     in localStorage, same sampling pattern used by consensusTrend24h.
+     Feeds: the 7D trend %, the mini sparkline, the last-exit timestamp,
+     the net reduction (24h) and the biggest single jump (24h). ── */
+  function exitHistoryTrack(key, pct, closedCount) {
+    const now = Date.now();
+    const DAY = 24 * 60 * 60 * 1000;
+    const WINDOW = 7 * DAY;
+    const skey = 'exitHist:' + key;
+    let store = null;
+    try { store = JSON.parse(localStorage.getItem(skey) || 'null'); } catch (e) { store = null; }
+    let samples = (store && Array.isArray(store.samples)) ? store.samples : [];
+    let lastExitTs = (store && store.lastExitTs) || null;
+    const peakFirstTs = (store && store.peakFirstTs) || now;
+
+    const prevClosed = samples.length ? samples[samples.length - 1].c : 0;
+    if (closedCount > prevClosed) lastExitTs = now;
+
+    samples = samples.concat([{ t: now, p: pct, c: closedCount }]).filter(s => now - s.t <= WINDOW);
+    if (!samples.length) samples = [{ t: now, p: pct, c: closedCount }];
+
+    try {
+      localStorage.setItem(skey, JSON.stringify({ samples: samples.slice(-200), lastExitTs, peakFirstTs }));
+    } catch (e) {}
+
+    let trendDelta = null;
+    const oldest = samples[0];
+    if (samples.length > 1 && (now - oldest.t) > 5 * 60 * 1000) {
+      trendDelta = Math.round((pct - oldest.p) * 10) / 10;
+    }
+
+    const within24h = samples.filter(s => now - s.t <= DAY);
+    const dayAgo = within24h[0] || samples[0];
+    const netReduction24h = Math.max(0, closedCount - dayAgo.c);
+
+    let biggestJump = 0;
+    for (let i = 1; i < within24h.length; i++) {
+      const jump = within24h[i].c - within24h[i - 1].c;
+      if (jump > biggestJump) biggestJump = jump;
+    }
+
+    return { samples, trendDelta, lastExitTs, peakFirstTs, netReduction24h, biggestJump };
+  }
+
+  // Mini sparkline (line only, no fill) used inside the exit-card trend column
+  function exitBuildSparkline(values, color) {
+    const W = 130, H = 30;
+    if (!values || values.length < 2) {
+      return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="exit-trend-svg"><line x1="0" y1="${H/2}" x2="${W}" y2="${H/2}" stroke="var(--border2)" stroke-width="1"/></svg>`;
+    }
+    const min = Math.min(...values), max = Math.max(...values);
+    const range = (max - min) || 1;
+    const stepX = W / (values.length - 1);
+    const pts = values.map((v, i) => `${(i * stepX).toFixed(1)},${(H - ((v - min) / range) * H).toFixed(1)}`);
+    const linePath = 'M' + pts.join(' L');
+    const last = pts[pts.length - 1].split(',');
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="exit-trend-svg">
+      <path d="${linePath}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="${last[0]}" cy="${last[1]}" r="2.4" fill="${color}"/>
+    </svg>`;
+  }
+
+  // Short relative-time string ("Xd atrás" / "Xh atrás" / "Xm atrás" / "Xs atrás")
+  function exitTimeAgoShort(ts) {
+    if (!ts) return null;
+    const diff = Math.max(0, Date.now() - ts);
+    const s = Math.floor(diff / 1000), m = Math.floor(s / 60), h = Math.floor(m / 60), d = Math.floor(h / 24);
+    if (d > 0) return `${d}d atrás`;
+    if (h > 0) return `${h}h atrás`;
+    if (m > 0) return `${m}m atrás`;
+    return `${s}s atrás`;
+  }
+
+  // "DD/MM HH:MM" timestamp, same short format used elsewhere in the dashboard
+  function exitFormatTs(ts) {
+    if (!ts) return null;
+    const d = new Date(ts);
+    const pad = n => String(n).padStart(2, '0');
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
 
   function renderSmartExit() {
     const body  = document.getElementById('smart-exit-body');
@@ -12757,8 +14095,7 @@
       const isLong = d.side === 'LONG';
       if (_exFilters2.dir === 'long' && !isLong) return false;
       if (_exFilters2.dir === 'short' && isLong) return false;
-      if (_exFilters2.grade === 'high' && d.pct < 50) return false;
-      if (_exFilters2.grade === 'low' && d.pct >= 50) return false;
+      if (_exFilters2.grade !== 'all' && exitRiskTier(d.pct) !== _exFilters2.grade) return false;
       if (_exFilters2.asset !== 'all' && d.pair !== _exFilters2.asset) return false;
       if (_exFilters2.wallet !== 'all') {
         const ws = _exitKeyWallets[d.key];
@@ -12767,46 +14104,156 @@
       return true;
     });
 
+    const totalWhalesTracked = (trackedWallets && trackedWallets.length) || (typeof LIVE_WALLETS !== 'undefined' && LIVE_WALLETS.length) || 0;
+
     const cards = filteredExitData.map(d => {
-      const isLong  = d.side === 'LONG';
-      const level   = d.pct >= 50 ? 'high' : d.pct >= 30 ? 'medium' : 'low';
-      const cardCls = d.pct >= 30 ? 'alert' : 'safe';
-      const pctCls  = d.pct >= 50 ? 'danger' : d.pct >= 30 ? 'warn' : 'safe';
-      const barStillH = Math.round((d.currentOpen / Math.max(d.peak, 1)) * 100);
-      const barClosedH = Math.round((d.closed_count / Math.max(d.peak, 1)) * 100);
+      const isLong   = d.side === 'LONG';
+      const tierKey  = exitRiskTier(d.pct);
+      const tier     = exitTierInfo(tierKey);
+      const cardCls  = d.pct >= 30 ? 'alert' : 'safe';
+      const pctCls   = d.pct >= 50 ? 'danger' : d.pct >= 30 ? 'warn' : 'safe';
+      const gaugePos = exitGaugePosition(tierKey);
+      const openPct  = Math.round((d.currentOpen / Math.max(d.peak, 1)) * 100);
+      const whaleWord = (n) => `baleia${n !== 1 ? 's' : ''}`;
 
-      const trigger = d.pct >= 30
-        ? `<div style="font-size:9px;color:var(--amber);margin-top:5px">⚡ Pode ser gatilho para encerrar operação.</div>`
-        : '';
+      const hist = exitHistoryTrack(d.key, d.pct, d.closed_count);
 
-      return `<div class="exit-card ${cardCls}">
-        <div class="exit-pair-row">
-          <span class="exit-pair">${d.pair}</span>
-          <span style="font-size:9px;color:${isLong ? 'var(--green)' : 'var(--red)'};margin-left:4px">${d.side}</span>
-          <span class="exit-warn-badge ${level}" style="margin-left:6px">${level === 'high' ? '⚠ Alto' : level === 'medium' ? '⚠ Médio' : '✓ Baixo'}</span>
-        </div>
-        <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px">
-          <span class="exit-pct ${pctCls}">${d.pct.toFixed(0)}%</span>
-          <span style="font-size:9px;color:var(--muted)">das posições fechadas</span>
-        </div>
-        <div class="exit-bars">
-          <div class="exit-bar-wrap">
-            <div class="exit-bar-track">
-              <div class="exit-bar-fill still" style="height:${barStillH}%"></div>
-            </div>
-            <div class="exit-bar-label">Abertas<br>${d.currentOpen}</div>
+      // ── Coluna direita: tendência de saída (7D) ──
+      let trendBlock;
+      if (hist.trendDelta === null) {
+        trendBlock = `<div class="exit-trend-collecting">Coletando dados…</div>`;
+      } else {
+        const isFlat   = hist.trendDelta === 0;
+        const isDown   = hist.trendDelta < 0;
+        const trendCls = isFlat ? 'flat' : (isDown ? 'down' : 'up');
+        const trendTxt = isFlat ? 'Estável' : (isDown ? 'Redução' : 'Aumento');
+        const sparkColor = isFlat ? 'var(--muted)' : (isDown ? 'var(--green)' : 'var(--red)');
+        const sparkline  = exitBuildSparkline(hist.samples.map(s => s.p), sparkColor);
+        const sign = hist.trendDelta > 0 ? '+' : '';
+        trendBlock = `
+          <div class="exit-trend-row">
+            <span class="exit-trend-pct ${trendCls}">${sign}${hist.trendDelta.toFixed(0)}%</span>
           </div>
-          <div class="exit-bar-wrap">
-            <div class="exit-bar-track">
-              <div class="exit-bar-fill closed" style="height:${barClosedH}%"></div>
+          ${sparkline}
+          <div class="exit-trend-cap">${trendTxt} <span style="opacity:.75">vs 7D anterior</span></div>`;
+      }
+
+      // ── Escala do comparativo histórico (mesmos 5 tiers do gauge) ──
+      const scaleLabels = EXIT_TIERS.map(t =>
+        `<span class="${t.key === tierKey ? 'active' : ''}">${t.label}</span>`
+      ).join('');
+
+      // ── Mini-cards (Pico de Saída / Última Saída / Redução Líquida / Maior Redução) ──
+      const lastExitVal = hist.lastExitTs ? exitFormatTs(hist.lastExitTs) : '—';
+      const lastExitSub = hist.lastExitTs
+        ? exitTimeAgoShort(hist.lastExitTs)
+        : 'Nenhuma saída nas últimas 24h';
+
+      const biggestPct = d.peak > 0 ? Math.round((hist.biggestJump / d.peak) * 100) : 0;
+      const biggestSub = hist.biggestJump <= 1
+        ? 'Por uma única baleia'
+        : `${hist.biggestJump} ${whaleWord(hist.biggestJump)} ${d.side}`;
+
+      const peakAgo = exitTimeAgoShort(hist.peakFirstTs);
+
+      return `<div class="exit-card ${cardCls} tier-${tierKey}">
+        <div class="exit-card-head">
+          <div class="exit-card-icon">🚪</div>
+          <div class="exit-card-titleblock">
+            <div class="exit-card-top">
+              <div class="exit-pair-row">
+                <span class="exit-pair">${d.pair}</span>
+                <span class="exit-dir-badge ${isLong ? 'long' : 'short'}">${d.side}</span>
+              </div>
+              <span class="exit-risk-badge">${tier.icon} Risco ${tier.label}</span>
             </div>
-            <div class="exit-bar-label">Saíram<br>${d.closed_count}</div>
+            <div class="exit-card-subrow">
+              <span class="exit-card-subtitle" title="Monitora reduções ou saídas de posições das baleias, ajudando a identificar possíveis pontos de saída do mercado.">Monitor de Saída Inteligente <i>ⓘ</i></span>
+              <span class="exit-signal-badge" title="Sinal de Saída: nível de risco de saída atual desta posição.">🛡 ${tier.label}</span>
+            </div>
           </div>
         </div>
-        <div class="exit-stats">
-          <span>Pico: ${d.peak} baleia${d.peak !== 1 ? 's' : ''} ${isLong ? 'LONG' : 'SHORT'}</span>
+
+        <div class="exit-card-mid">
+          <div class="exit-mid-col">
+            <div class="exit-mid-label">% das posições fechadas (24h)</div>
+            <div class="exit-metric-row">
+              <span class="exit-pct ${pctCls}">${d.pct.toFixed(0)}%</span>
+              <span class="exit-level-pill">${tier.label}</span>
+            </div>
+            <div class="exit-progress-track" style="margin-top:8px">
+              <div class="exit-progress-fill" style="width:${Math.max(d.pct, 3)}%"></div>
+            </div>
+            <div class="exit-footer-row nested">
+              <div class="exit-footer-col">
+                <span class="exit-footer-label">Abertas</span>
+                <span class="exit-footer-value open">${d.currentOpen} <small>(${openPct}%)</small></span>
+              </div>
+              <div class="exit-footer-divider"></div>
+              <div class="exit-footer-col">
+                <span class="exit-footer-label">Saíram</span>
+                <span class="exit-footer-value closed">${d.closed_count} <small>(${d.pct.toFixed(0)}%)</small></span>
+              </div>
+            </div>
+          </div>
+          <div class="exit-mid-col">
+            <div class="exit-mid-label">Tendência de saída (7D)</div>
+            ${trendBlock}
+          </div>
         </div>
-        ${trigger}
+
+        <div class="exit-gauge-wrap">
+          <div class="exit-gauge-title">Comparativo histórico</div>
+          <div class="exit-gauge-track">
+            <div class="exit-gauge-seg vlow"></div>
+            <div class="exit-gauge-seg low"></div>
+            <div class="exit-gauge-seg med"></div>
+            <div class="exit-gauge-seg high"></div>
+            <div class="exit-gauge-seg vhigh"></div>
+            <div class="exit-gauge-dot" style="left:${gaugePos}%"></div>
+          </div>
+          <div class="exit-gauge-scale-labels">${scaleLabels}</div>
+        </div>
+
+        <div class="exit-stat-grid">
+          <div class="exit-stat-item">
+            <div class="exit-stat-icon">👥</div>
+            <div class="exit-stat-body">
+              <span class="exit-stat-label">Pico de Saída</span>
+              <span class="exit-stat-value">${d.peak}</span>
+              <span class="exit-stat-sub">${whaleWord(d.peak)} ${d.side} (24h)</span>
+            </div>
+          </div>
+          <div class="exit-stat-item">
+            <div class="exit-stat-icon">⏱</div>
+            <div class="exit-stat-body">
+              <span class="exit-stat-label">Última Saída</span>
+              <span class="exit-stat-value" style="font-size:12px">${lastExitVal}</span>
+              <span class="exit-stat-sub">${lastExitSub}</span>
+            </div>
+          </div>
+          <div class="exit-stat-item">
+            <div class="exit-stat-icon">📉</div>
+            <div class="exit-stat-body">
+              <span class="exit-stat-label">Redução Líquida</span>
+              <span class="exit-stat-value">${hist.netReduction24h.toFixed(1)}</span>
+              <span class="exit-stat-sub">Posições (24h)</span>
+            </div>
+          </div>
+          <div class="exit-stat-item">
+            <div class="exit-stat-icon">📊</div>
+            <div class="exit-stat-body">
+              <span class="exit-stat-label">Maior Redução (24h)</span>
+              <span class="exit-stat-value">${biggestPct}%</span>
+              <span class="exit-stat-sub">${biggestSub}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="exit-card-footerline">
+          <span class="exit-foot-l">🎯 Pico de Saída: <b>${d.peak} ${whaleWord(d.peak)} ${d.side}</b>${peakAgo ? ' • ' + peakAgo : ''}</span>
+          <span class="exit-foot-r">👁 Acompanhando <b>${totalWhalesTracked}</b> baleias</span>
+        </div>
       </div>`;
     }).join('');
 
@@ -14176,7 +15623,8 @@
     return {
       minWhales: parseInt((document.getElementById('cluster-min-whales') || {}).value || '1', 10),
       dir: (document.getElementById('cluster-dir-filter') || {}).value || 'all',
-      asset: (document.getElementById('cluster-asset-filter') || {}).value || 'all'
+      asset: (document.getElementById('cluster-asset-filter') || {}).value || 'all',
+      strength: (document.getElementById('cluster-strength-filter') || {}).value || 'all'
     };
   }
 
@@ -14184,7 +15632,7 @@
   function getExitFilters() {
     return {
       dir: (document.getElementById('exit-dir-filter') || {}).value || 'all',
-      grade: (document.getElementById('exit-grade-filter') || {}).value || 'all', // 'all'|'high'|'low'
+      grade: (document.getElementById('exit-grade-filter') || {}).value || 'all', // 'all'|'vlow'|'low'|'medium'|'high'|'vhigh'
       asset: (document.getElementById('exit-asset-filter') || {}).value || 'all',
       wallet: (document.getElementById('exit-wallet-filter') || {}).value || 'all'
     };
@@ -14323,7 +15771,11 @@
     scale:      '<path d="M12 3v18M6 21h12M5 7h14M5 7l-2 6h4zM19 7l-2 6h4z"/><path d="M3 13a2 2 0 0 0 4 0M17 13a2 2 0 0 0 4 0"/>',
     map:        '<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/>',
     arrowRight: '<path d="M5 12h14M13 6l6 6-6 6"/>',
-    robot:      '<path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2M20 14h2M9 13v2M15 13v2"/>'
+    robot:      '<path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2M20 14h2M9 13v2M15 13v2"/>',
+    users:      '<circle cx="9" cy="8" r="3"/><path d="M2 20c0-3 3-5 7-5s7 2 7 5"/><path d="M17 4a3 3 0 0 1 0 6"/><path d="M22 20c0-2.5-2-4.5-4.5-5"/>',
+    clock:      '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+    eye:        '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
+    shieldCheck:'<path d="M12 3l7 3v6c0 5-3 8-7 9-4-1-7-4-7-9V6z"/><path d="m9 12 2 2 4-4"/>'
   };
   // Emoji → icon key
   var MAP = {
@@ -14333,7 +15785,8 @@
     '📉':'trendDown','📂':'folder','✅':'check','🗂':'files','🗂️':'files','🔍':'search',
     '⚡':'bolt','🌡':'thermometer','🌡️':'thermometer','🔬':'microscope','❌':'block','🚫':'block',
     '⏳':'hourglass','💥':'boom','⚖':'scale','⚖️':'scale','📋':'clipboard','📁':'folder',
-    '➡':'arrowRight','➡️':'arrowRight','🤖':'robot'
+    '➡':'arrowRight','➡️':'arrowRight','🤖':'robot',
+    '👥':'users','⏱':'clock','⏱️':'clock','🕐':'clock','👁':'eye','👁️':'eye','🛡':'shieldCheck','🛡️':'shieldCheck'
   };
   // Colored circle emoji → status dot color
   var DOT = { '🟢':'var(--green)', '🔴':'var(--red)', '🟡':'var(--amber)', '🟠':'var(--amber)', '🔵':'var(--blue)' };
@@ -14429,6 +15882,16 @@
 
   // PT (source) -> EN dictionary. Longest phrases first are handled automatically at build time.
   var DICT = [
+
+    // ── Entry Cluster Detection
+    ["NÍVEL DE CONSENSO","CONSENSUS LEVEL"],
+    ["Força do consenso","Strength of consensus"],
+    ["TENDÊNCIA DO CONSENSO (24H)","CONSENSUS TREND (24H)"],
+    ["estável","stable"],
+    ["mais forte","stronger"],
+    ["MUITO ALTA","VERY HIGH"],
+   
+
     ["Selecione uma ou mais wallets acima para gerar sinais aqui.","Select one or more wallets above to generate signals here."],
     ["Nenhuma wallet monitorada ainda...","No wallet monitored yet..."],
     ["Selecione uma ou mais wallets acima","Select one or more wallets above"],
@@ -14441,7 +15904,7 @@
     ["Fase 1: descobrindo traders…","Phase 1: discovering traders…"],
     ["Descoberta via Market Trades Stream iniciada…","Discovery via Market Trades Stream started…"],
     ["0x… endereço EVM","0x… EVM address"],
-    ["Divisão por carteira","Breakdown por Wallet"],
+    ["Divisão por carteira","Breakdown by Wallet"],
     ["sem trades recebidos. Preencha LIVE_WALLETS manualmente.","no trades received. Fill in LIVE_WALLETS manually."],
     ["registros","records"],
     ["Selecione a Carteira:","Select Wallet:"],
@@ -14563,13 +16026,15 @@
     ["Buscando funding fees...","Fetching funding fees..."],
     ["Buscando posições fechadas...","Fetching closed positions..."],
     ["Buscando top wallets no leaderboard da SoDEX…","Fetching top wallets on the SoDEX leaderboard…"],
-    ["Buscando…","Searching…"],
+    ["Buscando...","Searching..."],
     ["Concluído!","Done!"],
     ["Conectando WebSocket…","Connecting WebSocket…"],
     ["Construindo curva de patrimônio...","Building portfolio curve..."],
     ["Erro no WebSocket de descoberta — verifique conexão","Discovery WebSocket error — check connection"],
     ["Erro no WebSocket principal — reconectando…","Main WebSocket error — reconnecting…"],
     ["Estável","Stable"],
+    ["Desacelerando","Decelerating"],
+    ["Acelerando","Accelerating"],
     ["Fase 0: leaderboard não retornou endereços. ","Phase 0: leaderboard did not return addresses. "],
     ["Forte dominância LONG","Strong LONG dominance"],
     ["Forte dominância SHORT","Strong SHORT dominance"],
@@ -14780,6 +16245,38 @@
     ["Monitor de Saída Inteligente","Smart Exit Monitor"],
     ["Saída Inteligente","Smart Exit"],
 
+    // ── Smart Exit Monitor card redesign — risk tiers, filter label and
+    //    footer stats (Abertas/Saíram) introduced with the new card layout ──
+    ["Nível de Risco:","Risk Level:"],
+    ["Risco Muito Baixo","Very Low Risk"],
+    ["Risco Baixo","Low Risk"],
+    ["Risco Médio","Medium Risk"],
+    ["Risco Alto","High Risk"],
+    ["Risco Muito Alto","Very High Risk"],
+    ["Muito Baixo","Very Low"],
+    ["Muito Alto","Very High"],
+    ["Abertas","Open"],
+    ["Saíram","Exited"],
+    ["% das posições fechadas","% of positions closed"],
+
+    // ── Smart Exit Monitor card v2 — signal badge, %closed/7D trend block,
+    //    historical gauge title and the new icon-stat mini-cards ──
+    ["Sinal de Saída: nível de risco de saída atual desta posição.","Exit Signal: this position's current exit-risk level."],
+    ["Tendência de saída","Exit trend"],
+    ["vs 7D anterior","vs previous 7D"],
+    ["Coletando dados…","Collecting data…"],
+    ["Comparativo histórico","Historical comparison"],
+    ["Pico de Saída","Exit Peak"],
+    ["Última Saída","Last Exit"],
+    ["Nenhuma saída nas últimas 24h","No exit in the last 24h"],
+    ["Redução Líquida","Net Reduction"],
+    ["Maior Redução","Biggest Reduction"],
+    ["Posições","Positions"],
+    ["Por uma única baleia","By a single whale"],
+    ["Acompanhando","Tracking"],
+    ["d atrás","d ago"],
+    ["h atrás","h ago"],
+
     // ── Sidebar label text that differs slightly (case/wording) from the
     //    phrasing used elsewhere, so the existing entries didn't match ──
     ["Wallets Monitoradas","Monitored wallets"],
@@ -14787,6 +16284,17 @@
 
     // ── Whale Score card — shown when a wallet has no history yet ──
     ["Sem histórico suficiente","Not enough history"],
+    ["Consistência","Consistency"],
+    ["Ruim","Bad"],
+    ["Regular","Regular"],
+    ["Bom","Good"],
+    ["Histórico completo","Full history"],
+    ["Alta","High"],
+    ["Média","Average"],
+    ["Baixa","Low"],
+    ["Alto Risco","High Risk"],
+    ["Médio Risco","Medium Risk"],
+    ["Baixo Risco","Low Risk"],
 
     // ── Recent Movements — "increased position" price narrative ──
     ["adicionou","added"],
@@ -14799,6 +16307,8 @@
     //    Smart Exit Monitor, Risk Score, Operações abertas, Posições
     //    fechadas recentes e Histórico de Posições) — built dynamically via
     //    innerHTML, so these phrases weren't in the static dictionary ──
+    ["Última atualização: agora","Last updated: now"],
+    ["Muito Alta","Very High"],
     ["Filtro ativo:","Active filter:"],
     ["todos os painéis exibem apenas dados desta wallet","all panels show only this wallet's data"],
     ["exibindo apenas dados desta wallet","showing only this wallet's data"],
@@ -14815,10 +16325,56 @@
     ["Filtro Operações:","Operations filter:"],
     ["Filtro Fechadas:","Closed filter:"],
     ["Filtro Histórico:","History filter:"],
+    ["Força:","Strength:"],
+    ["BAIXA","LOW"],
+    ["MÉDIA","AVERAGE"],
+    ["ALTA","HIGH"],
+    ["MUITO ALTA","VERY HIGH"],
+    ["Peso Long","Long Weight"],
+    ["Peso Short","Short Weight"],
+    ["Todos do mesmo lado","All on the same side"],
+    ["100% do lado Short","100% on the Short side"],
+    ["100% do lado Long","100% on the Long side"],
+    ["100% do total","100% of the total"],
+    ["Muito alta convicção","Very high conviction"],
+
+
+
+
+
+    // ── Entry Cluster Detection — new rich card layout (header/force, stats,
+    //    direction/distribution/type, whale list, footer) ──
+    ["Cluster de Entrada Detectado","Entry Cluster Detected"],
+    ["Força do Cluster","Cluster Strength"],
+    ["Filtrar por força do cluster","Filter by cluster strength"],
+    ["Preço Atual","Current Price"],
+    ["Índice","Index"],
+    ["Direção","Direction"],
+    ["Baleias no Cluster","Whales in Cluster"],
+    ["Baleias","Whales"],
+    ["Participantes","Participants"],
+    ["Tempo do Cluster","Cluster Time"],
+    ["Janela de entrada","Entry window"],
+    ["Volume Total","Total Volume"],
+    ["Posições abertas","Open positions"],
+    ["Convicção coordenada","Coordinated conviction"],
+    ["Convicção individual","Individual conviction"],
+    ["Distribuição das Entradas","Entry Distribution"],
+    ["Tipo de Cluster","Cluster Type"],
+    ["Coordenado","Coordinated"],
+    ["Alta probabilidade de movimento","High probability of movement"],
+    ["Sinal isolado, menor confiança","Isolated signal, lower confidence"],
+    ["Baleias monitoradas que fazem parte deste cluster de entrada, ordenadas por volume.","Monitored whales that are part of this entry cluster, sorted by volume."],
+    ["Cluster identificado há","Cluster identified"],
+    ["Probabilidade de sucesso:","Success probability:"],
+    ["baleia no cluster","whale in cluster"],
+    ["baleias no cluster","whales in cluster"],
 
     // ── "?" help tooltip buttons (panel-help, data-help attribute) next to
     //    each of the 24 fields/panels — full sentences, translated as whole
     //    phrases so they match/replace in one shot ──
+    ["Última Atualização:","Last Update:"],
+    ["atrás","back"],
     ["Cole aqui até 10 endereços de wallets EVM que deseja monitorar. Clique em Aplicar para iniciar o rastreamento em tempo real via WebSocket.","Paste up to 10 EVM wallet addresses you want to monitor here. Click Apply to start real-time tracking via WebSocket."],
     ["Lista as posições abertas neste momento pelas wallets monitoradas, atualizadas em tempo real.","Lists the positions currently open by the monitored wallets, updated in real time."],
     ["Feed ao vivo dos eventos das wallets monitoradas: aberturas, aumentos, reduções, fechamentos e liquidações.","Live feed of events from monitored wallets: openings, increases, reductions, closures and liquidations."],
