@@ -15383,6 +15383,11 @@
     el.textContent = secs < 60 ? secs + 's atrás' : Math.floor(secs / 60) + 'm atrás';
   }, 1000);
 
+  // Declarado aqui (antes do primeiro renderAll()) para evitar erro de temporal
+  // dead zone: várias funções de render leem selectedWalletAddr de forma
+  // incondicional (fora de callbacks de array) já na primeira renderização.
+  let selectedWalletAddr = null; // null = todas | string = addr selecionada
+
   // Render imediato ao carregar (estado de "Iniciando...")
   renderAll();
 
@@ -15409,7 +15414,6 @@
   }
 
   /* ── WALLET SELECTION FILTER (clique nas barras do PnL por Wallet) ── */
-  let selectedWalletAddr = null; // null = todas | string = addr selecionada
   let hoveredWalletAddr  = null; // realce transitório ao passar o mouse (barra OU item da legenda)
   let _pnlBarHitAreas   = [];   // [{addr, y1, y2}] — atualizado a cada renderPnlChart
   let _heatmapSelectedWallet = null; // null = todas | string addr — seleção do Whale Heatmap
