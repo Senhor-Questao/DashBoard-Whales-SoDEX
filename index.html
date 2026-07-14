@@ -10075,7 +10075,13 @@
         opts += `<option value="${addr}">${label}</option>`;
       });
       wSel.innerHTML = opts;
-      if (curVal && curVal !== 'all') wSel.value = curVal;
+      // Sincroniza com a seleção global de wallet (clique em Whale Score /
+      // Predominância de Direção / PnL por Wallet), quando não houver escolha manual.
+      if (curVal && curVal !== 'all') {
+        wSel.value = curVal;
+      } else if (selectedWalletAddr) {
+        wSel.value = selectedWalletAddr;
+      }
     }
 
     // Read filters
@@ -10258,7 +10264,13 @@
         opts += `<option value="${addr}">${label}</option>`;
       });
       wSel.innerHTML = opts;
-      if (curVal && curVal !== 'all') wSel.value = curVal;
+      // Sincroniza com a seleção global de wallet (clique em Whale Score /
+      // Predominância de Direção / PnL por Wallet), quando não houver escolha manual.
+      if (curVal && curVal !== 'all') {
+        wSel.value = curVal;
+      } else if (selectedWalletAddr) {
+        wSel.value = selectedWalletAddr;
+      }
     }
 
     // Read filters
@@ -10382,7 +10394,13 @@
         opts += `<option value="${addr}">${label}</option>`;
       });
       wSel.innerHTML = opts;
-      if (curVal && curVal !== 'all') wSel.value = curVal;
+      // Sincroniza com a seleção global de wallet (clique em Whale Score /
+      // Predominância de Direção / PnL por Wallet), quando não houver escolha manual.
+      if (curVal && curVal !== 'all') {
+        wSel.value = curVal;
+      } else if (selectedWalletAddr) {
+        wSel.value = selectedWalletAddr;
+      }
     }
 
     // Read filters
@@ -15420,6 +15438,12 @@
     _heatmapSelectedWallet = selectedWalletAddr;
     const hmSel = document.getElementById('heatmap-wallet-filter');
     if (hmSel) hmSel.value = selectedWalletAddr || 'all';
+    // Sync "Wallet:" dropdowns do Smart Exit Monitor, Operações abertas,
+    // Posições fechadas recentes e Histórico de Posições com a seleção global.
+    ['exit-wallet-filter','ops-wallet-filter','closed-wallet-filter','hist-wallet-filter'].forEach(id => {
+      const sel = document.getElementById(id);
+      if (sel) sel.value = selectedWalletAddr || 'all';
+    });
     _updateHeatmapWalletBanner();
     _updateWalletFilterBanner();
     _updateDirDomWalletBanner();
@@ -15433,6 +15457,12 @@
     _heatmapSelectedWallet = null;
     const hmSel = document.getElementById('heatmap-wallet-filter');
     if (hmSel) hmSel.value = 'all';
+    // Also clear "Wallet:" dropdowns do Smart Exit Monitor, Operações abertas,
+    // Posições fechadas recentes e Histórico de Posições.
+    ['exit-wallet-filter','ops-wallet-filter','closed-wallet-filter','hist-wallet-filter'].forEach(id => {
+      const sel = document.getElementById(id);
+      if (sel) sel.value = 'all';
+    });
     _updateHeatmapWalletBanner();
     _updateWalletFilterBanner();
     _updateDirDomWalletBanner();
