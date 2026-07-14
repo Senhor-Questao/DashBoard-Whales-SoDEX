@@ -14086,20 +14086,32 @@
         opts += `<option value="${addr}">${label}</option>`;
       });
       exWalletSel.innerHTML = opts;
-      if (curVal && curVal !== 'all') exWalletSel.value = curVal;
+      // Sincroniza com a seleção global de wallet (clique em Whale Score / Predominância
+      // de Direção / PnL por Wallet). A escolha manual no próprio dropdown tem prioridade;
+      // se o dropdown estiver em "Todas", refletimos a seleção global feita em outro painel.
+      if (curVal && curVal !== 'all') {
+        exWalletSel.value = curVal;
+      } else if (selectedWalletAddr) {
+        exWalletSel.value = selectedWalletAddr;
+      }
     }
 
     // Apply smart exit filters
     const _exFilters2 = getExitFilters();
+    // A seleção global (selectedWalletAddr) só entra como fallback quando o dropdown
+    // local não tiver uma escolha manual própria — assim o clique nas wallets do
+    // Whale Score / Predominância de Direção / PnL por Wallet realmente filtra o
+    // Smart Exit Monitor, sem sobrepor um filtro manual já escolhido aqui.
+    const _activeExitWallet = _exFilters2.wallet !== 'all' ? _exFilters2.wallet : selectedWalletAddr;
     const filteredExitData = exitData.filter(d => {
       const isLong = d.side === 'LONG';
       if (_exFilters2.dir === 'long' && !isLong) return false;
       if (_exFilters2.dir === 'short' && isLong) return false;
       if (_exFilters2.grade !== 'all' && exitRiskTier(d.pct) !== _exFilters2.grade) return false;
       if (_exFilters2.asset !== 'all' && d.pair !== _exFilters2.asset) return false;
-      if (_exFilters2.wallet !== 'all') {
+      if (_activeExitWallet) {
         const ws = _exitKeyWallets[d.key];
-        if (!ws || !ws.has(_exFilters2.wallet.toLowerCase())) return false;
+        if (!ws || !ws.has(_activeExitWallet.toLowerCase())) return false;
       }
       return true;
     });
