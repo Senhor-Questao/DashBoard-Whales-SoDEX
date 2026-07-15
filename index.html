@@ -1157,6 +1157,81 @@
 
   /* end macOS minimize buttons */
 
+  /* ── HIDE-TO-SIDEBAR BUTTON (envia o painel para a barra lateral — estilo "Minimize to Panel" do KDE Plasma) ── */
+  .btn-panel-hide {
+    background: #ff5f57;
+    border: none;
+    border-radius: 50%;
+    color: transparent;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 900;
+    line-height: 1;
+    width: 16px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0;
+    position: relative;
+    transition: background 0.15s, color 0.15s, transform 0.1s, box-shadow 0.15s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+  }
+  .btn-panel-hide::before {
+    content: '⇤';
+    color: rgba(90,0,0,0.75);
+    font-size: 9px;
+    font-weight: 900;
+    line-height: 1;
+    position: absolute;
+    opacity: 0;
+    transition: opacity 0.12s;
+  }
+  .btn-panel-hide:hover::before { opacity: 1; }
+  .btn-panel-hide:hover { transform: scale(1.12); box-shadow: 0 2px 8px rgba(255,95,87,0.5); }
+  .btn-panel-hide:active { transform: scale(0.92); }
+  /* end hide-to-sidebar button */
+
+  /* Painel enviado para a sidebar: some do fluxo visual sem sair do DOM,
+     garantindo retorno exato à posição original ao restaurar. */
+  .panel-hidden { display: none !important; }
+
+  /* ── ANIMAÇÃO (genérica, reaproveitada por qualquer painel) ──
+     Efeito rápido "encolhe/some" ao enviar para a sidebar e "aparece/cresce"
+     ao restaurar — mesma ideia do "Minimize to Panel" do KDE Plasma. */
+  @keyframes panelSendToSidebar {
+    0%   { opacity: 1; transform: scale(1) translateX(0); }
+    100% { opacity: 0; transform: scale(0.82) translateX(-32px); }
+  }
+  @keyframes panelRestoreFromSidebar {
+    0%   { opacity: 0; transform: scale(0.82) translateX(-32px); }
+    100% { opacity: 1; transform: scale(1) translateX(0); }
+  }
+  .panel-hiding {
+    animation: panelSendToSidebar 0.22s cubic-bezier(.4,0,.6,1) forwards;
+    transform-origin: left center;
+    pointer-events: none;
+  }
+  .panel-restoring {
+    animation: panelRestoreFromSidebar 0.22s cubic-bezier(.2,0,.2,1) forwards;
+    transform-origin: left center;
+  }
+
+  /* Indicador de painel oculto no ícone correspondente da sidebar */
+  .sidebar-item-icon { position: relative; }
+  .sidebar-item.has-hidden-panel .sidebar-item-icon::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    right: -1px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ff5f57;
+    border: 1.5px solid var(--bg2);
+  }
+
   /* ── PANEL HEAD ACTIONS (agrupa botão de dúvida + minimizar, lado a lado) ── */
   .panel-head-actions {
     display: inline-flex;
@@ -1449,8 +1524,36 @@
   /* Collapsed sections */
   .section-collapsible.collapsed > .table-wrap-paged,
   .section-collapsible.collapsed > .mid-row,
-  .section-collapsible.collapsed > .hist-table-inner {
-    display: none;
+  .section-collapsible.collapsed > .hist-table-inner,
+  .section-collapsible.collapsed > [id$="-wallet-selection-banner"] {
+    display: none !important;
+  }
+
+  /* ── Operações abertas / Posições fechadas / Histórico ──
+     Unifica título + filtros + tabela num único "campo" com borda contínua,
+     no mesmo padrão visual do Signal Master Table (.smt-panel/.smt-head). */
+  #section-ops,
+  #section-closed,
+  #section-hist {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg2);
+    overflow: hidden;
+  }
+  #section-ops > .sec-header,
+  #section-closed > .sec-header,
+  #section-hist > .hist-header {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 9px 14px;
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+  }
+  #section-ops .table-wrap-paged,
+  #section-closed .table-wrap-paged,
+  #section-hist .table-wrap-paged {
+    border: none;
+    border-radius: 0;
   }
 
   /* ranking mid-row inside collapsible */
@@ -4414,6 +4517,7 @@
         <span class="wallet-input-hint" id="wallet-count-hint">0 / 10 wallets</span>
         <span class="panel-head-actions">
           <span class="panel-help" data-help="Cole aqui até 10 endereços de wallets EVM que deseja monitorar. Clique em Aplicar para iniciar o rastreamento em tempo real via WebSocket.">?</span>
+          <button class="btn-panel-hide" onclick="togglePanelVisibility('wallet-input-panel',this)" title="Enviar para a barra lateral"></button>
           <button class="btn-minimize-panel" id="btn-minimize-wallets" onclick="toggleWalletPanel()" title="Minimizar painel"></button>
         </span>
       </div>
@@ -4555,6 +4659,7 @@
       </div>
       <span class="panel-head-actions">
         <span class="panel-help" data-help="Gráfico com a evolução do PnL de cada wallet ao longo do tempo. Use o filtro Wallet para focar em uma wallet específica.">?</span>
+        <button class="btn-panel-hide" onclick="togglePanelVisibility('pnl-chart-panel',this)" title="Enviar para a barra lateral"></button>
         <button class="btn-panel-minimize" onclick="togglePanelMinimize('pnl-chart-panel',this)" title="Minimizar"></button>
       </span>
     </div>
@@ -4590,6 +4695,7 @@
       <span class="patrimony-update-info" id="patrimony-update-info">Última Atualização: <strong id="patrimony-update-secs">—</strong></span>
       <span class="panel-head-actions">
         <span class="panel-help" data-help="Acompanha a evolução do patrimônio total (e por wallet) ao longo do tempo, junto com as posições abertas e movimentações recentes.">?</span>
+        <button class="btn-panel-hide" onclick="togglePanelVisibility('patrimony-panel',this)" title="Enviar para a barra lateral"></button>
         <button class="btn-panel-minimize" onclick="togglePanelMinimize('patrimony-panel',this)" title="Minimizar"></button>
       </span>
     </div>
@@ -4746,6 +4852,7 @@
       </div>
       <span class="panel-head-actions">
         <span class="panel-help" data-help="Mostra se as wallets monitoradas estão predominantemente posicionadas em Long ou Short, com base nas posições abertas.">?</span>
+        <button class="btn-panel-hide" onclick="togglePanelVisibility('dir-dom-panel',this)" title="Enviar para a barra lateral"></button>
         <button class="btn-panel-minimize" onclick="togglePanelMinimize('dir-dom-panel',this)" title="Minimizar"></button>
       </span>
     </div>
@@ -4772,6 +4879,7 @@
       </div>
       <span class="panel-head-actions">
         <span class="panel-help" data-help="Pontuação que resume a performance histórica de cada wallet (winrate, PnL, consistência) para identificar as melhores baleias.">?</span>
+        <button class="btn-panel-hide" onclick="togglePanelVisibility('whale-score-panel',this)" title="Enviar para a barra lateral"></button>
         <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-score-panel',this)" title="Minimizar"></button>
       </span>
     </div>
@@ -4804,6 +4912,7 @@
       </div>
       <span class="panel-head-actions">
         <span class="panel-help" data-help="Identifica pares em que várias baleias monitoradas estão posicionadas na mesma direção ao mesmo tempo (consenso de mercado).">?</span>
+        <button class="btn-panel-hide" onclick="togglePanelVisibility('whale-consensus-panel',this)" title="Enviar para a barra lateral"></button>
         <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-consensus-panel',this)" title="Minimizar"></button>
       </span>
     </div>
@@ -4845,6 +4954,7 @@
       </div>
       <span class="panel-head-actions">
         <span class="panel-help" data-help="Mede o quão convictas as baleias estão em uma posição, combinando número de baleias, peso da posição e consenso.">?</span>
+        <button class="btn-panel-hide" onclick="togglePanelVisibility('whale-conviction-panel',this)" title="Enviar para a barra lateral"></button>
         <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-conviction-panel',this)" title="Minimizar"></button>
       </span>
     </div>
@@ -4877,6 +4987,7 @@
       </div>
       <span class="panel-head-actions">
         <span class="panel-help" data-help="Detecta se as baleias estão aumentando ou reduzindo suas posições, indicando aceleração ou desaceleração de convicção.">?</span>
+        <button class="btn-panel-hide" onclick="togglePanelVisibility('whale-momentum-panel',this)" title="Enviar para a barra lateral"></button>
         <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-momentum-panel',this)" title="Minimizar"></button>
       </span>
     </div>
@@ -4893,6 +5004,7 @@
       <span class="panel-count" id="whale-heatmap-count">0 ativos</span>
       <span class="panel-head-actions">
         <span class="panel-help" data-help="Mapa de calor com a concentração das posições das baleias por ativo e direção.">?</span>
+        <button class="btn-panel-hide" onclick="togglePanelVisibility('whale-heatmap-panel',this)" title="Enviar para a barra lateral"></button>
         <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-heatmap-panel',this)" title="Minimizar"></button>
       </span>
     </div>
@@ -4930,6 +5042,7 @@
       <span class="panel-count" id="whale-leaderboard-count">0 wallets</span>
       <span class="panel-head-actions">
         <span class="panel-help" data-help="Ranking geral das wallets monitoradas por performance histórica, com base no Whale Score.">?</span>
+        <button class="btn-panel-hide" onclick="togglePanelVisibility('whale-leaderboard-panel',this)" title="Enviar para a barra lateral"></button>
         <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-leaderboard-panel',this)" title="Minimizar"></button>
       </span>
     </div>
@@ -4945,6 +5058,7 @@
       <span class="panel-count" id="smt-count">0 pares</span>
       <span class="panel-head-actions">
         <span class="panel-help" data-help="Tabela consolidada com todos os sinais calculados (consensus, conviction, momentum, heatmap) e uma recomendação de ação (GO/WAIT/BLOCK) por par.">?</span>
+        <button class="btn-panel-hide" onclick="togglePanelVisibility('smt-panel',this)" title="Enviar para a barra lateral"></button>
         <button class="btn-panel-minimize" onclick="togglePanelMinimize('smt-panel',this)" title="Minimizar"></button>
       </span>
     </div>
@@ -5021,6 +5135,7 @@
       <span class="panel-count" id="cts-count">0 sinais</span>
       <span class="panel-head-actions">
         <span class="panel-help" data-help="Gera sinais de entrada/saída prontos para copy trade com base nas wallets selecionadas abaixo. Selecione uma ou mais wallets para começar.">?</span>
+        <button class="btn-panel-hide" onclick="togglePanelVisibility('cts-panel',this)" title="Enviar para a barra lateral"></button>
         <button class="btn-panel-minimize" onclick="togglePanelMinimize('cts-panel',this)" title="Minimizar"></button>
       </span>
     </div>
@@ -5060,6 +5175,7 @@
       <span class="panel-count" id="cs-count">0 pares</span>
       <span class="panel-head-actions">
         <span class="panel-help" data-help="Combina todos os indicadores (consensus, conviction, momentum, heatmap) em um score único por par, com filtros para refinar o resultado.">?</span>
+        <button class="btn-panel-hide" onclick="togglePanelVisibility('cs-panel',this)" title="Enviar para a barra lateral"></button>
         <button class="btn-panel-minimize" onclick="togglePanelMinimize('cs-panel',this)" title="Minimizar"></button>
       </span>
     </div>
@@ -5118,6 +5234,7 @@
       <span class="panel-count" id="entry-cluster-count">0 clusters</span>
       <span class="panel-head-actions">
         <span class="panel-help" data-help="Detecta clusters de entradas simultâneas de múltiplas baleias no mesmo ativo e direção, um sinal de movimento coordenado.">?</span>
+        <button class="btn-panel-hide" onclick="togglePanelVisibility('entry-cluster-panel',this)" title="Enviar para a barra lateral"></button>
         <button class="btn-panel-minimize" onclick="togglePanelMinimize('entry-cluster-panel',this)" title="Minimizar"></button>
       </span>
     </div>
@@ -5160,6 +5277,7 @@
       <span class="panel-count" id="smart-exit-count">0 ativos</span>
       <span class="panel-head-actions">
         <span class="panel-help" data-help="Monitora reduções ou saídas de posições das baleias, ajudando a identificar possíveis pontos de saída do mercado.">?</span>
+        <button class="btn-panel-hide" onclick="togglePanelVisibility('smart-exit-panel',this)" title="Enviar para a barra lateral"></button>
         <button class="btn-panel-minimize" onclick="togglePanelMinimize('smart-exit-panel',this)" title="Minimizar"></button>
       </span>
     </div>
@@ -5201,6 +5319,7 @@
       <span class="panel-count" id="risk-score-count">0 pares</span>
       <span class="panel-head-actions">
         <span class="panel-help" data-help="Calcula um score de risco por par com base no consensus e conviction das baleias, para avaliar a exposição do mercado.">?</span>
+        <button class="btn-panel-hide" onclick="togglePanelVisibility('risk-score-panel',this)" title="Enviar para a barra lateral"></button>
         <button class="btn-panel-minimize" onclick="togglePanelMinimize('risk-score-panel',this)" title="Minimizar"></button>
       </span>
     </div>
@@ -5245,6 +5364,7 @@
       <span class="panel-count" id="hist-prob-count">0 pares</span>
       <span class="panel-head-actions">
         <span class="panel-help" data-help="Mostra a probabilidade histórica de sucesso de operações similares, com base no histórico de posições já fechadas.">?</span>
+        <button class="btn-panel-hide" onclick="togglePanelVisibility('hist-prob-panel',this)" title="Enviar para a barra lateral"></button>
         <button class="btn-panel-minimize" onclick="togglePanelMinimize('hist-prob-panel',this)" title="Minimizar"></button>
       </span>
     </div>
@@ -5263,6 +5383,7 @@
         <button class="btn-sec-nav" id="ops-nav-prev" onclick="opsNavPage(-1)" title="Página anterior">&#8592;</button>
         <button class="btn-sec-nav" id="ops-nav-next" onclick="opsNavPage(1)" title="Próxima página">&#8594;</button>
         <span class="panel-help" data-help="Tabela completa e paginada de todas as posições abertas das wallets monitoradas, com filtros por ativo e direção.">?</span>
+        <button class="btn-panel-hide" onclick="togglePanelVisibility('section-ops',this)" title="Enviar para a barra lateral"></button>
         <button class="btn-sec-collapse" id="btn-collapse-ops" onclick="toggleSection('section-ops','btn-collapse-ops')" title="Minimizar"></button>
       </div>
     </div>
@@ -5343,6 +5464,7 @@
         <button class="btn-sec-nav" id="closed-nav-prev" onclick="closedNavPage(-1)" title="Página anterior">&#8592;</button>
         <button class="btn-sec-nav" id="closed-nav-next" onclick="closedNavPage(1)" title="Próxima página">&#8594;</button>
         <span class="panel-help" data-help="Tabela paginada das posições fechadas mais recentemente pelas wallets monitoradas.">?</span>
+        <button class="btn-panel-hide" onclick="togglePanelVisibility('section-closed',this)" title="Enviar para a barra lateral"></button>
         <button class="btn-sec-collapse" id="btn-collapse-closed" onclick="toggleSection('section-closed','btn-collapse-closed')" title="Minimizar"></button>
       </div>
     </div>
@@ -5440,6 +5562,7 @@
           <button class="btn-sec-nav" id="hist-nav-prev" onclick="histNavPage(-1)" title="Página anterior">&#8592;</button>
           <button class="btn-sec-nav" id="hist-nav-next" onclick="histNavPage(1)" title="Próxima página">&#8594;</button>
           <span class="panel-help" data-help="Histórico completo de posições fechadas dentro do período selecionado, usado para calcular estatísticas e a probabilidade histórica.">?</span>
+          <button class="btn-panel-hide" onclick="togglePanelVisibility('section-hist',this)" title="Enviar para a barra lateral"></button>
           <button class="btn-sec-collapse" id="btn-collapse-hist" onclick="toggleSection('section-hist','btn-collapse-hist')" title="Minimizar"></button>
         </div>
       </div>
@@ -5632,6 +5755,12 @@
   function sidebarNav(el) {
     var targetId = el.getAttribute('data-target');
     if (!targetId) return;
+
+    // Se o painel associado a este item foi enviado para a sidebar, restaura
+    // (mesmo mecanismo genérico usado por todos os painéis, sem lógica específica aqui)
+    if (window.isPanelHidden && window.isPanelHidden(targetId)) {
+      window.restorePanelFromSidebar(targetId);
+    }
 
     // Mark active
     document.querySelectorAll('.sidebar-item').forEach(function(i){ i.classList.remove('active'); });
@@ -15403,6 +15532,68 @@
     btn.classList.toggle('is-collapsed', collapsed);
     btn.title = collapsed ? 'Expandir' : 'Minimizar';
   }
+
+  /* ── HIDE-TO-SIDEBAR (genérico/reutilizável — estilo "Minimize to Panel" do KDE Plasma) ──
+     Estrutura central de estado + funções únicas reaproveitadas por qualquer painel.
+     Nenhum painel possui implementação própria: basta que o botão no HTML chame
+     togglePanelVisibility('<id-do-painel>', this) e que exista um item na sidebar
+     com data-target="<id-do-painel>". Nada mais precisa ser tocado para suportar
+     novos painéis no futuro. */
+  const hiddenPanels = new Set(); // estado independente por painel, em memória (sessão atual)
+
+  function _sidebarItemFor(panelId) {
+    return document.querySelector('.sidebar-item[data-target="' + panelId + '"]');
+  }
+
+  function isPanelHidden(panelId) {
+    return hiddenPanels.has(panelId);
+  }
+
+  /** Envia o painel para a sidebar: o elemento permanece no DOM (apenas oculto via
+   *  CSS), o que garante retorno exato à posição original ao restaurar.
+   *  Toca uma animação rápida de "encolher/sumir" antes de aplicar display:none. */
+  function hidePanelToSidebar(panelId) {
+    const panel = document.getElementById(panelId);
+    if (!panel || hiddenPanels.has(panelId)) return;
+    hiddenPanels.add(panelId);
+    const item = _sidebarItemFor(panelId);
+    if (item) item.classList.add('has-hidden-panel');
+    panel.classList.remove('panel-restoring');
+    panel.classList.add('panel-hiding');
+    const finish = () => {
+      panel.classList.remove('panel-hiding');
+      panel.classList.add('panel-hidden');
+    };
+    panel.addEventListener('animationend', finish, { once: true });
+    setTimeout(finish, 260); // rede de segurança caso o evento de animação não dispare
+  }
+
+  /** Restaura o painel exatamente na posição em que estava (o nó nunca saiu do DOM).
+   *  Toca uma animação rápida de "aparecer/crescer" ao remover display:none. */
+  function restorePanelFromSidebar(panelId) {
+    const panel = document.getElementById(panelId);
+    if (!panel || !hiddenPanels.has(panelId)) return;
+    hiddenPanels.delete(panelId);
+    const item = _sidebarItemFor(panelId);
+    if (item) item.classList.remove('has-hidden-panel');
+    panel.classList.remove('panel-hiding', 'panel-hidden');
+    panel.classList.add('panel-restoring');
+    const finish = () => { panel.classList.remove('panel-restoring'); };
+    panel.addEventListener('animationend', finish, { once: true });
+    setTimeout(finish, 260);
+  }
+
+  /** Handler único usado pelo botão de "ocultar" em qualquer painel. */
+  function togglePanelVisibility(panelId, btn) {
+    if (isPanelHidden(panelId)) {
+      restorePanelFromSidebar(panelId);
+    } else {
+      hidePanelToSidebar(panelId);
+    }
+  }
+  window.togglePanelVisibility = togglePanelVisibility;
+  window.isPanelHidden = isPanelHidden;
+  window.restorePanelFromSidebar = restorePanelFromSidebar;
 
   /* ── PNL WALLET FILTER ── */
   let pnlWalletFilter = 'all'; // 'all' | wallet address | number string like '5'
