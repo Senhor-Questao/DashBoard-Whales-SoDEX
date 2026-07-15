@@ -1202,20 +1202,22 @@
      ao restaurar — mesma ideia do "Minimize to Panel" do KDE Plasma. */
   @keyframes panelSendToSidebar {
     0%   { opacity: 1; transform: scale(1) translateX(0); }
-    100% { opacity: 0; transform: scale(0.82) translateX(-32px); }
+    100% { opacity: 0; transform: scale(0.9) translateX(-18px); }
   }
   @keyframes panelRestoreFromSidebar {
-    0%   { opacity: 0; transform: scale(0.82) translateX(-32px); }
+    0%   { opacity: 0; transform: scale(0.9) translateX(-18px); }
     100% { opacity: 1; transform: scale(1) translateX(0); }
   }
   .panel-hiding {
-    animation: panelSendToSidebar 0.22s cubic-bezier(.4,0,.6,1) forwards;
+    animation: panelSendToSidebar 0.14s var(--ease) forwards;
     transform-origin: left center;
     pointer-events: none;
+    will-change: opacity, transform;
   }
   .panel-restoring {
-    animation: panelRestoreFromSidebar 0.22s cubic-bezier(.2,0,.2,1) forwards;
+    animation: panelRestoreFromSidebar 0.14s var(--ease) forwards;
     transform-origin: left center;
+    will-change: opacity, transform;
   }
 
   /* Indicador de painel oculto no ícone correspondente da sidebar */
@@ -15545,6 +15547,7 @@
      com data-target="<id-do-painel>". Nada mais precisa ser tocado para suportar
      novos painéis no futuro. */
   const hiddenPanels = new Set(); // estado independente por painel, em memória (sessão atual)
+  const _panelAnimTimers = {};    // panelId -> id do setTimeout pendente (ver _cancelPendingAnim)
 
   function _sidebarItemFor(panelId) {
     return document.querySelector('.sidebar-item[data-target="' + panelId + '"]');
@@ -15552,6 +15555,19 @@
 
   function isPanelHidden(panelId) {
     return hiddenPanels.has(panelId);
+  }
+
+  // Cancela o "finish" pendente (setTimeout) de uma chamada anterior de
+  // hide/restore para este painel. Sem isso, se o usuário clicasse para
+  // restaurar um painel enquanto a animação de ocultar ainda não havia
+  // concluído, o setTimeout antigo (de hidePanelToSidebar) disparava depois
+  // e reaplicava display:none no painel já restaurado — fazendo-o "sumir"
+  // permanentemente, sem nenhuma forma de trazê-lo de volta.
+  function _cancelPendingAnim(panelId) {
+    if (_panelAnimTimers[panelId]) {
+      clearTimeout(_panelAnimTimers[panelId]);
+      delete _panelAnimTimers[panelId];
+    }
   }
 
   /** Envia o painel para a sidebar: o elemento permanece no DOM (apenas oculto via
@@ -15563,14 +15579,18 @@
     hiddenPanels.add(panelId);
     const item = _sidebarItemFor(panelId);
     if (item) item.classList.add('has-hidden-panel');
+    _cancelPendingAnim(panelId);
     panel.classList.remove('panel-restoring');
     panel.classList.add('panel-hiding');
     const finish = () => {
+      // Só conclui se o painel ainda deve permanecer oculto: evita que um
+      // callback atrasado sobrescreva uma restauração feita nesse meio tempo.
+      if (!hiddenPanels.has(panelId)) return;
       panel.classList.remove('panel-hiding');
       panel.classList.add('panel-hidden');
     };
     panel.addEventListener('animationend', finish, { once: true });
-    setTimeout(finish, 260); // rede de segurança caso o evento de animação não dispare
+    _panelAnimTimers[panelId] = setTimeout(finish, 170); // rede de segurança caso o evento de animação não dispare
   }
 
   /** Restaura o painel exatamente na posição em que estava (o nó nunca saiu do DOM).
@@ -15581,11 +15601,17 @@
     hiddenPanels.delete(panelId);
     const item = _sidebarItemFor(panelId);
     if (item) item.classList.remove('has-hidden-panel');
+    _cancelPendingAnim(panelId);
     panel.classList.remove('panel-hiding', 'panel-hidden');
     panel.classList.add('panel-restoring');
-    const finish = () => { panel.classList.remove('panel-restoring'); };
+    const finish = () => {
+      // Simetria com hidePanelToSidebar: só limpa a classe se o painel
+      // não tiver sido ocultado de novo enquanto o callback esperava.
+      if (hiddenPanels.has(panelId)) return;
+      panel.classList.remove('panel-restoring');
+    };
     panel.addEventListener('animationend', finish, { once: true });
-    setTimeout(finish, 260);
+    _panelAnimTimers[panelId] = setTimeout(finish, 170);
   }
 
   /** Handler único usado pelo botão de "ocultar" em qualquer painel. */
