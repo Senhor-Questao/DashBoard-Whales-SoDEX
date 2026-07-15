@@ -5789,7 +5789,12 @@
     var scrollY = window.pageYOffset + 100;
     var active = null;
     for (var i = targets.length - 1; i >= 0; i--) {
-      if (targets[i].el.offsetTop <= scrollY) {
+      var el = targets[i].el;
+      // Painéis enviados para a sidebar (display:none) reportam offsetTop=0 e
+      // offsetParent=null — precisam ser ignorados aqui, senão "vencem" a varredura
+      // e o ícone errado fica marcado como ativo ao rolar a página.
+      if (el.offsetParent === null) continue;
+      if (el.offsetTop <= scrollY) {
         active = targets[i].item;
         break;
       }
