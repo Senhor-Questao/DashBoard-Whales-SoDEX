@@ -1733,6 +1733,7 @@
     background: var(--bg2);
   }
   .patrimony-legend-item {
+    --row-color: #00e07a; /* fallback — sobrescrito inline com a cor da wallet */
     display: flex; flex-direction: column; gap: 5px;
     min-width: 150px; flex: 1 1 150px;
     font-size: 9px; color: var(--muted);
@@ -1744,7 +1745,9 @@
   }
   .patrimony-legend-item:hover { background: var(--bg4); border-color: var(--border3); color: var(--text); transform: translateY(-1px); }
   .patrimony-legend-item.legend-active {
-    background: var(--bg4); border-color: var(--border3); color: var(--text);
+    background: color-mix(in srgb, var(--row-color) 10%, var(--bg3));
+    border-color: var(--row-color);
+    color: var(--text);
   }
   .patrimony-legend-item.legend-dimmed {
     opacity: 0.4;
@@ -3238,6 +3241,7 @@
   }
   .cts-wallet-empty-hint { font-size: 10px; color: var(--muted2); font-style: italic; }
   .cts-wallet-chip {
+    --row-color: #00e07a; /* fallback — sobrescrito inline com a cor da wallet */
     display: flex; align-items: center; gap: 5px;
     font-size: 9.5px; font-family: var(--mono); letter-spacing: 0.3px;
     color: var(--muted); border: 1px solid var(--border2); border-radius: 999px;
@@ -3246,14 +3250,16 @@
   }
   .cts-wallet-chip:hover { background: var(--bg4); border-color: var(--border3); color: var(--text); transform: translateY(-1px); }
   .cts-wallet-chip.cts-active {
-    background: rgba(0,224,122,0.10); border-color: rgba(0,224,122,0.45); color: var(--text);
+    background: color-mix(in srgb, var(--row-color) 14%, var(--bg3));
+    border-color: var(--row-color);
+    color: var(--text);
   }
   .cts-wallet-chip .cts-chk {
     width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--border3);
     flex-shrink: 0; display: flex; align-items: center; justify-content: center;
     background: var(--bg4); font-size: 8px; line-height: 1; color: transparent;
   }
-  .cts-wallet-chip.cts-active .cts-chk { background: var(--green); border-color: var(--green); color: #06110b; }
+  .cts-wallet-chip.cts-active .cts-chk { background: var(--row-color); border-color: var(--row-color); color: #06110b; }
   .cts-wallet-chip .cts-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
   .cts-wallet-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
   .cts-wallet-actions button {
@@ -3899,18 +3905,25 @@
   }
   .hist-prob-body {
     padding: 12px;
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 10px;
+  }
+  @media (max-width: 1600px) {
+    .hist-prob-body { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 1200px) {
+    .hist-prob-body { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 700px) {
+    .hist-prob-body { grid-template-columns: 1fr; }
   }
   .prob-card {
     background: var(--bg3);
     border: 1px solid var(--border2);
     border-radius: var(--radius-sm);
     padding: 12px 16px;
-    min-width: 180px;
-    flex: 1;
-    max-width: 260px;
+    width: 100%;
     position: relative;
     overflow: hidden;
     transition: border-color 0.15s, transform 0.12s;
@@ -5049,6 +5062,7 @@
         <button class="btn-panel-minimize" onclick="togglePanelMinimize('whale-leaderboard-panel',this)" title="Minimizar"></button>
       </span>
     </div>
+    <div id="whale-leaderboard-wallet-selection-banner" style="display:none;align-items:center;gap:8px;padding:6px 14px;background:rgba(61,142,255,0.07);border-bottom:1px solid rgba(61,142,255,0.18);font-size:10px;font-family:var(--mono);flex-wrap:wrap"></div>
     <div class="whale-leaderboard-body" id="whale-leaderboard-body">
       <div class="lb-empty">Aguardando histórico de wallets...</div>
     </div>
@@ -5370,6 +5384,13 @@
         <button class="btn-panel-hide" onclick="togglePanelVisibility('hist-prob-panel',this)" title="Enviar para a barra lateral"></button>
         <button class="btn-panel-minimize" onclick="togglePanelMinimize('hist-prob-panel',this)" title="Minimizar"></button>
       </span>
+    </div>
+    <div id="hist-prob-wallet-selection-banner" style="display:none;align-items:center;gap:8px;padding:6px 14px;background:rgba(61,142,255,0.07);border-bottom:1px solid rgba(61,142,255,0.18);font-size:10px;font-family:var(--mono);flex-wrap:wrap"></div>
+    <div class="table-filter-bar" style="padding:8px 14px;border-bottom:1px solid var(--border)">
+      <label>Ativo:</label>
+      <select class="tf-select" id="hist-prob-asset-filter" onchange="renderHistoricalProbability()" title="Filtrar por ativo">
+        <option value="all">Todos</option>
+      </select>
     </div>
     <div class="hist-prob-body" id="hist-prob-body">
       <div class="prob-empty">Aguardando histórico de posições...</div>
@@ -11686,7 +11707,7 @@
         const isHidden = isAll && _patrimonyHiddenWallets.has(s.addr.toLowerCase());
         const clickHandler = isAll ? ` onclick="_patrimonyToggleLegend('${s.addr}')"` : '';
         const activeClass = isAll ? (isHidden ? ' legend-dimmed' : ' legend-active') : '';
-        return `<div class="patrimony-legend-item${activeClass}" data-addr="${s.addr}"${clickHandler} title="${isAll ? (isHidden ? 'Clique para exibir' : 'Clique para ocultar') : ''}">
+        return `<div class="patrimony-legend-item${activeClass}" data-addr="${s.addr}" style="--row-color:${s.isCombined ? 'var(--green)' : s.color}"${clickHandler} title="${isAll ? (isHidden ? 'Clique para exibir' : 'Clique para ocultar') : ''}">
           <div class="pcard-top">
             <div class="patrimony-legend-dot" style="background:${isHidden ? 'var(--muted2)' : dotColor}"></div>
             <span class="pcard-rank">${rankPfx}</span>
@@ -12596,7 +12617,7 @@
       const dominates = Math.abs(lp - sp) < 5 ? 'neut' : lp > sp ? 'long' : 'short';
       const pctLabel  = dominates === 'neut' ? '~50%' : dominates === 'long' ? '+'+lp.toFixed(0)+'%L' : '+'+sp.toFixed(0)+'%S';
       const _isSelW = selectedWalletAddr && selectedWalletAddr.toLowerCase() === d.addr.toLowerCase();
-      const selStyle = _isSelW ? `;background:${d.color}0d;box-shadow:inset 0 0 0 1px ${d.color}30;border-radius:4px` : '';
+      const selStyle = _isSelW ? `;--row-color:${d.color};background:color-mix(in srgb, ${d.color} 12%, var(--bg3));box-shadow:inset 0 0 0 1px ${d.color};border-radius:4px` : '';
       // Índice da wallet: mesmo número (#N) usado no painel "PnL por Wallet"
       const wIdx = trackedWallets.findIndex(a => a && a.toLowerCase() === d.addr.toLowerCase());
       const wNumLabel = (wIdx >= 0 ? '#' + (wIdx + 1) + ' ' : '') + d.label;
@@ -14669,11 +14690,24 @@
       return;
     }
 
+    // Populate asset filter dropdown
+    const aSel = document.getElementById('hist-prob-asset-filter');
+    if (aSel) {
+      const curAsset = aSel.value;
+      const assetList = [...new Set(allHistory.map(p => p.pair).filter(Boolean))].sort();
+      let aOpts = '<option value="all">Todos</option>';
+      assetList.forEach(p => { aOpts += `<option value="${p}">${p}</option>`; });
+      aSel.innerHTML = aOpts;
+      if (curAsset && curAsset !== 'all') aSel.value = curAsset;
+    }
+    const fAsset = (document.getElementById('hist-prob-asset-filter') || {}).value || 'all';
+
     // Group by pair
     const byPair = {};
     allHistory.forEach(p => {
       const pair = p.pair;
       if (!pair) return;
+      if (fAsset !== 'all' && pair !== fAsset) return;
       if (isWalletFiltered(p.addr || p.wallet)) return;
       // BUGFIX: mesmo problema do Whale Leaderboard — o PnL realizado está em
       // `finalPnl`, não em realizedPnL/pnl/fpnl. Sem isso, tp/sl nunca
@@ -15125,7 +15159,7 @@
         // Índice da wallet: mesmo número (#N) usado no painel "PnL por Wallet"
         const wIdx = trackedWallets.findIndex(a => a && a.toLowerCase() === lc);
         const wNumLabel = (wIdx >= 0 ? '#' + (wIdx + 1) + ' ' : '') + label;
-        return `<div class="cts-wallet-chip${active ? ' cts-active' : ''}" data-addr="${addr}" onclick="ctsToggleWallet('${addr}')" title="${addr}">
+        return `<div class="cts-wallet-chip${active ? ' cts-active' : ''}" style="--row-color:${wc}" data-addr="${addr}" onclick="ctsToggleWallet('${addr}')" title="${addr}">
           <span class="cts-chk">${active ? '✓' : ''}</span>
           <span class="cts-dot" style="background:${wc}"></span>
           <span>${wNumLabel}</span>
@@ -15309,7 +15343,7 @@
           ? _ctsFmtDate(s.openedAtTs, s.openedAt)
           : _ctsFmtDate(s.closedAtTs || s.openedAtTs, s.closedAt || s.openedAt);
         const wc = walletColor(s.addr);
-        return `<tr data-signal-id="${s.id}" data-wallet="${s.addr}" data-symbol="${s.symbol}" data-direction="${s.side}" data-entry="${s.entrySignal}" data-sl="${s.sl != null ? s.sl : ''}" data-tp="${s.tp != null ? s.tp : ''}" data-perf-pct="${s.lastPerfPct.toFixed(4)}" data-status="${s.status}" data-opened-ts="${s.openedAtTs || ''}" data-closed-ts="${s.closedAtTs || ''}">
+        return `<tr class="tr-wallet-row" style="--row-color:${wc}" data-signal-id="${s.id}" data-wallet="${s.addr}" data-symbol="${s.symbol}" data-direction="${s.side}" data-entry="${s.entrySignal}" data-sl="${s.sl != null ? s.sl : ''}" data-tp="${s.tp != null ? s.tp : ''}" data-perf-pct="${s.lastPerfPct.toFixed(4)}" data-status="${s.status}" data-opened-ts="${s.openedAtTs || ''}" data-closed-ts="${s.closedAtTs || ''}">
           <td class="wallet-addr" title="${s.addr || ''}"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${wc};margin-right:4px;vertical-align:middle;flex-shrink:0"></span>${s.wallet}<button class="w-copy" title="Copiar endereço" style="margin-left:4px" onclick="event.stopPropagation();copyWalletAddr(this,'${s.addr}')">⧉</button></td>
           <td class="pair-sym">${s.symbol}</td>
           <td style="color:var(--muted);font-size:10px">${dateStr || '—'}</td>
@@ -15779,7 +15813,9 @@
     { id: 'risk-score-wallet-selection-banner',        label: 'Filtro Risk Score:' },
     { id: 'ops-wallet-selection-banner',               label: 'Filtro Operações:' },
     { id: 'closed-wallet-selection-banner',            label: 'Filtro Fechadas:' },
-    { id: 'hist-wallet-selection-banner',              label: 'Filtro Histórico:' }
+    { id: 'hist-wallet-selection-banner',              label: 'Filtro Histórico:' },
+    { id: 'hist-prob-wallet-selection-banner',         label: 'Filtro Operações:' },
+    { id: 'whale-leaderboard-wallet-selection-banner', label: 'Filtro Operações:' }
   ];
 
   function _renderGenericWalletBanner(id, label) {
