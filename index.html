@@ -1994,6 +1994,7 @@
   .mov-time {
     font-size: 9px; color: var(--muted2); white-space: nowrap;
     flex-shrink: 0; margin-top: 2px; font-family: var(--mono);
+    line-height: 1.45; text-align: right; min-width: 56px;
   }
   .mov-icon {
     flex-shrink: 0; width: 15px; height: 15px; border-radius: 50%;
@@ -9709,18 +9710,19 @@
         ? `<span class="mov-lev">${pos.leverage}x</span>`
         : '';
 
-      // Horário da movimentação — sempre exibe data e hora completas (DD/MM HH:MM:SS)
-      // para que o usuário possa identificar exatamente quando o evento ocorreu.
+      // Horário da movimentação — sempre exibe data completa COM ANO (DD/MM/AAAA)
+      // e hora (HH:MM:SS), em duas linhas (data em cima, hora embaixo) para que o
+      // usuário identifique exatamente quando o evento ocorreu e a leitura fique
+      // mais confortável na coluna estreita. Deriva sempre do timestamp real do
+      // item (item.sortTs já reflete corretamente open/close/liq/movTs conforme
+      // montado acima), em vez de reaproveitar strings pré-formatadas sem ano.
       const _fmtFullTs = (tsMs) => {
         const d = new Date(tsMs);
         const pad = n => String(n).padStart(2, '0');
-        return `${pad(d.getDate())}/${pad(d.getMonth()+1)} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}<br>${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
       };
-      const timeLabel = kind === 'open'
-        ? (pos.openedAt && pos.openedAt !== '—' ? pos.openedAt : '—')
-        : (kind === 'reduce' || kind === 'increase' || kind === 'partial') && pos.movTs
-          ? (pos.closedAt && pos.closedAt !== '—' ? pos.closedAt : _fmtFullTs(pos.movTs))
-          : (pos.closedAt ? pos.closedAt : '—');
+      const _movTsForLabel = item.sortTs || pos.openedAtTs || pos.movTs || pos.closedAtTs || 0;
+      const timeLabel = _movTsForLabel ? _fmtFullTs(_movTsForLabel) : '—';
 
       // ── Helpers de formatação ────────────────────────────────────────────
       const _fmtUsd = v => {
@@ -14453,7 +14455,11 @@
       const addr = (p.addr || p.wallet || '').toLowerCase();
       if (!addr) return;
       if (!stats[addr]) stats[addr] = { wins: 0, losses: 0, grossProfit: 0, grossLoss: 0, totalPnl: 0 };
-      const pnl = parseFloat(p.realizedPnL ?? p.realizedPnl ?? p.pnl ?? p.fpnl ?? 0);
+      // BUGFIX: os itens de `history`/`historyRestData` guardam o PnL realizado no
+      // campo `finalPnl` (ver montagem desses arrays), não em realizedPnL/pnl/fpnl.
+      // Sem `p.finalPnl` na cadeia, pnl sempre caía em 0 → wins/losses nunca
+      // incrementavam → leaderboard sempre vazio ("Sem histórico suficiente").
+      const pnl = parseFloat(p.finalPnl ?? p.realizedPnL ?? p.realizedPnl ?? p.pnl ?? p.fpnl ?? 0);
       stats[addr].totalPnl += pnl;
       if (pnl > 0) { stats[addr].wins++; stats[addr].grossProfit += pnl; }
       else if (pnl < 0) { stats[addr].losses++; stats[addr].grossLoss += Math.abs(pnl); }
@@ -14488,11 +14494,14 @@
       const col       = walletColor(w.addr);
       const wrCls     = 'wr';
       const pfCls     = w.pf >= 1.5 ? 'pf' : 'pf bad';
+      // Índice da wallet: mesmo número (#N) usado no painel "PnL por Wallet"
+      const wIdx      = trackedWallets.findIndex(a => a && a.toLowerCase() === w.addr.toLowerCase());
+      const wNumLabel = (wIdx >= 0 ? '#' + (wIdx + 1) + ' ' : '') + shortAddr(w.addr);
       return `<div class="lb-row ${rankCls}">
         <div class="lb-medal ${medalCls}">${medal}</div>
         <div class="lb-addr">
           <div class="lb-color-bar" style="background:${col}"></div>
-          <span>${shortAddr(w.addr)}</span>
+          <span>${wNumLabel}</span>
         </div>
         <div class="lb-metrics">
           <div class="lb-metric">
@@ -14666,7 +14675,10 @@
       const pair = p.pair;
       if (!pair) return;
       if (isWalletFiltered(p.addr || p.wallet)) return;
-      const pnl = parseFloat(p.realizedPnL ?? p.realizedPnl ?? p.pnl ?? p.fpnl ?? 0);
+      // BUGFIX: mesmo problema do Whale Leaderboard — o PnL realizado está em
+      // `finalPnl`, não em realizedPnL/pnl/fpnl. Sem isso, tp/sl nunca
+      // incrementavam e o painel ficava sempre em "Histórico insuficiente".
+      const pnl = parseFloat(p.finalPnl ?? p.realizedPnL ?? p.realizedPnl ?? p.pnl ?? p.fpnl ?? 0);
       if (!byPair[pair]) byPair[pair] = { tp: 0, sl: 0 };
       if (pnl > 0) byPair[pair].tp++;
       else if (pnl < 0) byPair[pair].sl++;
@@ -14762,7 +14774,10 @@
     allHistory.forEach(p => {
       if (!p.pair) return;
       if (isWalletFiltered(p.addr || p.wallet)) return;
-      const pnl = parseFloat(p.realizedPnL ?? p.realizedPnl ?? p.pnl ?? p.fpnl ?? 0);
+      // BUGFIX: mesmo problema de campo de PnL (ver Whale Leaderboard / Probabilidade
+      // Histórica) — sem `finalPnl` na cadeia, o Win Rate usado no Signal Master
+      // Table / Composite Score também ficava sempre zerado.
+      const pnl = parseFloat(p.finalPnl ?? p.realizedPnL ?? p.realizedPnl ?? p.pnl ?? p.fpnl ?? 0);
       if (!histByPair[p.pair]) histByPair[p.pair] = { tp: 0, sl: 0 };
       if (pnl > 0) histByPair[p.pair].tp++;
       else if (pnl < 0) histByPair[p.pair].sl++;
@@ -16492,6 +16507,11 @@
     ["Duração","Duration"],
     ["Alavancagem","Leverage"],
     ["Tamanho","Size"],
+
+    // ── Probabilidade Histórica — card label and criteria line ──
+    ["Sucesso Histórico","Historical Success"],
+    ["Baseado em","Based on"],
+    ["operações históricas","historical operations"],
 
     // ── Recent Movements feed — action verbs missing (were causing partial/
     //    mixed-language output, e.g. "opened LONG em BTC") ──
